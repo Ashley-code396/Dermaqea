@@ -47,7 +47,7 @@ export function ScanChart({ data }: { data: ScanDataPoint[] }) {
               borderRadius: "8px",
             }}
             labelStyle={{ color: "#E8F5EE" }}
-            formatter={(value: number) => [value, ""]}
+            formatter={(value: number | undefined) => [value ?? 0, ""]}
           />
           <Legend />
           <Line
