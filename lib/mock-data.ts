@@ -1,4 +1,4 @@
-import type { ActivityItem, Product, Batch, Manufacturer, ScanAlert } from "@/types";
+import type { ActivityItem, Product, Batch, Manufacturer, ScanAlert, QRCode } from "@/types";
 
 export const MOCK_MANUFACTURER: Manufacturer = {
   id: "mfr-1",
@@ -43,6 +43,20 @@ export const MOCK_PRODUCTS: Product[] = [
     status: "pending",
     created_at: "2025-02-01T00:00:00Z",
   },
+  {
+    id: "prod-3",
+    manufacturer_id: "mfr-1",
+    sui_object_id: "0xretinol123",
+    name: "Retinol Night Cream",
+    sku: "RET-NIGHT-003",
+    category: "Moisturizer",
+    description: "Anti-aging retinol cream",
+    ingredients: [],
+    certifications: [],
+    images: [],
+    status: "approved",
+    created_at: "2024-12-15T00:00:00Z",
+  },
 ];
 
 export const MOCK_BATCHES: Batch[] = [
@@ -50,6 +64,7 @@ export const MOCK_BATCHES: Batch[] = [
     id: "batch-1",
     product_id: "prod-1",
     product: MOCK_PRODUCTS[0],
+    sui_object_id: "0xbatch447",
     batch_number: "447",
     manufacture_date: "2025-01-10",
     expiry_date: "2026-01-10",
@@ -59,6 +74,74 @@ export const MOCK_BATCHES: Batch[] = [
     status: "active",
     created_at: "2025-01-10T00:00:00Z",
   },
+  {
+    id: "batch-2",
+    product_id: "prod-1",
+    product: MOCK_PRODUCTS[0],
+    batch_number: "448",
+    manufacture_date: "2025-02-01",
+    expiry_date: "2026-02-01",
+    unit_count: 5000,
+    facility: "Nairobi Plant A",
+    stolen: false,
+    status: "active",
+    created_at: "2025-02-01T00:00:00Z",
+  },
+];
+
+export const MOCK_QR_CODES: QRCode[] = [
+  {
+    id: "qr-1",
+    batch_id: "batch-1",
+    sui_object_id: "0xqr001",
+    serial_number: "DQ-447-00001",
+    unique_hash: "a1b2c3d4e5",
+    status: "scanned",
+    scan_count: 3,
+    flagged: false,
+    first_scan_at: "2025-02-10T12:00:00Z",
+    first_scan_location: "Nairobi",
+    created_at: "2025-01-15T00:00:00Z",
+  },
+  {
+    id: "qr-2",
+    batch_id: "batch-1",
+    sui_object_id: "0xqr002",
+    serial_number: "DQ-447-00002",
+    unique_hash: "f6g7h8i9j0",
+    status: "applied",
+    scan_count: 0,
+    flagged: false,
+    applied_at: "2025-01-20T08:00:00Z",
+    created_at: "2025-01-15T00:00:00Z",
+  },
+  {
+    id: "qr-3",
+    batch_id: "batch-1",
+    sui_object_id: "0xqr003",
+    serial_number: "DQ-447-00291",
+    unique_hash: "k1l2m3n4o5",
+    status: "flagged",
+    scan_count: 127,
+    flagged: true,
+    first_scan_at: "2025-01-15T09:00:00Z",
+    first_scan_location: "Nairobi",
+    created_at: "2025-01-15T00:00:00Z",
+  },
+];
+
+export const MOCK_VERIFICATION_TIMELINE = [
+  { step: "Account Created", done: true, date: "Jan 15, 2025" },
+  { step: "Documents Submitted", done: true, date: "Jan 16, 2025" },
+  { step: "Dermaqea Review", done: false, inProgress: true, note: "Estimated 2-3 business days" },
+  { step: "Verified Manufacturer", done: false },
+  { step: "First Product Submission", done: false },
+];
+
+export const MOCK_VERIFICATION_DOCS = [
+  { type: "Business Registration Certificate", filename: "business_reg.pdf", status: "Verified" as const, uploaded: "Jan 16, 2025", ipfs_hash: "QmX1y2z3..." },
+  { type: "FDA Registration", filename: "fda_reg.pdf", status: "Verified" as const, uploaded: "Jan 16, 2025", ipfs_hash: "QmA4b5c6..." },
+  { type: "ISO 22716 (GMP)", filename: "iso_gmp.pdf", status: "Pending" as const, uploaded: "Jan 18, 2025", ipfs_hash: "QmD7e8f9..." },
 ];
 
 export const MOCK_ACTIVITY: ActivityItem[] = [

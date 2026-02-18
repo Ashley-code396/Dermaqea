@@ -15,7 +15,7 @@ const TITLE_MAP: Record<string, string> = {
   "/batches/new": "Create New Batch",
   "/qr-codes": "QR Codes",
   "/analytics": "Analytics",
-  "/settings": "Settings",
+  "/settings": "Account Settings",
 };
 
 function getTitle(pathname: string): string {
