@@ -44,14 +44,12 @@ export default function LandingPage() {
             className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
             style={{ fontFamily: "var(--font-syne)" }}
           >
-            Product authentication
+            Make your skincare
             <br />
-            <span className="text-primary">on the blockchain</span>
+            <span className="text-primary">undeniably yours</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
-            Register your brand, submit products for verification, and protect
-            consumers from counterfeits. Every bottle gets a unique QR code tied
-            to the Sui blockchain.
+           Protect your brand from fake or unauthorized copies .
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Button size="lg" asChild>
