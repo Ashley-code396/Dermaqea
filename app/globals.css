@@ -48,6 +48,18 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Hero side image blending */
+.hero-image {
+  /* Fade the left edge so it blends into the dark background */
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
 :root {
   /* Dermaqea design tokens */
   --background: #080E0C;

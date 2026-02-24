@@ -38,28 +38,42 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="flex min-h-screen flex-col items-center justify-center px-6 pt-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1
-            className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
-            style={{ fontFamily: "var(--font-syne)" }}
-          >
-            Make your skincare
-            <br />
-            <span className="text-primary">undeniably yours</span>
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
-           Protect your brand from fake or unauthorized copies .
-          </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link href="/create-account" className="gap-2">
-                Get started
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/dashboard">View dashboard</Link>
-            </Button>
+      <section className="flex min-h-screen items-center px-6 pt-16">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="flex flex-col items-center lg:flex-row lg:items-stretch">
+            {/* Left: text (takes half on lg) */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left px-4 lg:px-12">
+              <h1
+                className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
+                style={{ fontFamily: "var(--font-syne)" }}
+              >
+                Make your skincare
+                <br />
+                <span className="text-primary">undeniably yours</span>
+              </h1>
+              <p className="mt-6 text-lg text-muted-foreground">
+                Protect your brand from fake or unauthorized copies.
+              </p>
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+                <Button size="lg" asChild>
+                  <Link href="/create-account" className="gap-2">
+                    Get started
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/dashboard">View dashboard</Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right: image (takes half on lg) */}
+            <div className="hidden lg:block lg:w-1/2">
+              <img
+                src="/dermaqea2.jpg"
+                alt="Dermaqea skincare product"
+                className="hero-image w-full h-[80vh] object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
