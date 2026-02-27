@@ -60,8 +60,81 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.6);
 }
 
+/* Light mode adjustments so the image blends into white backgrounds */
+.light .hero-image {
+  /* Remove the mask in light mode so the image remains fully visible.
+     We'll blend using the wrapper overlay instead. */
+  -webkit-mask-image: none;
+  mask-image: none;
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+}
+
+/* Wrapper so we can add a white overlay on light backgrounds to blend image edges */
+.hero-image-wrapper {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.hero-image-wrapper .hero-image {
+  display: block;
+}
+
+/* Add a subtle white-to-transparent gradient overlay on the left in light mode
+   to mask darker image pixels and blend into the page background. */
+.dark .hero-image-wrapper::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 18%; /* keep a slightly wider fade on dark backgrounds */
+  pointer-events: none;
+  /* Fade from dark page background into the image to blend edges */
+  background: linear-gradient(to right, rgba(8,14,12,0.98) 0%, rgba(8,14,12,0) 100%);
+  mix-blend-mode: normal;
+}
+
 :root {
-  /* Dermaqea design tokens */
+  /* Light theme (default) design tokens - use green palette to match dark */
+  --background: #FFFFFF;
+  --foreground: #0F1720;
+  --card: #F8FAFC;
+  --card-foreground: #0F1720;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F1720;
+  --primary: #16A34A; /* green */
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F1720;
+  --muted: #F1F5F9;
+  --muted-foreground: #6B7280;
+  --accent: #16A34A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --warning: #F59E0B;
+  --border: #ECFDF5;
+  --input: #FFFFFF;
+  --ring: #16A34A;
+  --chart-1: #16A34A;
+  --chart-2: #F59E0B;
+  --chart-3: #BBF7D0;
+  --chart-4: #86EFAC;
+  --chart-5: #EF4444;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F1720;
+  --sidebar-primary: #16A34A;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F8FAFC;
+  --sidebar-accent-foreground: #0F1720;
+  --sidebar-border: #ECFDF5;
+  --sidebar-ring: #16A34A;
+  --verified-glow: 0 0 12px #16A34440;
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Dark theme (green) tokens preserved from previous design */
   --background: #080E0C;
   --foreground: #E8F5EE;
   --card: #0D1612;

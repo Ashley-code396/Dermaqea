@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Shield, QrCode, BarChart3, Zap } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
+import HeroImage from "@/components/HeroImage";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
+  <header className="fixed left-0 right-0 top-0 z-50 border-b border-primary/40 dark:border-primary/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <span
             className="text-xl font-semibold text-primary"
@@ -27,6 +29,7 @@ export default function LandingPage() {
             >
               How it works
             </Link>
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/dashboard">Sign in</Link>
             </Button>
@@ -38,11 +41,11 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="flex min-h-screen items-center px-6 pt-16">
+  <section className="flex min-h-screen items-center px-6 pt-16 border-b border-primary/40 dark:border-primary/60">
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex flex-col items-center lg:flex-row lg:items-stretch">
             {/* Left: text (takes half on lg) */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left px-4 lg:pl-0 lg:pr-12">
+            <div className="w-full lg:w-1/3 flex flex-col justify-center text-center lg:text-left px-4 lg:pl-0 lg:pr-12">
               <h1
                 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
                 style={{ fontFamily: "var(--font-syne)" }}
@@ -67,19 +70,17 @@ export default function LandingPage() {
             </div>
 
             {/* Right: image (takes half on lg) */}
-            <div className="hidden lg:block lg:w-1/2">
-              <img
-                src="/dermaqea2.jpg"
-                alt="Dermaqea skincare product"
-                className="hero-image w-full h-[80vh] object-cover"
-              />
+            <div className="hidden lg:block lg:w-2/3">
+              <div className="hero-image-wrapper">
+                <HeroImage className="hero-image w-3/4 mx-auto max-h-[80vh] object-contain" />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="border-t border-border bg-card/50 py-24">
+  <section id="features" className="border-t border-primary/40 dark:border-primary/60 bg-card/50 py-24">
         <div className="mx-auto max-w-6xl px-6">
           <h2
             className="mb-16 text-center text-3xl font-bold"
@@ -113,7 +114,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="border-t border-border py-24">
+  <section id="how-it-works" className="border-t border-primary/40 dark:border-primary/60 py-24">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2
             className="mb-12 text-3xl font-bold"
@@ -180,7 +181,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12">
+  <footer className="border-t border-primary/50 dark:border-primary/70 py-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <span

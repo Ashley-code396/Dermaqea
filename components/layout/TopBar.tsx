@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ExternalLink } from "lucide-react";
+import { Bell, ExternalLink, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 
 const SUISCAN_URL = "https://suiscan.xyz/testnet";
 
@@ -28,6 +29,7 @@ function getTitle(pathname: string): string {
 export function TopBar() {
   const pathname = usePathname();
   const title = getTitle(pathname);
+  const { theme, resolvedTheme, setTheme } = useTheme();
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-8">
       <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
@@ -35,6 +37,17 @@ export function TopBar() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        >
+          {resolvedTheme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
         </Button>
         <Button variant="outline" size="sm" asChild>
           <a
