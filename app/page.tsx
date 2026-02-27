@@ -42,7 +42,7 @@ export default function LandingPage() {
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex flex-col items-center lg:flex-row lg:items-stretch">
             {/* Left: text (takes half on lg) */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left px-4 lg:px-12">
+            <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left px-4 lg:pl-0 lg:pr-12">
               <h1
                 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
                 style={{ fontFamily: "var(--font-syne)" }}
