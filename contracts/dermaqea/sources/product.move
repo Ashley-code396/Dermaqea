@@ -3,9 +3,12 @@ module dermaqea::product;
 use sui::event;
 use sui::table::{Self, Table};
 use sui::clock::{Self, Clock};
-use dermaqea::serial_registry::{Self, SerialRegistry};
+use dermaqea::serial_registry::{Self,SerialRegistry};
+use std::string::String;
+use dermaqea::admin::MinterCap;
 
-// ─── Error Constants ────────────────────────────────────────────────────────
+
+
 
 const ENotAuthorized: u64 = 0;
 const EDuplicateSerialNumber: u64 = 1;
@@ -14,47 +17,29 @@ const EProductFlagged: u64 = 3;
 const EProductCounterfeit: u64 = 4;
 const EInvalidStatus: u64 = 5;
 
-// ─── Status Constants ────────────────────────────────────────────────────────
+
 
 const STATUS_ACTIVE: u8 = 0;
 const STATUS_SOLD: u8 = 1;
 const STATUS_FLAGGED: u8 = 2;
 const STATUS_COUNTERFEIT: u8 = 3;
 
-// ─── Capabilities ────────────────────────────────────────────────────────────
 
-/// Owned by the deployer / backend service. Required to mint products.
-public struct MinterCap has key, store {
-    id: UID,
-}
-
-/// One-time witness / admin object created at init.
-public struct AdminCap has key, store {
-    id: UID,
-}
-
-
-/// One physical skincare product unit ↔ one on-chain digital twin.
+// One physical skincare product unit ↔ one on-chain digital twin.
 public struct ProductTwin has key, store {
     id: UID,
-    /// Brand wallet — only an address reference, no brand metadata stored.
     brand_wallet: address,
-    product_name: vector<u8>,
+    product_name: String,
     serial_number: vector<u8>,
     batch_number: vector<u8>,
-    /// Unix timestamp (ms) — set at manufacture time.
     manufacture_date: u64,
-    /// Unix timestamp (ms) — product must not be verifiable after this.
     expiry_date: u64,
-    /// Keccak-256 / SHA-256 hash of the off-chain product detail JSON.
     metadata_hash: vector<u8>,
     verification_count: u64,
-    /// 0 = active | 1 = sold | 2 = flagged | 3 = counterfeit
     status: u8,
     current_owner: address,
 }
 
-// ─── Events ──────────────────────────────────────────────────────────────────
 
 public struct ProductMinted has copy, drop {
     product_id: address,
@@ -95,76 +80,48 @@ public struct OwnershipTransferred has copy, drop {
     to: address,
     transferred_at: u64,
 }
-
-// ─── Init ────────────────────────────────────────────────────────────────────
-
-
-// ─── Capability Management ───────────────────────────────────────────────────
-
-/// AdminCap holder can issue additional MinterCaps to backend services.
-public fun issue_minter_cap(
-    _: &AdminCap,
-    recipient: address,
-    ctx: &mut TxContext,
-) {
-    let cap = MinterCap { id: object::new(ctx) };
-    transfer::transfer(cap, recipient);
-}
-
-/// AdminCap holder can revoke a MinterCap by destroying it.
-public fun revoke_minter_cap(_: &AdminCap, cap: MinterCap) {
-    let MinterCap { id } = cap;
-    object::delete(id);
-}
-
-// ─── Minting ─────────────────────────────────────────────────────────────────
-
-/// Mint a new ProductTwin. Requires a MinterCap.
-/// The resulting object is transferred directly to `initial_owner`
-/// (typically the brand's fulfilment wallet).
-public fun mint_product(
+#[allow(lint(self_transfer))]
+public(package) fun mint_product(
     _cap: &MinterCap,
     registry: &mut SerialRegistry,
     brand_wallet: address,
-    product_name: vector<u8>,
+    product_name: String,
     serial_number: vector<u8>,
     batch_number: vector<u8>,
+    metadata_hash: vector<u8>,
     manufacture_date: u64,
     expiry_date: u64,
-    metadata_hash: vector<u8>,
-    initial_owner: address,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
     let now = clock::timestamp_ms(clock);
 
-    // Enforce expiry is in the future at mint time.
+    
     assert!(expiry_date > now, EProductExpired);
 
-    // Prevent duplicate serial numbers globally.
     assert!(
-        !table::contains(&registry.serials, serial_number),
+        !serial_registry::has_serial(registry, &serial_number),
         EDuplicateSerialNumber,
     );
-
-    let mut twin = ProductTwin {
+    let twin = ProductTwin {
         id: object::new(ctx),
         brand_wallet,
         product_name,
-        serial_number: serial_number,
+        serial_number,
         batch_number,
+        metadata_hash,
         manufacture_date,
         expiry_date,
-        metadata_hash,
         verification_count: 0,
         status: STATUS_ACTIVE,
-        current_owner: initial_owner,
+        current_owner: ctx.sender(),
     };
+   
 
     let product_id = object::uid_to_address(&twin.id);
 
-    // Register the serial number.
-    table::add(&mut registry.serials, twin.serial_number, product_id);
+    
+    serial_registry::add_serial(registry, twin.serial_number, product_id);
 
     event::emit(ProductMinted {
         product_id,
@@ -175,14 +132,10 @@ public fun mint_product(
         minted_at: now,
     });
 
-    transfer::transfer(twin, initial_owner);
+    transfer::transfer(twin, ctx.sender());
 }
 
-// ─── Verification ─────────────────────────────────────────────────────────────
 
-/// Called by the frontend after fetching the ProductTwin from Sui RPC.
-/// The consumer must present the actual object (passed as mutable reference via
-/// programmable transaction). Increments count and emits an event.
 public fun verify_product(
     twin: &mut ProductTwin,
     clock: &Clock,
@@ -279,7 +232,7 @@ public fun product_id(twin: &ProductTwin): address {
     object::uid_to_address(&twin.id)
 }
 public fun brand_wallet(twin: &ProductTwin): address { twin.brand_wallet }
-public fun product_name(twin: &ProductTwin): &vector<u8> { &twin.product_name }
+public fun product_name(twin: &ProductTwin): &String { &twin.product_name }
 public fun serial_number(twin: &ProductTwin): &vector<u8> { &twin.serial_number }
 public fun batch_number(twin: &ProductTwin): &vector<u8> { &twin.batch_number }
 public fun manufacture_date(twin: &ProductTwin): u64 { twin.manufacture_date }
@@ -289,7 +242,5 @@ public fun verification_count(twin: &ProductTwin): u64 { twin.verification_count
 public fun status(twin: &ProductTwin): u8 { twin.status }
 public fun current_owner(twin: &ProductTwin): address { twin.current_owner }
 
-public fun serial_registered(registry: &SerialRegistry, serial: &vector<u8>): bool {
-    table::contains(&registry.serials, *serial)
-}
+
 
