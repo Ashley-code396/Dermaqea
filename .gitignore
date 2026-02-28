@@ -1,7 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+# ignore node_modules for nested projects (e.g. client/)
+client/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -16,6 +18,9 @@
 # next.js
 /.next/
 /out/
+
+# Next build artifacts for the client app
+client/.next/
 
 # production
 /build

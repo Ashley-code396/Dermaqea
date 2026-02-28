@@ -31,7 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light" style={{ colorScheme: "light" }}>
+    // Do not hardcode a theme class on the html element so the ThemeProvider
+  // can manage the class consistently. Default theme is set in
+  // components/ThemeProvider.tsx (defaultTheme="light").
+  // To avoid hydration mismatches we render the same theme attributes
+  // on the server as the client will expect (class + color-scheme).
+  <html lang="en" className="light" style={{ colorScheme: "light" }}>
       <body
         className={`${syne.variable} ${dmMono.variable} ${instrumentSans.variable} font-sans antialiased`}
       >
