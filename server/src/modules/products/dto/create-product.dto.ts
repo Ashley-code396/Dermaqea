@@ -1,6 +1,15 @@
+import { IsString, IsOptional, IsNotEmpty, IsUUID } from 'class-validator';
+
 export class CreateProductDto {
-  name!: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsUUID() // ensures valid UUID for manufacturer
   manufacturer?: string;
-  sku?: string;
 }

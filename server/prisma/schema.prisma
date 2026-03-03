@@ -69,17 +69,25 @@ model Manufacturer {
 
 //Products
 model Product {
-  id               String        @id @default(uuid())
-  manufacturerId   String
-  name             String
-  description      String?
-  status           ProductStatus @default(PENDING)
-  approvalDate     DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id              String   @id @default(uuid())
+  product_name    String
+  brand_wallet    String
+  serialNumber    String   @unique
+  batchNumber     String
+  metadataHash    String?
+  manufactureDate DateTime
+  expiryDate      DateTime
+  extraData       Json?
+  objectId        String?   // returned by Move function
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  manufacturer     Manufacturer  @relation(fields: [manufacturerId], references: [id])
-  batches          Batch[]
+  manufacturerId  String
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  batches         Batch[]
+
+  @@index([manufacturerId])
 }
 
 //Batches

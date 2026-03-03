@@ -538,6 +538,10 @@ export type EnumActivationStatusFieldUpdateOperationsInput = {
   set?: $Enums.ActivationStatus
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type SerialRegistryCreateNestedOneWithoutQrCodeInput = {
   create?: Prisma.XOR<Prisma.SerialRegistryCreateWithoutQrCodeInput, Prisma.SerialRegistryUncheckedCreateWithoutQrCodeInput>
   connectOrCreate?: Prisma.SerialRegistryCreateOrConnectWithoutQrCodeInput

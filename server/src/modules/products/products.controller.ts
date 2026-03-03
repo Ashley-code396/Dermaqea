@@ -1,6 +1,18 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import type { Express } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductsController {
@@ -19,5 +31,22 @@ export class ProductsController {
   @Post()
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);
+  }
+
+
+  @Post('upload-batch')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadBatch(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5_000_000 })], // 5MB
+      }),
+    )
+    file: Express.Multer.File,
+    @Body('product_name') product_name: string,
+    @Body('brand_wallet') brand_wallet: string,
+  ) {
+    // Delegate parsing & DB logic to service
+    return this.productsService.processBatchFile(file, product_name, brand_wallet);
   }
 }

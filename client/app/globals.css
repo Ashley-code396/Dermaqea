@@ -50,30 +50,36 @@
 
 /* Hero side image blending */
 .hero-image {
-  /* Fade the left edge so it blends into the dark background */
-  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-  mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+  /* Make the hero image blend seamlessly with the page background.
+     Remove the mask, rounded frame and drop shadow so the image itself
+     is shown without a visible white/rounded rectangle frame. */
+  -webkit-mask-image: none;
+  mask-image: none;
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
-  object-fit: cover;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  /* Nudge the hero image 1cm right and 1cm down so it sits slightly offset */
+  transform: translate(2cm, 2cm);
+  will-change: transform;
 }
 
 /* Light mode adjustments so the image blends into white backgrounds */
 .light .hero-image {
-  /* Remove the mask in light mode so the image remains fully visible.
-     We'll blend using the wrapper overlay instead. */
+  /* Keep light mode simple as well */
   -webkit-mask-image: none;
   mask-image: none;
-  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+  box-shadow: none;
 }
 
 /* Wrapper so we can add a white overlay on light backgrounds to blend image edges */
 .hero-image-wrapper {
   position: relative;
-  border-radius: 0.75rem;
-  overflow: hidden;
+  /* Remove wrapper rounding and overflow clipping so the image edges are not boxed */
+  border-radius: 0;
+  overflow: visible;
 }
 
 .hero-image-wrapper .hero-image {
@@ -83,16 +89,8 @@
 /* Add a subtle white-to-transparent gradient overlay on the left in light mode
    to mask darker image pixels and blend into the page background. */
 .dark .hero-image-wrapper::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 18%; /* keep a slightly wider fade on dark backgrounds */
-  pointer-events: none;
-  /* Fade from dark page background into the image to blend edges */
-  background: linear-gradient(to right, rgba(8,14,12,0.98) 0%, rgba(8,14,12,0) 100%);
-  mix-blend-mode: normal;
+  /* Remove dark overlay so the image isn't dimmed by a pseudo-element */
+  content: none;
 }
 
 :root {

@@ -46,7 +46,7 @@ public fun mint_new_product(
         );
     }
 
-    public fun batch_mint_new_products(
+public fun batch_mint_new_products(
     cap: &MinterCap,
     registry: &mut SerialRegistry,
     brand_wallet: address,

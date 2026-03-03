@@ -13,14 +13,21 @@ export default function HeroImage({
   const { resolvedTheme } = useTheme();
 
   // Use a light-mode image when available; fall back to the dark image.
-  const lightSrc = "/dermaqealight.png";
+  // prefer the new landing asset if present
+  const lightSrc = "/dermaqea.png";
   const darkSrc = "/dermaqea2.jpg";
   const src = resolvedTheme === "dark" ? darkSrc : lightSrc;
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
+    // If the preferred light image fails to load, try the dark image as a fallback.
     if (img.src.endsWith(lightSrc)) {
       img.src = darkSrc;
+      return;
+    }
+    // If the dark image also fails, attempt to load the generic dermaqea.png (if not already)
+    if (!img.src.endsWith("/dermaqea.png")) {
+      img.src = "/dermaqea.png";
     }
   };
 
