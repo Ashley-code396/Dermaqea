@@ -1,0 +1,192 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/prisma/generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//Enums
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+}
+
+enum ProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BatchStatus {
+  ACTIVE
+  EXHAUSTED
+  RECALLED
+}
+
+enum ActivationStatus {
+  UNSCANNED
+  ACTIVATED
+  FLAGGED
+  COUNTERFEIT
+}
+
+enum AlertType {
+  MULTI_SCAN
+  INVALID_SIGNATURE
+  GEO_MISMATCH
+  REPLAY_ATTEMPT
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  REVIEWER
+  ANALYST
+}
+
+//Manufacturers
+model Manufacturer {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  passwordHash        String
+  suiWalletAddress    String
+  verificationStatus  VerificationStatus @default(PENDING)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  products            Product[]
+}
+
+//Products
+model Product {
+  id               String        @id @default(uuid())
+  manufacturerId   String
+  name             String
+  description      String?
+  status           ProductStatus @default(PENDING)
+  approvalDate     DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  manufacturer     Manufacturer  @relation(fields: [manufacturerId], references: [id])
+  batches          Batch[]
+}
+
+//Batches
+model Batch {
+  id               String       @id @default(uuid())
+  productId        String
+  batchNumber      String
+  manufactureDate  DateTime
+  expiryDate       DateTime
+  unitsProduced    Int
+  status           BatchStatus  @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+
+  product          Product      @relation(fields: [productId], references: [id])
+  serials          SerialRegistry[]
+  twins            ProductTwin[]
+
+  // unique constraint ensures no duplicate batch for same product
+  @@unique([productId, batchNumber])
+}
+
+//Products-Twin (Sui Binding)
+// Represents the on-chain twin object created per batch serial
+model ProductTwin {
+  id              String   @id @default(uuid())
+  batchId         String
+  serialNumber    String
+  twinObjectId    String   @unique
+  onchainTxHash   String
+  mintedAt        DateTime @default(now())
+
+  batch           Batch    @relation(fields: [batchId], references: [id])
+  serial          SerialRegistry?
+
+  @@index([batchId])
+}
+
+//Serial Registry
+// Serial numbers are uploaded by the manufacturer; backend does NOT generate them
+model SerialRegistry {
+  id               String           @id @default(uuid())
+  batchId          String
+  serialNumber     String           @unique
+  twinObjectId     String?          @unique
+  payloadHash      String?          @unique
+  signature        String?
+  qrData           String?
+  activationStatus ActivationStatus @default(UNSCANNED)
+  firstScanAt      DateTime?
+  createdAt        DateTime         @default(now())
+
+  batch            Batch            @relation(fields: [batchId], references: [id])
+  scans            ScanLog[]
+  alerts           SecurityAlert[]
+  twin             ProductTwin?     @relation(fields: [twinObjectId], references: [twinObjectId])
+  qrCode           QrCode?
+
+  @@index([serialNumber])
+}
+
+//QR Codes
+// QR code generated after payload & signature are ready
+model QrCode {
+  id             String   @id @default(uuid())
+  serialId       String   @unique
+  qrImageUrl     String
+  generatedAt    DateTime @default(now())
+  downloadedAt   DateTime?
+
+  serial         SerialRegistry @relation(fields: [serialId], references: [id])
+}
+
+//Scan Logs
+model ScanLog {
+  id                String   @id @default(uuid())
+  serialId          String
+  ipAddress         String?
+  country           String?
+  city              String?
+  deviceInfo        String?
+  isValidSignature  Boolean
+  isGeoAnomaly      Boolean @default(false)
+  scannedAt         DateTime @default(now())
+
+  serial            SerialRegistry @relation(fields: [serialId], references: [id])
+
+  @@index([serialId])
+  @@index([scannedAt])
+}
+
+//Security Alerts
+model SecurityAlert {
+  id         String    @id @default(uuid())
+  serialId   String
+  alertType  AlertType
+  severity   Severity
+  resolved   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  serial     SerialRegistry @relation(fields: [serialId], references: [id])
+}
+
+//Admins
+model Admin {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         AdminRole
+  createdAt    DateTime  @default(now())
+}
