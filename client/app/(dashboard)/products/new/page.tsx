@@ -8,17 +8,16 @@ import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
-  FormDescription,
-  FormField,
   FormItem,
   FormLabel,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 
 type Item = {
-  manufacture_date: string; // ISO date or timestamp string
-  expiry_date: string; // ISO date or timestamp string
+  manufacture_date: string;
+  expiry_date: string;
 };
 
 type FormValues = {
@@ -37,35 +36,11 @@ export default function NewProductPage() {
   const { control, handleSubmit, register } = form;
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
-  const [prepared, setPrepared] = useState<any>(null);
   const [attachedFileInfo, setAttachedFileInfo] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-
-  const onSubmit = (values: FormValues) => {
-    // prepare arrays for Move call
-    const manufacture_dates = values.items.map((i) => {
-      // try parse as ISO date -> epoch seconds
-      const d = Date.parse(i.manufacture_date);
-      return Number.isNaN(d) ? 0 : Math.floor(d / 1000);
-    });
-    const expiry_dates = values.items.map((i) => {
-      const d = Date.parse(i.expiry_date);
-      return Number.isNaN(d) ? 0 : Math.floor(d / 1000);
-    });
-
-    const payload = {
-      // NOTE: `cap`, `registry`, and `clock` are resources/objects and must be provided when constructing
-      // the actual transaction. This UI prepares the pure arguments (brand, product_name and vectors).
-      brand_wallet: MOCK_CONNECTED_ADDRESS,
-      product_name: values.product_name,
-      manufacture_dates,
-      expiry_dates,
-      // The CSV/XLSX file will be parsed on the backend for serial_number and batch_number.
-      attached_file_name: attachedFile?.name ?? null,
-    };
-
-    setPrepared(payload);
-  };
+  const [backendResponse, setBackendResponse] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFile = (file: File | null) => {
     if (!file) return;
@@ -73,7 +48,41 @@ export default function NewProductPage() {
     setAttachedFileInfo(`${file.name} (${Math.round(file.size / 1024)} KB)`);
   };
 
-  // Generate and download a small CSV template matching the Move function requirements
+  const onSubmit = async (values: FormValues) => {
+    if (!attachedFile) {
+      alert("Please attach a CSV/XLSX file with serials.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", attachedFile);
+      formData.append("product_name", values.product_name);
+      formData.append("brand_wallet", MOCK_CONNECTED_ADDRESS);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/products/upload-batch`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to upload batch");
+      }
+
+      const data = await res.json();
+      setBackendResponse(data);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message ?? "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const generateAndDownloadTemplate = () => {
     const headers = ["serial_number", "batch_number", "metadata_hash", "manufacture_date", "expiry_date"];
     const exampleRows = [
@@ -126,97 +135,39 @@ export default function NewProductPage() {
                     className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
                   />
                 </FormControl>
-                <FormDescription>The product name (reused for every item in the batch).</FormDescription>
               </FormItem>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="mb-2 rounded-md border border-slate-100/60 bg-slate-50/40 p-3 text-sm dark:border-slate-800/60 dark:bg-slate-900/40">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2">
-                          <p className="font-medium">CSV requirements</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            The CSV/XLSX must include the following columns (headers):
-                          </p>
-                          <ul className="mt-2 ml-4 list-disc text-xs text-muted-foreground">
-                            <li><strong>serial_number</strong> — the unique item serial (required)</li>
-                            <li><strong>batch_number</strong> — the batch id (required)</li>
-                            <li><strong>metadata_hash</strong> — IPFS/content hash (optional)</li>
-                            <li><strong>manufacture_date</strong> — YYYY-MM-DD (required)</li>
-                            <li><strong>expiry_date</strong> — YYYY-MM-DD (required)</li>
-                          </ul>
-                        </div>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button size="sm" variant="outline" onClick={generateAndDownloadTemplate}>Download CSV template</Button>
-                          <Button size="sm" variant="ghost" onClick={() => alert('Example: serial_number,batch_number,metadata_hash,manufacture_date,expiry_date\nSN0001,BATCH-A,QmExample,2026-01-01,2027-01-01')}>
-                            View example
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-2">
-                      <label className="block text-sm">Upload serials (CSV, XLSX, PDF)</label>
-                      <input
-                        type="file"
-                        accept=".csv,.xls,.xlsx,.pdf"
-                        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-                        className="mt-1 block w-full rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
-                      />
-                      {attachedFileInfo && <p className="text-xs text-muted-foreground mt-1">{attachedFileInfo}</p>}
-                    </div>
-                  </div>
+              <div className="mt-2">
+                <label className="block text-sm">Upload serials (CSV, XLSX)</label>
+                <input
+                  type="file"
+                  accept=".csv,.xls,.xlsx"
+                  onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+                  className="mt-1 block w-full rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
+                />
+                {attachedFileInfo && <p className="text-xs text-muted-foreground mt-1">{attachedFileInfo}</p>}
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="outline" onClick={generateAndDownloadTemplate}>Download CSV template</Button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">Batch items</h3>
-                  <Button size="sm" type="button" onClick={() => append({ manufacture_date: "", expiry_date: "" })}>
-                    Add Item
-                  </Button>
-                </div>
-                {fields.map((field, idx) => (
-                  <Card key={field.id} className="p-3">
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                      <div>
-                        <label className="block text-sm">Manufacture date</label>
-                        <Input type="date" {...register(`items.${idx}.manufacture_date` as const)} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700" />
-                      </div>
-                      <div>
-                        <label className="block text-sm">Expiry date</label>
-                        <Input type="date" {...register(`items.${idx}.expiry_date` as const)} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700" />
-                      </div>
-                    </div>
-                    <div className="mt-2 flex justify-end">
-                      <Button variant="ghost" size="sm" type="button" onClick={() => remove(idx)}>
-                        Remove
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
               </div>
 
               <div className="flex items-center gap-2">
-                <Button type="submit">Prepare Payload</Button>
-                <Button variant="outline" type="button" onClick={() => {
-                  form.reset();
-                  setPrepared(null);
-                }}>
+                <Button type="submit" disabled={loading}>{loading ? "Submitting..." : "Submit Batch"}</Button>
+                <Button variant="outline" type="button" onClick={() => { form.reset(); setBackendResponse(null); setAttachedFile(null); setAttachedFileInfo(null); }}>
                   Reset
                 </Button>
               </div>
             </form>
           </Form>
 
-          {prepared && (
+          {error && <p className="mt-2 text-sm text-destructive">Error: {error}</p>}
+
+          {backendResponse && (
             <div className="mt-6">
-              <h4 className="font-medium">Prepared payload</h4>
-              <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-muted p-3 text-sm">{JSON.stringify(prepared, null, 2)}</pre>
-              <p className="text-sm text-muted-foreground mt-2">
-                NOTE: To actually submit this to the chain you must supply the MinterCap and SerialRegistry objects
-                (resources) and construct a TransactionBlock that calls the Move function
-                <code>dermaqea::dermaqea::batch_mint_new_products</code>. Use the wallet sign-and-execute hooks from
-                <code>@mysten/dapp-kit</code>.
-              </p>
+              <h4 className="font-medium">Backend response</h4>
+              <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-muted p-3 text-sm">
+                {JSON.stringify(backendResponse, null, 2)}
+              </pre>
             </div>
           )}
         </CardContent>

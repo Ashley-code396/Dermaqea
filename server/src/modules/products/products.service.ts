@@ -65,6 +65,12 @@ export class ProductsService {
     // 2️⃣ Map rows to canonical fields
     const mappedRows = rows.map((row) => this.mapRowToCanonical(row));
 
+    // Ensure manufacturer exists for the provided brand_wallet (sui wallet address)
+    const manufacturerRecord = await this.prisma.manufacturer.findFirst({ where: { suiWalletAddress: brand_wallet } });
+    if (!manufacturerRecord) {
+      throw new BadRequestException(`No manufacturer found for wallet: ${brand_wallet}`);
+    }
+
     // 3️⃣ Validate and store in DB
     const storedProducts: Product[] = [];
     for (const r of mappedRows) {
@@ -73,7 +79,7 @@ export class ProductsService {
         data: {
           product_name,
           brand_wallet,
-          manufacturer: { connect: { id: brand_wallet } },
+          manufacturer: { connect: { id: manufacturerRecord.id } },
           serialNumber: validRow.serial_number,
           batchNumber: validRow.batch_number,
           metadataHash: validRow.metadata_hash || null,
@@ -130,7 +136,7 @@ export class ProductsService {
       let mapped = false;
 
       for (const canonicalKey in this.columnMapping) {
-        if (this.columnMapping[canonicalKey].some((name) => name.toLowerCase() === key.toLowerCase())) {
+        if (this.columnMapping[canonicalKey].some((name) => this.headerMatches(name, key))) {
           canonical[canonicalKey] = val;
           mapped = true;
           break;
@@ -142,6 +148,37 @@ export class ProductsService {
 
     canonical.extra_data = extra;
     return canonical;
+  }
+
+  private normalizeHeader(input: any) {
+    if (input === undefined || input === null) return '';
+    return String(input).toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  private splitWords(input: any) {
+    if (input === undefined || input === null) return [];
+    return String(input)
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+  }
+
+  private headerMatches(mappingName: string, key: string) {
+    const mapWords = this.splitWords(mappingName);
+    const keyWords = this.splitWords(key);
+
+    if (mapWords.length === 0 || keyWords.length === 0) return false;
+
+    // Exact match of normalized form
+    if (this.normalizeHeader(mappingName) === this.normalizeHeader(key)) return true;
+
+    // If all key words are included in mapping words (e.g. mapping: "Batch / Lot Number", key: "batch_number")
+    if (keyWords.every((w) => mapWords.includes(w))) return true;
+
+    // If all mapping words are included in key words (e.g. mapping: "serial", key: "serial_number")
+    if (mapWords.every((w) => keyWords.includes(w))) return true;
+
+    return false;
   }
 
   private validateRow(row: any) {
