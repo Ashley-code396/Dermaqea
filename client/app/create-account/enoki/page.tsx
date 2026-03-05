@@ -40,15 +40,31 @@ export default function EnokiLoginPage() {
   const handleConnectGoogle = async () => {
     if (!googleWallet) return;
 
-    setIsLoading(true);
-    setError("");
-
+    // Prefer Enoki's redirect-based social login (full-page navigation) to avoid popups.
+    // Build Google OAuth URL using configured client ID and a backend callback if provided.
     try {
-      await connect({ wallet: googleWallet });
-      router.push("/create-account");
+      setIsLoading(true);
+      setError("");
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  // Force Enoki's public callback endpoint as the OAuth redirect target.
+  // This ensures the Enoki flow (not a local backend) handles the callback.
+  const redirectUri = 'https://api.enoki.mystenlabs.com/portal/auth/callback/google';
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        response_type: 'code',
+        scope: 'openid profile email',
+        redirect_uri: redirectUri,
+        service: 'lso',
+        flowName: 'GeneralOAuthFlow',
+      });
+
+      const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      // perform a full-page redirect so Enoki (or your backend) handles the OAuth callback
+      window.location.assign(googleUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect with Google");
-    } finally {
+      setError(err instanceof Error ? err.message : 'Failed to start Google redirect');
       setIsLoading(false);
     }
   };
