@@ -34,7 +34,7 @@ export default function LandingPage() {
               <Link href="/dashboard">Sign in</Link>
             </Button>
             <Button asChild>
-              <Link href="/create-account">Create account</Link>
+              <Link href="/create-account/enoki">Create account</Link>
             </Button>
           </nav>
         </div>
@@ -59,7 +59,7 @@ export default function LandingPage() {
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
                 <Button size="lg" asChild>
-                  <Link href="/create-account" className="gap-2">
+                  <Link href="/create-account/enoki" className="gap-2">
                     Get started
                   </Link>
                 </Button>
@@ -174,7 +174,7 @@ export default function LandingPage() {
           </ol>
           <div className="mt-16">
             <Button size="lg" asChild>
-              <Link href="/create-account">Create your account</Link>
+              <Link href="/create-account/enoki">Create your account</Link>
             </Button>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function LandingPage() {
               Dermaqea
             </span>
             <div className="flex gap-8 text-sm text-muted-foreground">
-              <Link href="/create-account" className="hover:text-foreground">
+              <Link href="/create-account/enoki" className="hover:text-foreground">
                 Create account
               </Link>
               <Link href="/dashboard" className="hover:text-foreground">

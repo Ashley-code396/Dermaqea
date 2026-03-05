@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import EnokiConnect from "@/components/EnokiConnect";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const createAccountSchema = z.object({
@@ -254,7 +255,9 @@ export default function CreateAccountPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+          <EnokiConnect />
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href="/dashboard" className="text-primary hover:underline">
             Sign in

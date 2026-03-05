@@ -3,6 +3,7 @@ import { Syne, DM_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
+import { SuiProvider } from "./providers";
 
 const syne = Syne({
   variable: "--font-syne",
@@ -41,7 +42,9 @@ export default function RootLayout({
         className={`${syne.variable} ${dmMono.variable} ${instrumentSans.variable} font-sans antialiased`}
       >
         <ThemeProvider>
+          <SuiProvider>
           {children}
+          </SuiProvider>
           <Toaster />
         </ThemeProvider>
       </body>
