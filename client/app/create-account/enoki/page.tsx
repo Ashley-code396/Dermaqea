@@ -1,20 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { Shield, Loader2, Check, LogOut, Wallet } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import {
   useConnectWallet,
   useCurrentAccount,
   useWallets,
   useDisconnectWallet,
-  ConnectButton,
 } from "@mysten/dapp-kit";
 import { isEnokiWallet, type EnokiWallet, type AuthProvider } from "@mysten/enoki";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-export default function EnokiLoginPage() {
+const LoginFlow = () => {
   const router = useRouter();
   const currentAccount = useCurrentAccount();
   const { mutateAsync: connect } = useConnectWallet();
@@ -27,44 +24,23 @@ export default function EnokiLoginPage() {
   );
 
   const googleWallet = walletsByProvider.get("google");
+  const twitchWallet = walletsByProvider.get("twitch");
+  const facebookWallet = walletsByProvider.get("facebook");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (currentAccount?.address) {
-      // User already connected — proceed to create-account step
-      router.push("/create-account");
-    }
-  }, [currentAccount, router]);
 
   const handleConnectGoogle = async () => {
     if (!googleWallet) return;
 
-    // Prefer Enoki's redirect-based social login (full-page navigation) to avoid popups.
-    // Build Google OAuth URL using configured client ID and a backend callback if provided.
+    setIsLoading(true);
+    setError("");
+
     try {
-      setIsLoading(true);
-      setError("");
-
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
-  // Force Enoki's public callback endpoint as the OAuth redirect target.
-  // This ensures the Enoki flow (not a local backend) handles the callback.
-  const redirectUri = 'https://api.enoki.mystenlabs.com/portal/auth/callback/google';
-
-      const params = new URLSearchParams({
-        client_id: clientId,
-        response_type: 'code',
-        scope: 'openid profile email',
-        redirect_uri: redirectUri,
-        service: 'lso',
-        flowName: 'GeneralOAuthFlow',
-      });
-
-      const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-      // perform a full-page redirect so Enoki (or your backend) handles the OAuth callback
-      window.location.assign(googleUrl);
+      await connect({ wallet: googleWallet });
+      router.push("/create-account");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start Google redirect');
+      setError(err instanceof Error ? err.message : "Failed to connect with Google");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -78,49 +54,25 @@ export default function EnokiLoginPage() {
     }
   };
 
+  useEffect(() => {
+    if (currentAccount?.address) {
+      // If already connected, proceed to create-account
+      router.push("/create-account");
+    }
+  }, [currentAccount, router]);
+
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border bg-card/50">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link
-            href="/"
-            className="text-xl font-semibold text-primary"
-            style={{ fontFamily: "var(--font-syne)" }}
-          >
-            Dermaqea
-          </Link>
-        </div>
-      </header>
-
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16">
+    <div className="min-h-screen bg-white text-gray-900">
+      <main className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="w-full max-w-md">
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle>Sign in</CardTitle>
-              <CardDescription>
-                Sign in with Google, Facebook, or Twitch using Enoki.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {/* Enoki Connect + Google zkLogin */}
+          <div className="text-center animate-fade-in">
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-8 shadow-sm">
               <div className="space-y-4">
-                <div className="group">
-                  <ConnectButton
-                    connectText={
-                      <div className="flex items-center justify-center gap-3 group-hover:gap-4 transition-all">
-                        <Wallet className="w-5 h-5" />
-                        <span>Connect Slush Wallet</span>
-                      </div>
-                    }
-                    className="w-full bg-gradient-to-r from-[#4DA2FF] to-[#3A8CE6] text-white font-semibold py-3 px-6 rounded-full hover:from-[#3A8CE6] hover:to-[#4DA2FF] transition-all shadow-md"
-                  />
-                </div>
-
+                {/* Google first */}
                 {googleWallet && (
                   <button
                     onClick={handleConnectGoogle}
-                    className="w-full bg-white/90 hover:bg-white text-gray-900 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                    className="w-full bg-white hover:bg-white text-gray-900 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -133,22 +85,98 @@ export default function EnokiLoginPage() {
                     )}
                   </button>
                 )}
-              </div>
 
-              <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link href="/dashboard" className="text-primary hover:underline">
-                  Go to dashboard
-                </Link>
-              </p>
-            </CardContent>
-          </Card>
+                {/* Facebook & Twitch */}
+                <div className="space-y-3">
+                  {facebookWallet ? (
+                    <button
+                      onClick={async () => {
+                        setIsLoading(true);
+                        setError("");
+                        try {
+                          await connect({ wallet: facebookWallet });
+                          router.push("/create-account");
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Failed to connect with Facebook");
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <FacebookIcon />
+                          Sign in with Facebook
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setError("Facebook sign-in is not configured")}
+                      className="w-full bg-[#1877F2]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                    >
+                      <FacebookIcon />
+                      Facebook (not available)
+                    </button>
+                  )}
+
+                  {twitchWallet ? (
+                    <button
+                      onClick={async () => {
+                        setIsLoading(true);
+                        setError("");
+                        try {
+                          await connect({ wallet: twitchWallet });
+                          router.push("/create-account");
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Failed to connect with Twitch");
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <TwitchIcon />
+                          Sign in with Twitch
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setError("Twitch sign-in is not configured")}
+                      className="w-full bg-[#6441A4]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                    >
+                      <TwitchIcon />
+                      Twitch (not available)
+                    </button>
+                  )}
+
+                </div>
+
+                <div className="mt-6 p-4 bg-white/50 rounded-lg border border-gray-200/30">
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                    <Shield className="w-4 h-4 text-green-400" />
+                    <span>Secured by zkLogin & Enoki</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-500/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-up">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-up">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
             <span>{error}</span>
@@ -157,7 +185,7 @@ export default function EnokiLoginPage() {
       )}
     </div>
   );
-}
+};
 
 function GoogleIcon() {
   return (
@@ -169,3 +197,22 @@ function GoogleIcon() {
     </svg>
   );
 }
+
+function FacebookIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.99 3.66 9.12 8.44 9.88v-6.99H8.9v-2.89h1.54V9.69c0-1.52.9-2.36 2.28-2.36.66 0 1.35.12 1.35.12v1.49h-.76c-.75 0-.98.47-.98.95v1.15h1.67l-.27 2.89h-1.4v6.99C18.34 21.12 22 16.99 22 12z" fill="#fff" />
+    </svg>
+  );
+}
+
+function TwitchIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 3v14.5L7 18l2 2 2-2h3l4-4V3H4z" fill="#9146FF" />
+      <path d="M15 7h1v5h-1zM11 7h1v5h-1z" fill="#fff" />
+    </svg>
+  );
+}
+
+export default LoginFlow;

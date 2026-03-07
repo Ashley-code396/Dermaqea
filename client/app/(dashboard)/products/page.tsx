@@ -23,47 +23,88 @@ interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fetchProducts = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+    const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
+    let url = "";
+    try {
+      if (!backend) {
+        console.error("NEXT_PUBLIC_BACKEND_URL is not set. Cannot fetch products from backend.");
+        setProducts([]);
+        setErrorMessage("Backend URL not configured (NEXT_PUBLIC_BACKEND_URL).");
+        return;
+      }
+
+      url = `${backend.replace(/\/$/, "")}/products`;
+      console.log("Fetching products from:", url);
+      const res = await fetch(url);
+
+      // If the response is not ok, log the status and body to help debugging.
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`Failed to fetch products: ${res.status} ${res.statusText}`, text);
+        setErrorMessage(`Server returned ${res.status} ${res.statusText}`);
+        return;
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but received:", text);
+        setErrorMessage("Invalid response from server (not JSON).");
+        return;
+      }
+
+      const data: Product[] = await res.json();
+      setProducts(data);
+    } catch (error) {
+      const errName = (error as any)?.name ?? "UnknownError";
+      const errMsg = (error as any)?.message ?? String(error ?? "");
+      // Browser DOMExceptions sometimes stringify to empty objects; log fields explicitly.
+      console.error("Failed to fetch products", {
+        name: errName,
+        message: errMsg,
+        url,
+        backend,
+        online: typeof navigator !== "undefined" ? navigator.onLine : "unknown",
+        location: typeof window !== "undefined" ? window.location.href : "ssr",
+      });
+      setErrorMessage(errMsg || "Network error while fetching products");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
-        if (!backend) {
-          console.error("NEXT_PUBLIC_BACKEND_URL is not set. Cannot fetch products from backend.");
-          setProducts([]);
-          return;
-        }
-
-        const url = `${backend.replace(/\/$/, "")}/products`;
-        const res = await fetch(url);
-
-        // If the response is not ok, log the status and body to help debugging.
-        if (!res.ok) {
-          const text = await res.text();
-          console.error(`Failed to fetch products: ${res.status} ${res.statusText}`, text);
-          return;
-        }
-
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error("Expected JSON but received:", text);
-          return;
-        }
-
-        const data: Product[] = await res.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProducts();
+    void fetchProducts();
   }, []);
 
   if (loading) return <div>Loading products...</div>;
+
+  if (errorMessage) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">All Products</h2>
+        </div>
+        <Card className="border-border bg-card">
+          <CardContent>
+            <div className="p-6 text-center">
+              <p className="mb-4 text-red-600">Failed to fetch products: {errorMessage}</p>
+              <div className="flex items-center justify-center gap-2">
+                <Button onClick={() => void fetchProducts()}>Retry</Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/">Back to dashboard</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
