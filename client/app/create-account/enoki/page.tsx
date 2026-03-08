@@ -29,6 +29,7 @@ const LoginFlow = () => {
   const facebookWallet = walletsByProvider.get("facebook");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [enokiReady, setEnokiReady] = useState(false);
 
   const { setConnectedAddress } = useWalletSync();
 
@@ -51,6 +52,32 @@ const LoginFlow = () => {
       },
     });
   };
+
+  // Wait for Enoki registration to complete (set by RegisterEnokiWallets in providers.tsx)
+  useEffect(() => {
+    // If already set, mark ready
+    if (typeof window !== 'undefined' && (window as any).__ENOKI_REGISTERED) {
+      setEnokiReady(true);
+      return;
+    }
+
+    // Poll briefly for readiness (registration happens during providers mount)
+    let cancelled = false;
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (cancelled) return;
+      if ((window as any).__ENOKI_REGISTERED) {
+        setEnokiReady(true);
+        clearInterval(interval);
+        return;
+      }
+      // timeout after 5s
+      if (Date.now() - start > 5000) {
+        clearInterval(interval);
+      }
+    }, 100);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   const handleDisconnect = async () => {
     try {
@@ -89,11 +116,12 @@ const LoginFlow = () => {
                 {/* Google button (prominent) */}
                 {googleWallet && (
                   <div className="pt-2">
-                    <button
-                      onClick={handleConnectGoogle}
-                      className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                      disabled={isLoading}
-                    >
+                      <button
+                        onClick={handleConnectGoogle}
+                        className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
+                        disabled={!enokiReady || isLoading}
+                        title={!enokiReady ? "Initializing sign-in providers…" : undefined}
+                      >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
@@ -103,6 +131,9 @@ const LoginFlow = () => {
                         </>
                       )}
                     </button>
+                      {!enokiReady && (
+                        <p className="mt-2 text-xs text-muted-foreground">Initializing sign-in providers… please wait a moment and try again if the button is disabled.</p>
+                      )}
                   </div>
                 )}
 
@@ -125,7 +156,7 @@ const LoginFlow = () => {
                         });
                       }}
                       className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                      disabled={isLoading}
+                      disabled={!enokiReady || isLoading}
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -163,7 +194,7 @@ const LoginFlow = () => {
                         });
                       }}
                       className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                      disabled={isLoading}
+                      disabled={!enokiReady || isLoading}
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

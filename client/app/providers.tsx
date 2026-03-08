@@ -53,14 +53,32 @@ function RegisterEnokiWallets() {
       });
 
       // registerEnokiWallets may return an unregister function or an object with unregister.
-      if (result && typeof (result as any).unregister === 'function') {
-        return (result as any).unregister;
+      // Mark Enoki as registered on the window so UI can wait for registration to complete
+      try {
+        (window as any).__ENOKI_REGISTERED = true;
+      } catch (e) {
+        // ignore in non-browser environments
       }
 
-      // If the call returned a function directly, return it as cleanup
-      if (typeof result === 'function') {
-        return result as any;
+      // Create a cleanup wrapper that will unset the flag and then call the original unregister
+      const makeCleanup = (orig?: (() => void) | null) => {
+        return () => {
+          try { (window as any).__ENOKI_REGISTERED = false; } catch (e) {}
+          try { if (typeof orig === 'function') orig(); } catch (e) { /* ignore */ }
+        };
+      };
+
+      if (result && typeof (result as any).unregister === 'function') {
+        return makeCleanup((result as any).unregister.bind(result));
       }
+
+      // If the call returned a function directly, return a wrapped cleanup
+      if (typeof result === 'function') {
+        return makeCleanup(result as any);
+      }
+
+      // Otherwise return a cleanup that only unsets the flag
+      return makeCleanup();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[Enoki] registerEnokiWallets failed:', err);
