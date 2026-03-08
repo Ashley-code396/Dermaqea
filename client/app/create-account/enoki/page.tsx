@@ -10,6 +10,7 @@ import {
   useDisconnectWallet,
 } from "@mysten/dapp-kit";
 import { isEnokiWallet, type EnokiWallet, type AuthProvider } from "@mysten/enoki";
+import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 
 const LoginFlow = () => {
   const router = useRouter();
@@ -28,6 +29,8 @@ const LoginFlow = () => {
   const facebookWallet = walletsByProvider.get("facebook");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const { setConnectedAddress } = useWalletSync();
 
   const handleConnectGoogle = () => {
     if (!googleWallet) return;
@@ -52,6 +55,9 @@ const LoginFlow = () => {
   const handleDisconnect = async () => {
     try {
       await disconnect();
+      // clear persisted address
+      try { localStorage.removeItem("connectedAddress"); } catch (e) {}
+      setConnectedAddress(null);
       router.refresh();
     } catch (err) {
       setError("Failed to disconnect");
@@ -60,10 +66,13 @@ const LoginFlow = () => {
 
   useEffect(() => {
     if (currentAccount?.address) {
+      // persist the connected address for use across the app
+      try { localStorage.setItem("connectedAddress", currentAccount.address); } catch (e) {}
+      setConnectedAddress(currentAccount.address);
       // If already connected, proceed to create-account
       router.push("/create-account");
     }
-  }, [currentAccount, router]);
+  }, [currentAccount?.address, router, setConnectedAddress]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-card/50 text-gray-900 dark:text-gray-100">

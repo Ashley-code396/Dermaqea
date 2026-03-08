@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useFieldArray, useForm } from "react-hook-form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -27,7 +29,9 @@ type FormValues = {
 };
 
 export default function NewProductPage() {
-  const MOCK_CONNECTED_ADDRESS = "0x111122223333444455556666777788889999AAAa";
+  const currentAccount = useCurrentAccount();
+  const { connectedAddress } = useWalletSync();
+  const effectiveAddress = currentAccount?.address ?? connectedAddress ?? "";
 
   const form = useForm<FormValues>({
     defaultValues: { product_name: "", items: [{ manufacture_date: "", expiry_date: "" }] },
@@ -60,8 +64,11 @@ export default function NewProductPage() {
     try {
       const formData = new FormData();
       formData.append("file", attachedFile);
-      formData.append("product_name", values.product_name);
-      formData.append("brand_wallet", MOCK_CONNECTED_ADDRESS);
+  formData.append("product_name", values.product_name);
+  // Use the live connected address (dapp-kit currentAccount preferred, fallback to persisted connectedAddress)
+  const brandWalletToSend = effectiveAddress;
+  if (!brandWalletToSend) throw new Error("No connected wallet address. Please connect your wallet before submitting.");
+  formData.append("brand_wallet", brandWalletToSend);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/products/upload-batch`, {
         method: "POST",
@@ -119,8 +126,9 @@ export default function NewProductPage() {
                 <FormLabel>Brand wallet (connected)</FormLabel>
                 <FormControl>
                   <Input
-                    value={MOCK_CONNECTED_ADDRESS}
+                    value={effectiveAddress}
                     readOnly
+                    placeholder="Not connected"
                     className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
                   />
                 </FormControl>

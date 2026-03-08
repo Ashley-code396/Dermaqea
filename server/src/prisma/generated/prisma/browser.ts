@@ -23,6 +23,11 @@ export * from './enums.js';
  */
 export type Manufacturer = Prisma.ManufacturerModel
 /**
+ * Model ManufacturerDocument
+ * 
+ */
+export type ManufacturerDocument = Prisma.ManufacturerDocumentModel
+/**
  * Model Product
  * 
  */

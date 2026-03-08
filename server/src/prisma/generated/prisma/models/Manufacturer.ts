@@ -28,9 +28,11 @@ export type ManufacturerMinAggregateOutputType = {
   id: string | null
   name: string | null
   email: string | null
-  passwordHash: string | null
   suiWalletAddress: string | null
   verificationStatus: $Enums.VerificationStatus | null
+  country: string | null
+  businessRegNumber: string | null
+  website: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -39,9 +41,11 @@ export type ManufacturerMaxAggregateOutputType = {
   id: string | null
   name: string | null
   email: string | null
-  passwordHash: string | null
   suiWalletAddress: string | null
   verificationStatus: $Enums.VerificationStatus | null
+  country: string | null
+  businessRegNumber: string | null
+  website: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,9 +54,11 @@ export type ManufacturerCountAggregateOutputType = {
   id: number
   name: number
   email: number
-  passwordHash: number
   suiWalletAddress: number
   verificationStatus: number
+  country: number
+  businessRegNumber: number
+  website: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -63,9 +69,11 @@ export type ManufacturerMinAggregateInputType = {
   id?: true
   name?: true
   email?: true
-  passwordHash?: true
   suiWalletAddress?: true
   verificationStatus?: true
+  country?: true
+  businessRegNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -74,9 +82,11 @@ export type ManufacturerMaxAggregateInputType = {
   id?: true
   name?: true
   email?: true
-  passwordHash?: true
   suiWalletAddress?: true
   verificationStatus?: true
+  country?: true
+  businessRegNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -85,9 +95,11 @@ export type ManufacturerCountAggregateInputType = {
   id?: true
   name?: true
   email?: true
-  passwordHash?: true
   suiWalletAddress?: true
   verificationStatus?: true
+  country?: true
+  businessRegNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -169,9 +181,11 @@ export type ManufacturerGroupByOutputType = {
   id: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus: $Enums.VerificationStatus
+  country: string | null
+  businessRegNumber: string | null
+  website: string | null
   createdAt: Date
   updatedAt: Date
   _count: ManufacturerCountAggregateOutputType | null
@@ -201,24 +215,30 @@ export type ManufacturerWhereInput = {
   id?: Prisma.StringFilter<"Manufacturer"> | string
   name?: Prisma.StringFilter<"Manufacturer"> | string
   email?: Prisma.StringFilter<"Manufacturer"> | string
-  passwordHash?: Prisma.StringFilter<"Manufacturer"> | string
   suiWalletAddress?: Prisma.StringFilter<"Manufacturer"> | string
   verificationStatus?: Prisma.EnumVerificationStatusFilter<"Manufacturer"> | $Enums.VerificationStatus
+  country?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
+  businessRegNumber?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
+  website?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Manufacturer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Manufacturer"> | Date | string
   products?: Prisma.ProductListRelationFilter
+  documents?: Prisma.ManufacturerDocumentListRelationFilter
 }
 
 export type ManufacturerOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   suiWalletAddress?: Prisma.SortOrder
   verificationStatus?: Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessRegNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  website?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   products?: Prisma.ProductOrderByRelationAggregateInput
+  documents?: Prisma.ManufacturerDocumentOrderByRelationAggregateInput
 }
 
 export type ManufacturerWhereUniqueInput = Prisma.AtLeast<{
@@ -228,21 +248,26 @@ export type ManufacturerWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ManufacturerWhereInput[]
   NOT?: Prisma.ManufacturerWhereInput | Prisma.ManufacturerWhereInput[]
   name?: Prisma.StringFilter<"Manufacturer"> | string
-  passwordHash?: Prisma.StringFilter<"Manufacturer"> | string
   suiWalletAddress?: Prisma.StringFilter<"Manufacturer"> | string
   verificationStatus?: Prisma.EnumVerificationStatusFilter<"Manufacturer"> | $Enums.VerificationStatus
+  country?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
+  businessRegNumber?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
+  website?: Prisma.StringNullableFilter<"Manufacturer"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Manufacturer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Manufacturer"> | Date | string
   products?: Prisma.ProductListRelationFilter
+  documents?: Prisma.ManufacturerDocumentListRelationFilter
 }, "id" | "email">
 
 export type ManufacturerOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   suiWalletAddress?: Prisma.SortOrder
   verificationStatus?: Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessRegNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  website?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ManufacturerCountOrderByAggregateInput
@@ -257,9 +282,11 @@ export type ManufacturerScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Manufacturer"> | string
   name?: Prisma.StringWithAggregatesFilter<"Manufacturer"> | string
   email?: Prisma.StringWithAggregatesFilter<"Manufacturer"> | string
-  passwordHash?: Prisma.StringWithAggregatesFilter<"Manufacturer"> | string
   suiWalletAddress?: Prisma.StringWithAggregatesFilter<"Manufacturer"> | string
   verificationStatus?: Prisma.EnumVerificationStatusWithAggregatesFilter<"Manufacturer"> | $Enums.VerificationStatus
+  country?: Prisma.StringNullableWithAggregatesFilter<"Manufacturer"> | string | null
+  businessRegNumber?: Prisma.StringNullableWithAggregatesFilter<"Manufacturer"> | string | null
+  website?: Prisma.StringNullableWithAggregatesFilter<"Manufacturer"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Manufacturer"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Manufacturer"> | Date | string
 }
@@ -268,57 +295,71 @@ export type ManufacturerCreateInput = {
   id?: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.ProductCreateNestedManyWithoutManufacturerInput
+  documents?: Prisma.ManufacturerDocumentCreateNestedManyWithoutManufacturerInput
 }
 
 export type ManufacturerUncheckedCreateInput = {
   id?: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutManufacturerInput
+  documents?: Prisma.ManufacturerDocumentUncheckedCreateNestedManyWithoutManufacturerInput
 }
 
 export type ManufacturerUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.ProductUpdateManyWithoutManufacturerNestedInput
+  documents?: Prisma.ManufacturerDocumentUpdateManyWithoutManufacturerNestedInput
 }
 
 export type ManufacturerUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.ProductUncheckedUpdateManyWithoutManufacturerNestedInput
+  documents?: Prisma.ManufacturerDocumentUncheckedUpdateManyWithoutManufacturerNestedInput
 }
 
 export type ManufacturerCreateManyInput = {
   id?: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -327,9 +368,11 @@ export type ManufacturerUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -338,9 +381,11 @@ export type ManufacturerUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -349,9 +394,11 @@ export type ManufacturerCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   suiWalletAddress?: Prisma.SortOrder
   verificationStatus?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  businessRegNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -360,9 +407,11 @@ export type ManufacturerMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   suiWalletAddress?: Prisma.SortOrder
   verificationStatus?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  businessRegNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -371,9 +420,11 @@ export type ManufacturerMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   suiWalletAddress?: Prisma.SortOrder
   verificationStatus?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  businessRegNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -391,8 +442,26 @@ export type EnumVerificationStatusFieldUpdateOperationsInput = {
   set?: $Enums.VerificationStatus
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type ManufacturerCreateNestedOneWithoutDocumentsInput = {
+  create?: Prisma.XOR<Prisma.ManufacturerCreateWithoutDocumentsInput, Prisma.ManufacturerUncheckedCreateWithoutDocumentsInput>
+  connectOrCreate?: Prisma.ManufacturerCreateOrConnectWithoutDocumentsInput
+  connect?: Prisma.ManufacturerWhereUniqueInput
+}
+
+export type ManufacturerUpdateOneRequiredWithoutDocumentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ManufacturerCreateWithoutDocumentsInput, Prisma.ManufacturerUncheckedCreateWithoutDocumentsInput>
+  connectOrCreate?: Prisma.ManufacturerCreateOrConnectWithoutDocumentsInput
+  upsert?: Prisma.ManufacturerUpsertWithoutDocumentsInput
+  connect?: Prisma.ManufacturerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ManufacturerUpdateToOneWithWhereWithoutDocumentsInput, Prisma.ManufacturerUpdateWithoutDocumentsInput>, Prisma.ManufacturerUncheckedUpdateWithoutDocumentsInput>
 }
 
 export type ManufacturerCreateNestedOneWithoutProductsInput = {
@@ -409,26 +478,104 @@ export type ManufacturerUpdateOneRequiredWithoutProductsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ManufacturerUpdateToOneWithWhereWithoutProductsInput, Prisma.ManufacturerUpdateWithoutProductsInput>, Prisma.ManufacturerUncheckedUpdateWithoutProductsInput>
 }
 
+export type ManufacturerCreateWithoutDocumentsInput = {
+  id?: string
+  name: string
+  email: string
+  suiWalletAddress: string
+  verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  products?: Prisma.ProductCreateNestedManyWithoutManufacturerInput
+}
+
+export type ManufacturerUncheckedCreateWithoutDocumentsInput = {
+  id?: string
+  name: string
+  email: string
+  suiWalletAddress: string
+  verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutManufacturerInput
+}
+
+export type ManufacturerCreateOrConnectWithoutDocumentsInput = {
+  where: Prisma.ManufacturerWhereUniqueInput
+  create: Prisma.XOR<Prisma.ManufacturerCreateWithoutDocumentsInput, Prisma.ManufacturerUncheckedCreateWithoutDocumentsInput>
+}
+
+export type ManufacturerUpsertWithoutDocumentsInput = {
+  update: Prisma.XOR<Prisma.ManufacturerUpdateWithoutDocumentsInput, Prisma.ManufacturerUncheckedUpdateWithoutDocumentsInput>
+  create: Prisma.XOR<Prisma.ManufacturerCreateWithoutDocumentsInput, Prisma.ManufacturerUncheckedCreateWithoutDocumentsInput>
+  where?: Prisma.ManufacturerWhereInput
+}
+
+export type ManufacturerUpdateToOneWithWhereWithoutDocumentsInput = {
+  where?: Prisma.ManufacturerWhereInput
+  data: Prisma.XOR<Prisma.ManufacturerUpdateWithoutDocumentsInput, Prisma.ManufacturerUncheckedUpdateWithoutDocumentsInput>
+}
+
+export type ManufacturerUpdateWithoutDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  products?: Prisma.ProductUpdateManyWithoutManufacturerNestedInput
+}
+
+export type ManufacturerUncheckedUpdateWithoutDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  products?: Prisma.ProductUncheckedUpdateManyWithoutManufacturerNestedInput
+}
+
 export type ManufacturerCreateWithoutProductsInput = {
   id?: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  documents?: Prisma.ManufacturerDocumentCreateNestedManyWithoutManufacturerInput
 }
 
 export type ManufacturerUncheckedCreateWithoutProductsInput = {
   id?: string
   name: string
   email: string
-  passwordHash: string
   suiWalletAddress: string
   verificationStatus?: $Enums.VerificationStatus
+  country?: string | null
+  businessRegNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  documents?: Prisma.ManufacturerDocumentUncheckedCreateNestedManyWithoutManufacturerInput
 }
 
 export type ManufacturerCreateOrConnectWithoutProductsInput = {
@@ -451,22 +598,28 @@ export type ManufacturerUpdateWithoutProductsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  documents?: Prisma.ManufacturerDocumentUpdateManyWithoutManufacturerNestedInput
 }
 
 export type ManufacturerUncheckedUpdateWithoutProductsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   suiWalletAddress?: Prisma.StringFieldUpdateOperationsInput | string
   verificationStatus?: Prisma.EnumVerificationStatusFieldUpdateOperationsInput | $Enums.VerificationStatus
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessRegNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  documents?: Prisma.ManufacturerDocumentUncheckedUpdateManyWithoutManufacturerNestedInput
 }
 
 
@@ -476,10 +629,12 @@ export type ManufacturerUncheckedUpdateWithoutProductsInput = {
 
 export type ManufacturerCountOutputType = {
   products: number
+  documents: number
 }
 
 export type ManufacturerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   products?: boolean | ManufacturerCountOutputTypeCountProductsArgs
+  documents?: boolean | ManufacturerCountOutputTypeCountDocumentsArgs
 }
 
 /**
@@ -499,17 +654,27 @@ export type ManufacturerCountOutputTypeCountProductsArgs<ExtArgs extends runtime
   where?: Prisma.ProductWhereInput
 }
 
+/**
+ * ManufacturerCountOutputType without action
+ */
+export type ManufacturerCountOutputTypeCountDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ManufacturerDocumentWhereInput
+}
+
 
 export type ManufacturerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   email?: boolean
-  passwordHash?: boolean
   suiWalletAddress?: boolean
   verificationStatus?: boolean
+  country?: boolean
+  businessRegNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   products?: boolean | Prisma.Manufacturer$productsArgs<ExtArgs>
+  documents?: boolean | Prisma.Manufacturer$documentsArgs<ExtArgs>
   _count?: boolean | Prisma.ManufacturerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["manufacturer"]>
 
@@ -517,9 +682,11 @@ export type ManufacturerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   name?: boolean
   email?: boolean
-  passwordHash?: boolean
   suiWalletAddress?: boolean
   verificationStatus?: boolean
+  country?: boolean
+  businessRegNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["manufacturer"]>
@@ -528,9 +695,11 @@ export type ManufacturerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   name?: boolean
   email?: boolean
-  passwordHash?: boolean
   suiWalletAddress?: boolean
   verificationStatus?: boolean
+  country?: boolean
+  businessRegNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["manufacturer"]>
@@ -539,16 +708,19 @@ export type ManufacturerSelectScalar = {
   id?: boolean
   name?: boolean
   email?: boolean
-  passwordHash?: boolean
   suiWalletAddress?: boolean
   verificationStatus?: boolean
+  country?: boolean
+  businessRegNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ManufacturerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "suiWalletAddress" | "verificationStatus" | "createdAt" | "updatedAt", ExtArgs["result"]["manufacturer"]>
+export type ManufacturerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "suiWalletAddress" | "verificationStatus" | "country" | "businessRegNumber" | "website" | "createdAt" | "updatedAt", ExtArgs["result"]["manufacturer"]>
 export type ManufacturerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   products?: boolean | Prisma.Manufacturer$productsArgs<ExtArgs>
+  documents?: boolean | Prisma.Manufacturer$documentsArgs<ExtArgs>
   _count?: boolean | Prisma.ManufacturerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ManufacturerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -558,14 +730,17 @@ export type $ManufacturerPayload<ExtArgs extends runtime.Types.Extensions.Intern
   name: "Manufacturer"
   objects: {
     products: Prisma.$ProductPayload<ExtArgs>[]
+    documents: Prisma.$ManufacturerDocumentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
     email: string
-    passwordHash: string
     suiWalletAddress: string
     verificationStatus: $Enums.VerificationStatus
+    country: string | null
+    businessRegNumber: string | null
+    website: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["manufacturer"]>
@@ -963,6 +1138,7 @@ readonly fields: ManufacturerFieldRefs;
 export interface Prisma__ManufacturerClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   products<T extends Prisma.Manufacturer$productsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Manufacturer$productsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  documents<T extends Prisma.Manufacturer$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Manufacturer$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ManufacturerDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -995,9 +1171,11 @@ export interface ManufacturerFieldRefs {
   readonly id: Prisma.FieldRef<"Manufacturer", 'String'>
   readonly name: Prisma.FieldRef<"Manufacturer", 'String'>
   readonly email: Prisma.FieldRef<"Manufacturer", 'String'>
-  readonly passwordHash: Prisma.FieldRef<"Manufacturer", 'String'>
   readonly suiWalletAddress: Prisma.FieldRef<"Manufacturer", 'String'>
   readonly verificationStatus: Prisma.FieldRef<"Manufacturer", 'VerificationStatus'>
+  readonly country: Prisma.FieldRef<"Manufacturer", 'String'>
+  readonly businessRegNumber: Prisma.FieldRef<"Manufacturer", 'String'>
+  readonly website: Prisma.FieldRef<"Manufacturer", 'String'>
   readonly createdAt: Prisma.FieldRef<"Manufacturer", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Manufacturer", 'DateTime'>
 }
@@ -1409,6 +1587,30 @@ export type Manufacturer$productsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.ProductScalarFieldEnum | Prisma.ProductScalarFieldEnum[]
+}
+
+/**
+ * Manufacturer.documents
+ */
+export type Manufacturer$documentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ManufacturerDocument
+   */
+  select?: Prisma.ManufacturerDocumentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ManufacturerDocument
+   */
+  omit?: Prisma.ManufacturerDocumentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ManufacturerDocumentInclude<ExtArgs> | null
+  where?: Prisma.ManufacturerDocumentWhereInput
+  orderBy?: Prisma.ManufacturerDocumentOrderByWithRelationInput | Prisma.ManufacturerDocumentOrderByWithRelationInput[]
+  cursor?: Prisma.ManufacturerDocumentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ManufacturerDocumentScalarFieldEnum | Prisma.ManufacturerDocumentScalarFieldEnum[]
 }
 
 /**

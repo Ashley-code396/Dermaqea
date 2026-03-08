@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Manufacturer.js'
+export type * from './models/ManufacturerDocument.js'
 export type * from './models/Product.js'
 export type * from './models/Batch.js'
 export type * from './models/ProductTwin.js'

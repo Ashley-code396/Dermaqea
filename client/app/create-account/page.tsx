@@ -17,14 +17,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import EnokiConnect from "@/components/EnokiConnect";
+import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const createAccountSchema = z.object({
   brandName: z.string().min(2, "Brand name must be at least 2 characters"),
   country: z.string().min(2, "Country is required"),
   businessRegNumber: z.string().min(2, "Business registration number is required"),
-  website: z.string().url("Enter a valid URL").or(z.literal("")),
-  contactEmail: z.string().email("Enter a valid email"),
+  website: z.union([
+    z.url({ message: "Enter a valid URL" }),
+    z.literal("")
+  ]),
+  contactEmail: z.email({ message: "Enter a valid email" }),
 });
 
 type CreateAccountForm = z.infer<typeof createAccountSchema>;
@@ -32,6 +36,7 @@ type CreateAccountForm = z.infer<typeof createAccountSchema>;
 export default function CreateAccountPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState<"form" | "success">("form");
+  const { connectedAddress } = useWalletSync();
 
   const form = useForm<CreateAccountForm>({
     resolver: zodResolver(createAccountSchema),
@@ -47,9 +52,27 @@ export default function CreateAccountPage() {
   async function onSubmit(data: CreateAccountForm) {
     setIsSubmitting(true);
     try {
-      // Simulate API call - in production: create manufacturer record, upload docs, etc.
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setStep("success");
+      // Send data to backend API to create manufacturer record
+      const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${base.replace(/\/$/, '')}/manufacturers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.brandName,
+          contactEmail: data.contactEmail,
+          country: data.country,
+          businessRegNumber: data.businessRegNumber,
+          website: data.website,
+          suiWalletAddress: connectedAddress ?? '',
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Failed to create account: ${res.status} ${txt}`);
+      }
+
+      setStep('success');
     } finally {
       setIsSubmitting(false);
     }

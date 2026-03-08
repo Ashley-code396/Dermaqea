@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOCK_MANUFACTURER } from "@/lib/mock-data";
+import useManufacturer from "@/lib/useManufacturer";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,6 +30,23 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const currentAccount = useCurrentAccount();
+  const { connectedAddress } = useWalletSync();
+  const { manufacturer } = useManufacturer();
+
+    const isVerified = manufacturer
+      ? (manufacturer.verified ?? manufacturer.verificationStatus === 'VERIFIED')
+      : MOCK_MANUFACTURER.verified;
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+      setMounted(true);
+    }, []);
+
+    // To avoid hydration mismatches, do NOT show dynamic wallet address until after mount.
+    const connectedAddr = mounted
+      ? (currentAccount?.address ?? connectedAddress ?? (manufacturer ? (manufacturer.sui_address ?? manufacturer.suiWalletAddress) : MOCK_MANUFACTURER.sui_address) ?? "")
+      : "";
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-card">
@@ -61,27 +82,31 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-border p-4">
-        <div className="rounded-lg bg-secondary/50 p-3">
+          <div className="rounded-lg bg-secondary/50 p-3">
           <div className="mb-1 flex items-center gap-2">
             <div
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs font-medium",
-                MOCK_MANUFACTURER.verified
+                (manufacturer ? manufacturer.verificationStatus === 'VERIFIED' : MOCK_MANUFACTURER.verified)
                   ? "bg-primary/20 text-primary"
                   : "bg-warning/20 text-warning"
               )}
               style={
-                MOCK_MANUFACTURER.verified
+                (manufacturer ? manufacturer.verificationStatus === 'VERIFIED' : MOCK_MANUFACTURER.verified)
                   ? { boxShadow: "0 0 12px #3DDC8440" }
                   : undefined
               }
             >
-              {MOCK_MANUFACTURER.verified ? "Verified" : "Pending"}
+                {isVerified ? "Verified" : "Pending"}
             </div>
           </div>
           <p className="font-mono text-xs text-muted-foreground">
-            {MOCK_MANUFACTURER.sui_address.slice(0, 6)}...
-            {MOCK_MANUFACTURER.sui_address.slice(-4)}
+            {(() => {
+                const addr = connectedAddr;
+              if (!addr) return "Not connected";
+              if (addr.length <= 12) return addr;
+              return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+            })()}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">Testnet</p>
         </div>

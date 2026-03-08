@@ -1,14 +1,45 @@
-import {
-  MOCK_MANUFACTURER,
-  MOCK_VERIFICATION_TIMELINE,
-  MOCK_VERIFICATION_DOCS,
-} from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Clock, ExternalLink, Copy } from "lucide-react";
 
-export default function ProfilePage() {
+async function fetchManufacturer() {
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  try {
+    const res = await fetch(`${base.replace(/\/$/, '')}/manufacturers`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return (body.data && body.data.length > 0) ? body.data[0] : null;
+  } catch (e) {
+    console.error('Failed to fetch manufacturer', e);
+    return null;
+  }
+}
+
+export default async function ProfilePage() {
+  const manufacturer = await fetchManufacturer();
+
+  const MOCK_VERIFICATION_TIMELINE = [
+    { step: "Account Created", done: true, date: "Jan 15, 2025" },
+    { step: "Documents Submitted", done: true, date: "Jan 16, 2025" },
+    { step: "Dermaqea Review", done: false, inProgress: true, note: "Estimated 2-3 business days" },
+    { step: "Verified Manufacturer", done: false },
+    { step: "First Product Submission", done: false },
+  ];
+
+  const MOCK_VERIFICATION_DOCS = [] as any[];
+
+  const m = manufacturer ?? {
+    brand_name: '—',
+    country: '—',
+    business_reg_number: '—',
+    website: '',
+    sui_address: '',
+    email: '',
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -24,31 +55,31 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Brand Name</p>
-              <p className="font-medium">{MOCK_MANUFACTURER.brand_name}</p>
+              <p className="font-medium">{m.name ?? m.brand_name}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Country of Manufacture</p>
-              <p className="font-medium">{MOCK_MANUFACTURER.country}</p>
+              <p className="font-medium">{m.country}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Business Registration Number</p>
-              <p className="font-mono">{MOCK_MANUFACTURER.business_reg_number}</p>
+              <p className="font-mono">{m.businessRegNumber ?? m.business_reg_number}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Website</p>
               <a
-                href={MOCK_MANUFACTURER.website}
+                href={m.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-primary hover:underline"
               >
-                {MOCK_MANUFACTURER.website}
+                {m.website}
                 <ExternalLink className="h-4 w-4" />
               </a>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Contact Email</p>
-              <p>contact@dermaqea.com</p>
+              <p>{m.email ?? m.contactEmail ?? '—'}</p>
             </div>
           </CardContent>
         </Card>
@@ -61,9 +92,7 @@ export default function ProfilePage() {
             <div>
               <p className="mb-2 text-sm text-muted-foreground">Connected Address</p>
               <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-3 font-mono text-sm">
-                <span className="break-all">
-                  {MOCK_MANUFACTURER.sui_address}
-                </span>
+                <span className="break-all">{m.sui_address ?? m.suiWalletAddress ?? ''}</span>
                 <Button variant="ghost" size="icon" className="shrink-0">
                   <Copy className="h-4 w-4" />
                 </Button>

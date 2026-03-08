@@ -2,7 +2,8 @@ import type { ActivityItem, Product, Batch, Manufacturer, ScanAlert, QRCode } fr
 
 export const MOCK_MANUFACTURER: Manufacturer = {
   id: "mfr-1",
-  sui_address: "0x1234567890abcdef1234567890abcdef12345678",
+  // no hardcoded wallet address here — the app should use the connected wallet when available
+  sui_address: "",
   brand_name: "Dermaqea Labs",
   logo_url: "",
   country: "Kenya",

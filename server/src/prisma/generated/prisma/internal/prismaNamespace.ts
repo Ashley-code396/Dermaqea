@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Manufacturer: 'Manufacturer',
+  ManufacturerDocument: 'ManufacturerDocument',
   Product: 'Product',
   Batch: 'Batch',
   ProductTwin: 'ProductTwin',
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "manufacturer" | "product" | "batch" | "productTwin" | "serialRegistry" | "qrCode" | "scanLog" | "securityAlert" | "admin"
+    modelProps: "manufacturer" | "manufacturerDocument" | "product" | "batch" | "productTwin" | "serialRegistry" | "qrCode" | "scanLog" | "securityAlert" | "admin"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -483,6 +484,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ManufacturerCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ManufacturerCountAggregateOutputType> | number
+        }
+      }
+    }
+    ManufacturerDocument: {
+      payload: Prisma.$ManufacturerDocumentPayload<ExtArgs>
+      fields: Prisma.ManufacturerDocumentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ManufacturerDocumentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ManufacturerDocumentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        findFirst: {
+          args: Prisma.ManufacturerDocumentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ManufacturerDocumentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        findMany: {
+          args: Prisma.ManufacturerDocumentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>[]
+        }
+        create: {
+          args: Prisma.ManufacturerDocumentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        createMany: {
+          args: Prisma.ManufacturerDocumentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ManufacturerDocumentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>[]
+        }
+        delete: {
+          args: Prisma.ManufacturerDocumentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        update: {
+          args: Prisma.ManufacturerDocumentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        deleteMany: {
+          args: Prisma.ManufacturerDocumentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ManufacturerDocumentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ManufacturerDocumentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>[]
+        }
+        upsert: {
+          args: Prisma.ManufacturerDocumentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManufacturerDocumentPayload>
+        }
+        aggregate: {
+          args: Prisma.ManufacturerDocumentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateManufacturerDocument>
+        }
+        groupBy: {
+          args: Prisma.ManufacturerDocumentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ManufacturerDocumentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ManufacturerDocumentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ManufacturerDocumentCountAggregateOutputType> | number
         }
       }
     }
@@ -1121,14 +1196,30 @@ export const ManufacturerScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
-  passwordHash: 'passwordHash',
   suiWalletAddress: 'suiWalletAddress',
   verificationStatus: 'verificationStatus',
+  country: 'country',
+  businessRegNumber: 'businessRegNumber',
+  website: 'website',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type ManufacturerScalarFieldEnum = (typeof ManufacturerScalarFieldEnum)[keyof typeof ManufacturerScalarFieldEnum]
+
+
+export const ManufacturerDocumentScalarFieldEnum = {
+  id: 'id',
+  manufacturerId: 'manufacturerId',
+  docType: 'docType',
+  filename: 'filename',
+  ipfsHash: 'ipfsHash',
+  url: 'url',
+  status: 'status',
+  uploadedAt: 'uploadedAt'
+} as const
+
+export type ManufacturerDocumentScalarFieldEnum = (typeof ManufacturerDocumentScalarFieldEnum)[keyof typeof ManufacturerDocumentScalarFieldEnum]
 
 
 export const ProductScalarFieldEnum = {
@@ -1265,6 +1356,14 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -1272,14 +1371,6 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -1544,6 +1635,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   manufacturer?: Prisma.ManufacturerOmit
+  manufacturerDocument?: Prisma.ManufacturerDocumentOmit
   product?: Prisma.ProductOmit
   batch?: Prisma.BatchOmit
   productTwin?: Prisma.ProductTwinOmit

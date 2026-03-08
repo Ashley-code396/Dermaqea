@@ -58,13 +58,32 @@ model Manufacturer {
   id                  String   @id @default(uuid())
   name                String
   email               String   @unique
-  passwordHash        String
   suiWalletAddress    String
   verificationStatus  VerificationStatus @default(PENDING)
+  country             String?
+  businessRegNumber   String?
+  website             String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   products            Product[]
+  documents           ManufacturerDocument[]
+}
+
+// Manufacturer supporting documents (business reg, certifications, etc.)
+model ManufacturerDocument {
+  id              String   @id @default(uuid())
+  manufacturerId  String
+  docType         String
+  filename        String
+  ipfsHash        String?
+  url             String?
+  status          VerificationStatus @default(PENDING)
+  uploadedAt      DateTime @default(now())
+
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  @@index([manufacturerId])
 }
 
 //Products

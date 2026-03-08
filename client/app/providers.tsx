@@ -6,6 +6,7 @@ import { SuiClientProvider } from '@mysten/dapp-kit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { WalletProvider } from '@mysten/dapp-kit';
+import { WalletSyncProvider } from '@/components/blockchain/WalletSyncProvider';
 import { useCurrentClient, useCurrentNetwork } from '@mysten/dapp-kit-react';
 import { isEnokiNetwork, registerEnokiWallets } from '@mysten/enoki';
 
@@ -94,7 +95,11 @@ return (
         <DAppKitProvider dAppKit={dAppKit}>
           <RegisterEnokiWallets />
           <WalletProvider autoConnect>
-            {children}
+            {/* WalletSyncProvider keeps a persisted copy of the connected address in localStorage
+                and exposes it to the app. */}
+            <WalletSyncProvider>
+              {children}
+            </WalletSyncProvider>
           </WalletProvider>
         </DAppKitProvider>
       </SuiClientProvider>
