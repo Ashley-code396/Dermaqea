@@ -3,6 +3,7 @@ import { Syne, DM_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
+import Script from 'next/script';
 import { SuiProvider } from "./providers";
 
 const syne = Syne({
@@ -26,24 +27,30 @@ export const metadata: Metadata = {
   description: "Product authentication platform for cosmetics manufacturers",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Do not render a theme-dependent class on the server. Instead inject
+  // a tiny inline script that reads the `next-theme` cookie and sets the
+  // `<html>` class *before* React hydrates. This avoids hydration
+  // mismatches between server and client-rendered markup.
+
+  const themeInitScript = `(function(){try{var m=document.cookie.match('(^|;)\\s*next-theme=([^;]+)');var t=m?decodeURIComponent(m[2]):null;if(t==='dark'||t==='light'){document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}else{document.documentElement.classList.add('light');document.documentElement.style.colorScheme='light';}}catch(e){} })();`;
+
   return (
-    // Do not hardcode a theme class on the html element so the ThemeProvider
-  // can manage the class consistently. Default theme is set in
-  // components/ThemeProvider.tsx (defaultTheme="light").
-  // To avoid hydration mismatches we render the same theme attributes
-  // on the server as the client will expect (class + color-scheme).
-  <html lang="en" className="light" style={{ colorScheme: "light" }}>
+    <html lang="en">
+      <head>
+        {/* Run beforeInteractive so the class is applied before React hydration */}
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         className={`${syne.variable} ${dmMono.variable} ${instrumentSans.variable} font-sans antialiased`}
       >
         <ThemeProvider>
           <SuiProvider>
-          {children}
+            {children}
           </SuiProvider>
           <Toaster />
         </ThemeProvider>

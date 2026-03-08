@@ -66,32 +66,39 @@ const LoginFlow = () => {
   }, [currentAccount, router]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-white dark:bg-card/50 text-gray-900 dark:text-gray-100">
       <main className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="w-full max-w-md">
           <div className="text-center animate-fade-in">
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-8 shadow-sm">
-              <div className="space-y-4">
-                {/* Google first */}
+            <div className="bg-gray-50 dark:bg-card border border-gray-100 dark:border-border rounded-2xl p-8 shadow-sm">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create Account</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Start by connecting your account</p>
+                </div>
+
+                {/* Google button (prominent) */}
                 {googleWallet && (
-                  <button
-                    onClick={handleConnectGoogle}
-                    className="w-full bg-white hover:bg-white text-gray-900 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <GoogleIcon />
-                        Sign in with Google
-                      </>
-                    )}
-                  </button>
+                  <div className="pt-2">
+                    <button
+                      onClick={handleConnectGoogle}
+                      className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <GoogleIcon />
+                          Continue with Google
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
 
-                {/* Facebook & Twitch */}
-                <div className="space-y-3">
+                {/* Social providers */}
+                <div className="mt-2 space-y-3">
                   {facebookWallet ? (
                     <button
                       onClick={() => {
@@ -108,7 +115,7 @@ const LoginFlow = () => {
                           },
                         });
                       }}
-                      className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -123,7 +130,7 @@ const LoginFlow = () => {
                   ) : (
                     <button
                       onClick={() => setError("Facebook sign-in is not configured")}
-                      className="w-full bg-[#1877F2]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      className="w-full bg-[#1877F2]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
                     >
                       <FacebookIcon />
                       Facebook (not available)
@@ -146,7 +153,7 @@ const LoginFlow = () => {
                           },
                         });
                       }}
-                      className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -161,21 +168,15 @@ const LoginFlow = () => {
                   ) : (
                     <button
                       onClick={() => setError("Twitch sign-in is not configured")}
-                      className="w-full bg-[#6441A4]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
+                      className="w-full bg-[#6441A4]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
                     >
                       <TwitchIcon />
                       Twitch (not available)
                     </button>
                   )}
-
                 </div>
 
-                <div className="mt-6 p-4 bg-white/50 rounded-lg border border-gray-200/30">
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                    <Shield className="w-4 h-4 text-green-400" />
-                    <span>Secured by zkLogin & Enoki</span>
-                  </div>
-                </div>
+                {/* removed 'Secured by zkLogin & Enoki' badge per design update */}
               </div>
             </div>
           </div>
