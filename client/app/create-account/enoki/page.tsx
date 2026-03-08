@@ -14,7 +14,7 @@ import { isEnokiWallet, type EnokiWallet, type AuthProvider } from "@mysten/enok
 const LoginFlow = () => {
   const router = useRouter();
   const currentAccount = useCurrentAccount();
-  const { mutateAsync: connect } = useConnectWallet();
+  const { mutate: connect } = useConnectWallet();
   const { mutateAsync: disconnect } = useDisconnectWallet();
   const wallets = useWallets().filter(isEnokiWallet);
 
@@ -29,20 +29,24 @@ const LoginFlow = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleConnectGoogle = async () => {
+  const handleConnectGoogle = () => {
     if (!googleWallet) return;
 
     setIsLoading(true);
     setError("");
 
-    try {
-      await connect({ wallet: googleWallet });
-      router.push("/create-account");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect with Google");
-    } finally {
-      setIsLoading(false);
-    }
+    // Use the synchronous `mutate` entry so the wallet popup is opened
+    // directly from the click handler (avoids browser popup blockers).
+    connect({ wallet: googleWallet }, {
+      onSuccess: () => {
+        setIsLoading(false);
+        router.push("/create-account");
+      },
+      onError: (err: any) => {
+        setIsLoading(false);
+        setError(err instanceof Error ? err.message : "Failed to connect with Google");
+      },
+    });
   };
 
   const handleDisconnect = async () => {
@@ -90,17 +94,19 @@ const LoginFlow = () => {
                 <div className="space-y-3">
                   {facebookWallet ? (
                     <button
-                      onClick={async () => {
+                      onClick={() => {
                         setIsLoading(true);
                         setError("");
-                        try {
-                          await connect({ wallet: facebookWallet });
-                          router.push("/create-account");
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : "Failed to connect with Facebook");
-                        } finally {
-                          setIsLoading(false);
-                        }
+                        connect({ wallet: facebookWallet }, {
+                          onSuccess: () => {
+                            setIsLoading(false);
+                            router.push("/create-account");
+                          },
+                          onError: (err: any) => {
+                            setIsLoading(false);
+                            setError(err instanceof Error ? err.message : "Failed to connect with Facebook");
+                          },
+                        });
                       }}
                       className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
                       disabled={isLoading}
@@ -126,17 +132,19 @@ const LoginFlow = () => {
 
                   {twitchWallet ? (
                     <button
-                      onClick={async () => {
+                      onClick={() => {
                         setIsLoading(true);
                         setError("");
-                        try {
-                          await connect({ wallet: twitchWallet });
-                          router.push("/create-account");
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : "Failed to connect with Twitch");
-                        } finally {
-                          setIsLoading(false);
-                        }
+                        connect({ wallet: twitchWallet }, {
+                          onSuccess: () => {
+                            setIsLoading(false);
+                            router.push("/create-account");
+                          },
+                          onError: (err: any) => {
+                            setIsLoading(false);
+                            setError(err instanceof Error ? err.message : "Failed to connect with Twitch");
+                          },
+                        });
                       }}
                       className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-md"
                       disabled={isLoading}
