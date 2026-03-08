@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-export default function useManufacturer() {
+export default function useManufacturer(address?: string | null) {
   const [manufacturer, setManufacturer] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -11,10 +11,16 @@ export default function useManufacturer() {
       setLoading(true);
       const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
       try {
-        const res = await fetch(`${base.replace(/\/$/, "")}/manufacturers`);
+        const url = address
+          ? `${base.replace(/\/$/, "")}/manufacturers/${encodeURIComponent(address)}`
+          : `${base.replace(/\/$/, "")}/manufacturers`;
+        const res = await fetch(url);
         if (!res.ok) return;
         const body = await res.json();
-        if (!cancelled && body?.data?.length > 0) setManufacturer(body.data[0]);
+        if (!cancelled) {
+          if (address) setManufacturer(body?.data ?? null);
+          else setManufacturer(body?.data?.length > 0 ? body.data[0] : null);
+        }
       } catch (e) {
         // ignore
       } finally {
@@ -26,7 +32,7 @@ export default function useManufacturer() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [address]);
 
   return { manufacturer, loading };
 }

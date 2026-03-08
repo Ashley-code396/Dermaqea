@@ -34,4 +34,15 @@ export class ManufacturersService {
       },
     });
   }
+
+  async findBySuiWalletAddress(suiWalletAddress: string) {
+    if (!suiWalletAddress) return null;
+    return this.prisma.manufacturer.findFirst({
+      where: { suiWalletAddress },
+      include: {
+        documents: true,
+        products: true,
+      },
+    });
+  }
 }

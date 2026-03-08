@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Copy, ExternalLink } from "lucide-react";
 import ViewOnSuiscan from "@/components/ViewOnSuiscan";
 import useManufacturer from "@/lib/useManufacturer";
+import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 
 export default function ProfilePage() {
-  const { manufacturer, loading } = useManufacturer();
+  const { connectedAddress } = useWalletSync();
+  const { manufacturer, loading } = useManufacturer(connectedAddress ?? null);
 
   // Use real manufacturer data from the API. Provide small fallbacks for missing fields.
   const m = manufacturer ?? null;

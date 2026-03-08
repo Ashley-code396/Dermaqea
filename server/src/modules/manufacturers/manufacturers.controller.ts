@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { ManufacturersService } from './manufacturers.service';
 import { CreateManufacturerDto } from './dto/create-manufacturer.dto';
 
@@ -16,5 +16,11 @@ export class ManufacturersController {
   async list() {
     const list = await this.svc.findAll();
     return { data: list };
+  }
+
+  @Get(':suiWalletAddress')
+  async getBySui(@Param('suiWalletAddress') suiWalletAddress: string) {
+    const m = await this.svc.findBySuiWalletAddress(suiWalletAddress);
+    return { data: m };
   }
 }

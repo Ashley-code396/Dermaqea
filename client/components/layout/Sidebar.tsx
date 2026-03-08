@@ -32,7 +32,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const currentAccount = useCurrentAccount();
   const { connectedAddress } = useWalletSync();
-  const { manufacturer } = useManufacturer();
+  const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
+  const { manufacturer } = useManufacturer(acctAddr);
 
     const isVerified = manufacturer
       ? (manufacturer.verified ?? manufacturer.verificationStatus === 'VERIFIED')
@@ -45,7 +46,7 @@ export function Sidebar() {
 
     // To avoid hydration mismatches, do NOT show dynamic wallet address until after mount.
     const connectedAddr = mounted
-      ? (currentAccount?.address ?? connectedAddress ?? (manufacturer ? (manufacturer.sui_address ?? manufacturer.suiWalletAddress) : MOCK_MANUFACTURER.sui_address) ?? "")
+      ? (acctAddr ?? (manufacturer ? (manufacturer.sui_address ?? manufacturer.suiWalletAddress) : MOCK_MANUFACTURER.sui_address) ?? "")
       : "";
 
   return (
