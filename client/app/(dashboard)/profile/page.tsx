@@ -1,26 +1,13 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Copy, ExternalLink } from "lucide-react";
 import ViewOnSuiscan from "@/components/ViewOnSuiscan";
+import useManufacturer from "@/lib/useManufacturer";
 
-async function fetchManufacturer() {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-  try {
-    const res = await fetch(`${base.replace(/\/$/, '')}/manufacturers`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    const body = await res.json();
-    return (body.data && body.data.length > 0) ? body.data[0] : null;
-  } catch (e) {
-    console.error('Failed to fetch manufacturer', e);
-    return null;
-  }
-}
-
-export default async function ProfilePage() {
-  const manufacturer = await fetchManufacturer();
+export default function ProfilePage() {
+  const { manufacturer, loading } = useManufacturer();
 
   // Use real manufacturer data from the API. Provide small fallbacks for missing fields.
   const m = manufacturer ?? null;
@@ -73,31 +60,35 @@ export default async function ProfilePage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Brand Name</p>
-              <p className="font-medium">{m.name ?? m.brand_name}</p>
+              <p className="font-medium">{m?.name ?? m?.brand_name ?? '—'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Country of Manufacture</p>
-              <p className="font-medium">{m.country}</p>
+              <p className="font-medium">{m?.country ?? '—'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Business Registration Number</p>
-              <p className="font-mono">{m.businessRegNumber ?? m.business_reg_number}</p>
+              <p className="font-mono">{m?.businessRegNumber ?? m?.business_reg_number ?? '—'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Website</p>
-              <a
-                href={m.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-primary hover:underline"
-              >
-                {m.website}
-                <ExternalLink className="h-4 w-4" />
-              </a>
+              {m?.website ? (
+                <a
+                  href={m.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-primary hover:underline"
+                >
+                  {m.website}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Contact Email</p>
-              <p>{m.email ?? m.contactEmail ?? '—'}</p>
+              <p>{m?.email ?? m?.contactEmail ?? '—'}</p>
             </div>
           </CardContent>
         </Card>
@@ -110,7 +101,7 @@ export default async function ProfilePage() {
             <div>
               <p className="mb-2 text-sm text-muted-foreground">Connected Address</p>
               <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-3 font-mono text-sm">
-                <span className="break-all">{m.sui_address ?? m.suiWalletAddress ?? ''}</span>
+                <span className="break-all">{m?.sui_address ?? m?.suiWalletAddress ?? ''}</span>
                 <Button variant="ghost" size="icon" className="shrink-0">
                   <Copy className="h-4 w-4" />
                 </Button>
