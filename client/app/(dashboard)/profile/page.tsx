@@ -21,24 +21,41 @@ async function fetchManufacturer() {
 export default async function ProfilePage() {
   const manufacturer = await fetchManufacturer();
 
-  const MOCK_VERIFICATION_TIMELINE = [
-    { step: "Account Created", done: true, date: "Jan 15, 2025" },
-    { step: "Documents Submitted", done: true, date: "Jan 16, 2025" },
-    { step: "Dermaqea Review", done: false, inProgress: true, note: "Estimated 2-3 business days" },
-    { step: "Verified Manufacturer", done: false },
-    { step: "First Product Submission", done: false },
-  ];
+  // Use real manufacturer data from the API. Provide small fallbacks for missing fields.
+  const m = manufacturer ?? null;
 
-  const MOCK_VERIFICATION_DOCS = [] as any[];
+  // Derive verification documents and timeline from the manufacturer payload
+  const verificationDocs = (m?.documents && m.documents.length > 0) ? m.documents : [];
 
-  const m = manufacturer ?? {
-    brand_name: '—',
-    country: '—',
-    business_reg_number: '—',
-    website: '',
-    sui_address: '',
-    email: '',
-  };
+  const verificationTimeline = (() => {
+    const steps: Array<any> = [];
+    if (m) {
+      steps.push({ step: "Account Created", done: true, date: m.createdAt ? new Date(m.createdAt).toDateString() : undefined });
+      if (verificationDocs.length > 0) {
+        // Use the earliest uploadedAt as documents submitted date
+        const uploadedDates = verificationDocs.map((d: any) => d.uploadedAt).filter(Boolean).sort();
+        steps.push({ step: "Documents Submitted", done: true, date: uploadedDates.length > 0 ? new Date(uploadedDates[0]).toDateString() : undefined });
+      } else {
+        steps.push({ step: "Documents Submitted", done: false });
+      }
+
+      const anyPending = verificationDocs.some((d: any) => d.status === 'PENDING');
+      steps.push({ step: "Dermaqea Review", done: !anyPending && verificationDocs.length > 0, inProgress: anyPending });
+
+      steps.push({ step: "Verified Manufacturer", done: m.verificationStatus === 'VERIFIED' });
+
+      const hasProducts = (m.products && m.products.length > 0);
+      steps.push({ step: "First Product Submission", done: hasProducts });
+    } else {
+      // No manufacturer loaded yet — show minimal skeleton steps
+      steps.push({ step: "Account Created", done: false });
+      steps.push({ step: "Documents Submitted", done: false });
+      steps.push({ step: "Dermaqea Review", done: false });
+      steps.push({ step: "Verified Manufacturer", done: false });
+      steps.push({ step: "First Product Submission", done: false });
+    }
+    return steps;
+  })();
 
   return (
     <div className="space-y-6">
@@ -122,33 +139,37 @@ export default async function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {MOCK_VERIFICATION_DOCS.map((doc) => (
-              <div
-                key={doc.type}
-                className="flex items-center justify-between rounded-lg border border-border p-4"
-              >
-                <div>
-                  <p className="font-medium">{doc.type}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {doc.filename} • Uploaded {doc.uploaded}
-                  </p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    IPFS: {doc.ipfs_hash}
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    doc.status === "Verified"
-                      ? "default"
-                      : doc.status === "Pending"
-                        ? "secondary"
-                        : "destructive"
-                  }
+            {verificationDocs.length === 0 ? (
+              <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">No documents uploaded yet.</div>
+            ) : (
+              verificationDocs.map((doc: any) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-4"
                 >
-                  {doc.status}
-                </Badge>
-              </div>
-            ))}
+                  <div>
+                    <p className="font-medium">{doc.docType}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {doc.filename} • Uploaded {doc.uploadedAt ? new Date(doc.uploadedAt).toDateString() : 'unknown'}
+                    </p>
+                    {doc.ipfsHash && (
+                      <p className="font-mono text-xs text-muted-foreground">IPFS: {doc.ipfsHash}</p>
+                    )}
+                  </div>
+                  <Badge
+                    variant={
+                      doc.status === "VERIFIED"
+                        ? "default"
+                        : doc.status === "PENDING"
+                          ? "secondary"
+                          : "destructive"
+                    }
+                  >
+                    {doc.status}
+                  </Badge>
+                </div>
+              ))
+            )}
             <Button variant="outline" className="w-full">
               Upload New Document
             </Button>
@@ -162,7 +183,7 @@ export default async function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {MOCK_VERIFICATION_TIMELINE.map((item, i) => (
+            {verificationTimeline.map((item: any, i: number) => (
               <div
                 key={i}
                 className="flex items-start gap-4"

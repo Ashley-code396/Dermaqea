@@ -26,6 +26,12 @@ export class ManufacturersService {
   }
 
   async findAll() {
-    return this.prisma.manufacturer.findMany();
+    // Include related documents and products so callers (UI) can render verification state
+    return this.prisma.manufacturer.findMany({
+      include: {
+        documents: true,
+        products: true,
+      },
+    });
   }
 }
