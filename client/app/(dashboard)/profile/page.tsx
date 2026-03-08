@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, ExternalLink, Copy } from "lucide-react";
+import { Check, Clock, Copy, ExternalLink } from "lucide-react";
+import ViewOnSuiscan from "@/components/ViewOnSuiscan";
 
 async function fetchManufacturer() {
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
@@ -115,17 +116,8 @@ export default async function ProfilePage() {
                 </Button>
               </div>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://suiscan.xyz/testnet/account/0x1234567890abcdef1234567890abcdef12345678"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="gap-2"
-              >
-                View on Suiscan
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
+            {/* View on Suiscan: prefer the connected client wallet, fall back to the manufacturer's stored address */}
+            <ViewOnSuiscan fallbackAddress={m?.sui_address ?? m?.suiWalletAddress ?? undefined} />
           </CardContent>
         </Card>
       </div>
