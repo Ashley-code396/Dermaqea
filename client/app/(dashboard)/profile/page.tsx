@@ -2,10 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, Copy, ExternalLink } from "lucide-react";
+import { Check, Clock, Copy, ExternalLink, Loader2 } from "lucide-react";
 import ViewOnSuiscan from "@/components/ViewOnSuiscan";
 import useManufacturer from "@/lib/useManufacturer";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 
@@ -17,9 +18,52 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [docType, setDocType] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    country: '',
+    businessRegNumber: '',
+    website: '',
+    contactEmail: '',
+  });
+
+  const queryClient = useQueryClient();
+
+  // Mutation to update manufacturer profile
+  const updateMutation = useMutation<any, Error, any>({
+    mutationFn: async (payload: any) => {
+      const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || 'http://localhost:5000';
+      const sui = connectedAddress ?? m?.sui_address ?? m?.suiWalletAddress ?? '';
+      const url = `${base.replace(/\/$/, '')}/manufacturers/${encodeURIComponent(sui)}`;
+      const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('update failed');
+      const body = await res.json();
+      return body.data;
+    },
+    onSuccess(updated) {
+      // Update react-query cache so UI updates instantly
+      const key = ['manufacturer', connectedAddress ?? m?.sui_address ?? 'self'];
+      queryClient.setQueryData(key, updated);
+      setEditing(false);
+    },
+  });
+
+  const isSaving = (updateMutation as any)?.isLoading ?? false;
 
   // Use real manufacturer data from the API. Provide small fallbacks for missing fields.
   const m = manufacturer ?? null;
+
+  // Populate form when manufacturer data becomes available
+  useEffect(() => {
+    if (!m) return;
+    setForm({
+      name: m.name ?? m.brand_name ?? '',
+      country: m.country ?? '',
+      businessRegNumber: m.businessRegNumber ?? m.business_reg_number ?? '',
+      website: m.website ?? '',
+      contactEmail: m.email ?? m.contactEmail ?? '',
+    });
+  }, [m]);
 
   // Derive verification documents and timeline from the manufacturer payload
   const verificationDocs = (m?.documents && m.documents.length > 0) ? m.documents : [];
@@ -58,7 +102,43 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Manufacturer Profile</h2>
-        <Button variant="default" className="bg-emerald-600 text-white hover:bg-emerald-700">Edit Profile</Button>
+        {!editing ? (
+          <Button
+            variant="default"
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+            onClick={() => setEditing(true)}
+          >
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="default"
+              className="bg-emerald-600 text-white hover:bg-emerald-700 flex items-center"
+              onClick={() => updateMutation.mutate(form)}
+              disabled={isSaving}
+            >
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? 'Saving…' : 'Save'}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                // reset form to current manufacturer values and exit edit mode
+                setForm({
+                  name: m?.name ?? m?.brand_name ?? '',
+                  country: m?.country ?? '',
+                  businessRegNumber: m?.businessRegNumber ?? m?.business_reg_number ?? '',
+                  website: m?.website ?? '',
+                  contactEmail: m?.email ?? m?.contactEmail ?? '',
+                });
+                setEditing(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -69,35 +149,55 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Brand Name</p>
-              <p className="font-medium">{m?.name ?? m?.brand_name ?? '—'}</p>
+              {!editing ? (
+                <p className="font-medium">{m?.name ?? m?.brand_name ?? '—'}</p>
+              ) : (
+                <Input value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Country of Manufacture</p>
-              <p className="font-medium">{m?.country ?? '—'}</p>
+              {!editing ? (
+                <p className="font-medium">{m?.country ?? '—'}</p>
+              ) : (
+                <Input value={form.country} onChange={(e) => setForm((s) => ({ ...s, country: e.target.value }))} />
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Business Registration Number</p>
-              <p className="font-mono">{m?.businessRegNumber ?? m?.business_reg_number ?? '—'}</p>
+              {!editing ? (
+                <p className="font-mono">{m?.businessRegNumber ?? m?.business_reg_number ?? '—'}</p>
+              ) : (
+                <Input value={form.businessRegNumber} onChange={(e) => setForm((s) => ({ ...s, businessRegNumber: e.target.value }))} />
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Website</p>
-              {m?.website ? (
-                <a
-                  href={m.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-primary hover:underline"
-                >
-                  {m.website}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+              {!editing ? (
+                m?.website ? (
+                  <a
+                    href={m.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline"
+                  >
+                    {m.website}
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <p className="text-sm text-muted-foreground">—</p>
+                )
               ) : (
-                <p className="text-sm text-muted-foreground">—</p>
+                <Input value={form.website} onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))} />
               )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Contact Email</p>
-              <p>{m?.email ?? m?.contactEmail ?? '—'}</p>
+              {!editing ? (
+                <p>{m?.email ?? m?.contactEmail ?? '—'}</p>
+              ) : (
+                <Input value={form.contactEmail} onChange={(e) => setForm((s) => ({ ...s, contactEmail: e.target.value }))} />
+              )}
             </div>
           </CardContent>
         </Card>

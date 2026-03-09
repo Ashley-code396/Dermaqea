@@ -67,4 +67,23 @@ export class ManufacturersService {
 
     return created;
   }
+
+  // Partial update of manufacturer fields identified by their SUI wallet address
+  async updateBySuiWalletAddress(suiWalletAddress: string, data: Partial<CreateManufacturerDto>) {
+    if (!suiWalletAddress) throw new Error('missing suiWalletAddress');
+
+    const manufacturer = await this.prisma.manufacturer.findFirst({ where: { suiWalletAddress } });
+    if (!manufacturer) throw new Error('manufacturer not found');
+
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.contactEmail !== undefined) updateData.email = data.contactEmail;
+    if (data.country !== undefined) updateData.country = data.country;
+    if (data.businessRegNumber !== undefined) updateData.businessRegNumber = data.businessRegNumber;
+    if (data.website !== undefined) updateData.website = data.website;
+    if (data.suiWalletAddress !== undefined) updateData.suiWalletAddress = data.suiWalletAddress;
+
+    const updated = await this.prisma.manufacturer.update({ where: { id: manufacturer.id }, data: updateData });
+    return updated;
+  }
 }

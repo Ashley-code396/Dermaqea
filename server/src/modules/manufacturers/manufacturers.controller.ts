@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, UploadedFile, UseInterceptors, Patch } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -54,5 +54,15 @@ export class ManufacturersController {
   ) {
     const created = await this.svc.createDocumentForManufacturerBySui(suiWalletAddress, file, docType ?? 'Unknown');
     return { data: created };
+  }
+
+  // Update manufacturer fields (partial update) by SUI wallet address
+  @Patch(':suiWalletAddress')
+  async updateBySui(
+    @Param('suiWalletAddress') suiWalletAddress: string,
+    @Body() body: Partial<CreateManufacturerDto>,
+  ) {
+    const updated = await this.svc.updateBySuiWalletAddress(suiWalletAddress, body);
+    return { data: updated };
   }
 }
