@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
 import Script from 'next/script';
+import { cookies } from 'next/headers';
 import { SuiProvider } from "./providers";
 
 const syne = Syne({
@@ -36,6 +37,15 @@ export default async function RootLayout({
   // a tiny inline script that reads the `next-theme` cookie and sets the
   // `<html>` class *before* React hydrates. This avoids hydration
   // mismatches between server and client-rendered markup.
+  // If a server-rendered route has already set the `next-theme` cookie
+  // (see some server pages that set it explicitly), read it here and
+  // render the matching `class` and `color-scheme` on the `<html>` tag
+  // so the server markup matches the client. Otherwise leave it unset
+  // and rely on the client-side `themeInitScript` to apply a class
+  // before hydration.
+  const cookieStore = await cookies();
+  const nextThemeCookie = cookieStore.get('next-theme')?.value;
+  const serverTheme = nextThemeCookie === 'dark' || nextThemeCookie === 'light' ? nextThemeCookie : null;
 
   const themeInitScript = `(function(){try{var m=document.cookie.match('(^|;)\\s*next-theme=([^;]+)');var t=m?decodeURIComponent(m[2]):null;if(t==='dark'||t==='light'){document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}else{document.documentElement.classList.add('light');document.documentElement.style.colorScheme='light';}}catch(e){} })();`;
 
@@ -44,7 +54,12 @@ export default async function RootLayout({
     // The inline `themeInitScript` runs before React hydrates and will set
     // the correct class (light/dark) and color-scheme on the client to
     // avoid hydration mismatches.
-    <html lang="en">
+    <html
+      lang="en"  suppressHydrationWarning
+      {...(serverTheme
+        ? { className: serverTheme, style: { colorScheme: serverTheme } }
+        : {})}
+    >
       <head>
         {/* Run beforeInteractive so the class is applied before React hydration */}
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />

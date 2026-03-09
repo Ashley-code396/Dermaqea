@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Loader2 } from "lucide-react";
 import {
@@ -27,79 +27,106 @@ const LoginFlow = () => {
   const googleWallet = walletsByProvider.get("google");
   const twitchWallet = walletsByProvider.get("twitch");
   const facebookWallet = walletsByProvider.get("facebook");
+
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [enokiReady, setEnokiReady] = useState(false);
 
   const { setConnectedAddress } = useWalletSync();
 
-  const handleConnectGoogle = () => {
-    if (!googleWallet) return;
-
-    setIsLoading(true);
-    setError("");
-
-    // Use the synchronous `mutate` entry so the wallet popup is opened
-    // directly from the click handler (avoids browser popup blockers).
-    connect({ wallet: googleWallet }, {
-      onSuccess: () => {
-        setIsLoading(false);
-        router.push("/create-account");
-      },
-      onError: (err: any) => {
-        setIsLoading(false);
-        setError(err instanceof Error ? err.message : "Failed to connect with Google");
-      },
-    });
-  };
-
-  // Wait for Enoki registration to complete (set by RegisterEnokiWallets in providers.tsx)
+  // ─── Wait for Enoki to fully register before allowing any sign-in ───────────
+  // Key fix: also check that the wallets are actually populated (not just the
+  // global flag), because the redirect_uri is derived from the registered wallet.
   useEffect(() => {
-    // If already set, mark ready
-    if (typeof window !== 'undefined' && (window as any).__ENOKI_REGISTERED) {
-      setEnokiReady(true);
-      return;
-    }
-
-    // Poll briefly for readiness (registration happens during providers mount)
     let cancelled = false;
     const start = Date.now();
-    const interval = setInterval(() => {
+
+    const check = () => {
       if (cancelled) return;
-      if ((window as any).__ENOKI_REGISTERED) {
+
+      const flagReady = typeof window !== "undefined" && (window as any).__ENOKI_REGISTERED;
+      // wallets list is populated inside the closure via the outer `wallets` variable
+      // but we need a fresh read — re-check via the store instead:
+      const walletsReady = wallets.length > 0;
+
+      if (flagReady && walletsReady) {
         setEnokiReady(true);
-        clearInterval(interval);
         return;
       }
-      // timeout after 5s
-      if (Date.now() - start > 5000) {
-        clearInterval(interval);
+
+      if (Date.now() - start > 8000) {
+        // Give up waiting — surface a helpful message
+        setError("Sign-in providers took too long to load. Please refresh the page.");
+        return;
       }
-    }, 100);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+
+      setTimeout(check, 150);
+    };
+
+    check();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallets.length]); // re-run if wallets suddenly populate
+
+  // ─── Generic connect handler ─────────────────────────────────────────────────
+  const handleConnect = useCallback(
+    (wallet: EnokiWallet, provider: string) => {
+      if (!enokiReady || isLoading) return;
+
+      setIsLoading(true);
+      setLoadingProvider(provider);
+      setError("");
+
+      connect(
+        { wallet },
+        {
+          onSuccess: () => {
+            setIsLoading(false);
+            setLoadingProvider(null);
+            router.push("/create-account");
+          },
+          onError: (err: any) => {
+            setIsLoading(false);
+            setLoadingProvider(null);
+            // Don't surface "popup closed" as an error — user just cancelled
+            const message: string = err instanceof Error ? err.message : String(err);
+            if (!message.toLowerCase().includes("closed") && !message.toLowerCase().includes("cancel")) {
+              setError(message || `Failed to connect with ${provider}`);
+            }
+          },
+        },
+      );
+    },
+    [connect, enokiReady, isLoading, router],
+  );
+
+  // ─── If already connected, push immediately ──────────────────────────────────
+  useEffect(() => {
+    if (currentAccount?.address) {
+      try { localStorage.setItem("connectedAddress", currentAccount.address); } catch {}
+      setConnectedAddress(currentAccount.address);
+      router.push("/create-account");
+    }
+  }, [currentAccount?.address, router, setConnectedAddress]);
 
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      // clear persisted address
-      try { localStorage.removeItem("connectedAddress"); } catch (e) {}
+      try { localStorage.removeItem("connectedAddress"); } catch {}
       setConnectedAddress(null);
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Failed to disconnect");
     }
   };
 
+  // Dismiss error after 6 s
   useEffect(() => {
-    if (currentAccount?.address) {
-      // persist the connected address for use across the app
-      try { localStorage.setItem("connectedAddress", currentAccount.address); } catch (e) {}
-      setConnectedAddress(currentAccount.address);
-      // If already connected, proceed to create-account
-      router.push("/create-account");
-    }
-  }, [currentAccount?.address, router, setConnectedAddress]);
+    if (!error) return;
+    const t = setTimeout(() => setError(""), 6000);
+    return () => clearTimeout(t);
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-card/50 text-gray-900 dark:text-gray-100">
@@ -113,110 +140,89 @@ const LoginFlow = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Start by connecting your account</p>
                 </div>
 
-                {/* Google button (prominent) */}
-                {googleWallet && (
-                  <div className="pt-2">
-                      <button
-                        onClick={handleConnectGoogle}
-                        className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                        disabled={!enokiReady || isLoading}
-                        title={!enokiReady ? "Initializing sign-in providers…" : undefined}
-                      >
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <GoogleIcon />
-                          Continue with Google
-                        </>
-                      )}
-                    </button>
-                      {!enokiReady && (
-                        <p className="mt-2 text-xs text-muted-foreground">Initializing sign-in providers… please wait a moment and try again if the button is disabled.</p>
-                      )}
+                {/* ── Loading skeleton shown while Enoki initialises ── */}
+                {!enokiReady ? (
+                  <div className="pt-2 space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-full h-12 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
+                      />
+                    ))}
+                    <p className="text-xs text-center text-muted-foreground">
+                      Initialising sign-in providers…
+                    </p>
                   </div>
-                )}
+                ) : (
+                  <>
+                    {/* Google */}
+                    {googleWallet && (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => handleConnect(googleWallet, "Google")}
+                          disabled={isLoading}
+                          className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm disabled:opacity-60"
+                        >
+                          {loadingProvider === "Google" ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <GoogleIcon />
+                              Continue with Google
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
-                {/* Social providers */}
-                <div className="mt-2 space-y-3">
-                  {facebookWallet ? (
-                    <button
-                      onClick={() => {
-                        setIsLoading(true);
-                        setError("");
-                        connect({ wallet: facebookWallet }, {
-                          onSuccess: () => {
-                            setIsLoading(false);
-                            router.push("/create-account");
-                          },
-                          onError: (err: any) => {
-                            setIsLoading(false);
-                            setError(err instanceof Error ? err.message : "Failed to connect with Facebook");
-                          },
-                        });
-                      }}
-                      className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                      disabled={!enokiReady || isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                    {/* Social providers */}
+                    <div className="mt-2 space-y-3">
+                      {facebookWallet ? (
+                        <button
+                          onClick={() => handleConnect(facebookWallet, "Facebook")}
+                          disabled={isLoading}
+                          className="w-full bg-[#1877F2] hover:bg-[#166fe0] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm disabled:opacity-60"
+                        >
+                          {loadingProvider === "Facebook" ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <FacebookIcon />
+                              Sign in with Facebook
+                            </>
+                          )}
+                        </button>
                       ) : (
-                        <>
+                        <button disabled className="w-full bg-[#1877F2]/40 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 shadow-sm cursor-not-allowed">
                           <FacebookIcon />
-                          Sign in with Facebook
-                        </>
+                          Facebook (not available)
+                        </button>
                       )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setError("Facebook sign-in is not configured")}
-                      className="w-full bg-[#1877F2]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                    >
-                      <FacebookIcon />
-                      Facebook (not available)
-                    </button>
-                  )}
 
-                  {twitchWallet ? (
-                    <button
-                      onClick={() => {
-                        setIsLoading(true);
-                        setError("");
-                        connect({ wallet: twitchWallet }, {
-                          onSuccess: () => {
-                            setIsLoading(false);
-                            router.push("/create-account");
-                          },
-                          onError: (err: any) => {
-                            setIsLoading(false);
-                            setError(err instanceof Error ? err.message : "Failed to connect with Twitch");
-                          },
-                        });
-                      }}
-                      className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                      disabled={!enokiReady || isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                      {twitchWallet ? (
+                        <button
+                          onClick={() => handleConnect(twitchWallet, "Twitch")}
+                          disabled={isLoading}
+                          className="w-full bg-[#6441A4] hover:bg-[#503285] text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm disabled:opacity-60"
+                        >
+                          {loadingProvider === "Twitch" ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <TwitchIcon />
+                              Sign in with Twitch
+                            </>
+                          )}
+                        </button>
                       ) : (
-                        <>
+                        <button disabled className="w-full bg-[#6441A4]/40 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 shadow-sm cursor-not-allowed">
                           <TwitchIcon />
-                          Sign in with Twitch
-                        </>
+                          Twitch (not available)
+                        </button>
                       )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setError("Twitch sign-in is not configured")}
-                      className="w-full bg-[#6441A4]/80 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-sm"
-                    >
-                      <TwitchIcon />
-                      Twitch (not available)
-                    </button>
-                  )}
-                </div>
-
-                {/* removed 'Secured by zkLogin & Enoki' badge per design update */}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -225,9 +231,9 @@ const LoginFlow = () => {
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-up">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-up">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
+            <Shield className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
         </div>
@@ -235,6 +241,8 @@ const LoginFlow = () => {
     </div>
   );
 };
+
+// ── Icons ────────────────────────────────────────────────────────────────────
 
 function GoogleIcon() {
   return (
@@ -249,17 +257,17 @@ function GoogleIcon() {
 
 function FacebookIcon() {
   return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.99 3.66 9.12 8.44 9.88v-6.99H8.9v-2.89h1.54V9.69c0-1.52.9-2.36 2.28-2.36.66 0 1.35.12 1.35.12v1.49h-.76c-.75 0-.98.47-.98.95v1.15h1.67l-.27 2.89h-1.4v6.99C18.34 21.12 22 16.99 22 12z" fill="#fff" />
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.99 3.66 9.12 8.44 9.88v-6.99H8.9v-2.89h1.54V9.69c0-1.52.9-2.36 2.28-2.36.66 0 1.35.12 1.35.12v1.49h-.76c-.75 0-.98.47-.98.95v1.15h1.67l-.27 2.89h-1.4v6.99C18.34 21.12 22 16.99 22 12z" fill="#fff"/>
     </svg>
   );
 }
 
 function TwitchIcon() {
   return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 3v14.5L7 18l2 2 2-2h3l4-4V3H4z" fill="#9146FF" />
-      <path d="M15 7h1v5h-1zM11 7h1v5h-1z" fill="#fff" />
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+      <path d="M4 3v14.5L7 18l2 2 2-2h3l4-4V3H4z" fill="#9146FF"/>
+      <path d="M15 7h1v5h-1zM11 7h1v5h-1z" fill="#fff"/>
     </svg>
   );
 }
