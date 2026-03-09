@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { ScanChart } from "@/components/dashboard/ScanChart";
 import { Button } from "@/components/ui/button";
+import useManufacturer from '@/lib/useManufacturer';
+import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 import {
   MOCK_ACTIVITY,
   MOCK_BATCHES,
@@ -34,9 +38,19 @@ export default function DashboardPage() {
       glow: false,
     },
   };
+  // Prefer real manufacturer verification status when available (based on connected wallet).
+  const { connectedAddress } = useWalletSync();
+  const { manufacturer } = useManufacturer(connectedAddress ?? null);
 
-  const status = MOCK_MANUFACTURER.verified ? "VERIFIED" : "PENDING_REVIEW";
-  const config = statusConfig[status];
+  const mapStatus = (v?: string | null) => {
+    if (!v) return MOCK_MANUFACTURER.verified ? 'VERIFIED' : 'PENDING_REVIEW';
+    if (v === 'VERIFIED') return 'VERIFIED';
+    if (v === 'SUSPENDED') return 'ACTION_REQUIRED';
+    return 'PENDING_REVIEW';
+  };
+
+  const status = mapStatus(manufacturer?.verificationStatus ?? null);
+  const config = statusConfig[status as keyof typeof statusConfig];
 
   return (
     <div className="space-y-8">

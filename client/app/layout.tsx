@@ -40,10 +40,11 @@ export default async function RootLayout({
   const themeInitScript = `(function(){try{var m=document.cookie.match('(^|;)\\s*next-theme=([^;]+)');var t=m?decodeURIComponent(m[2]):null;if(t==='dark'||t==='light'){document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}else{document.documentElement.classList.add('light');document.documentElement.style.colorScheme='light';}}catch(e){} })();`;
 
   return (
-    // Render the default/light theme attributes on the server to match the
-    // client initial state. This avoids hydration mismatches when the
-    // theme initializer script or next-themes sets the html class/style.
-    <html lang="en" className="light" style={{ colorScheme: "light" }}>
+    // Do not render a theme-dependent class or color-scheme on the server.
+    // The inline `themeInitScript` runs before React hydrates and will set
+    // the correct class (light/dark) and color-scheme on the client to
+    // avoid hydration mismatches.
+    <html lang="en">
       <head>
         {/* Run beforeInteractive so the class is applied before React hydration */}
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />

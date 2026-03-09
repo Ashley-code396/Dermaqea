@@ -45,4 +45,26 @@ export class ManufacturersService {
       },
     });
   }
+
+  // Create a ManufacturerDocument record and associate it with the manufacturer
+  // identified by the given SUI wallet address. `file` is the multer-supplied
+  // file object. We store filename and a local URL (uploads are saved under ./uploads).
+  async createDocumentForManufacturerBySui(suiWalletAddress: string, file: Express.Multer.File, docType: string) {
+    if (!suiWalletAddress) throw new Error('missing suiWalletAddress');
+
+    const manufacturer = await this.prisma.manufacturer.findFirst({ where: { suiWalletAddress } });
+    if (!manufacturer) throw new Error('manufacturer not found');
+
+    const created = await this.prisma.manufacturerDocument.create({
+      data: {
+        manufacturerId: manufacturer.id,
+        docType,
+        filename: file.filename || file.originalname,
+        url: `/uploads/${file.filename || file.originalname}`,
+        status: 'PENDING',
+      },
+    });
+
+    return created;
+  }
 }

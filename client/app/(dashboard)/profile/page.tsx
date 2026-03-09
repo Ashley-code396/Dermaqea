@@ -5,11 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Copy, ExternalLink } from "lucide-react";
 import ViewOnSuiscan from "@/components/ViewOnSuiscan";
 import useManufacturer from "@/lib/useManufacturer";
+import { useState, useRef } from 'react';
+import { Input } from '@/components/ui/input';
 import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 
 export default function ProfilePage() {
   const { connectedAddress } = useWalletSync();
   const { manufacturer, loading } = useManufacturer(connectedAddress ?? null);
+
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [docType, setDocType] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Use real manufacturer data from the API. Provide small fallbacks for missing fields.
   const m = manufacturer ?? null;
@@ -51,7 +58,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Manufacturer Profile</h2>
-        <Button variant="outline">Edit Profile</Button>
+        <Button variant="default" className="bg-emerald-600 text-white hover:bg-emerald-700">Edit Profile</Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -155,9 +162,62 @@ export default function ProfilePage() {
                 </div>
               ))
             )}
-            <Button variant="outline" className="w-full">
-              Upload New Document
-            </Button>
+            {!uploading && !showUploadForm ? (
+              <Button variant="outline" className="w-full" onClick={() => setShowUploadForm(true)}>
+                Upload New Document
+              </Button>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!fileInputRef.current || !fileInputRef.current.files || fileInputRef.current.files.length === 0) return;
+                  const file = fileInputRef.current.files[0];
+                  setUploading(true);
+                  try {
+                    const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || 'http://localhost:5000';
+                    const url = `${base.replace(/\/$/, '')}/manufacturers/${encodeURIComponent(connectedAddress ?? '')}/documents`;
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('docType', docType || file.name);
+                    const res = await fetch(url, { method: 'POST', body: fd });
+                    if (!res.ok) {
+                      // TODO: better error handling
+                      console.error('upload failed', await res.text());
+                    } else {
+                      // refresh the page data — simplest: reload
+                      window.location.reload();
+                    }
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              >
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-sm text-muted-foreground">Document Type</label>
+                    <Input
+                      className="border-2 border-emerald-400/30 bg-emerald-50"
+                      value={docType}
+                      onChange={(e) => setDocType(e.target.value)}
+                      placeholder="e.g. Business Registration"
+                    />
+                  </div>
+                  <div>
+                    <input type="file" ref={fileInputRef} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1" disabled={uploading}>
+                      {uploading ? 'Uploading…' : 'Submit'}
+                    </Button>
+                    <Button variant="ghost" className="flex-1" onClick={() => { setShowUploadForm(false); setDocType(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            )}
           </div>
         </CardContent>
       </Card>
