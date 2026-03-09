@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param, UploadedFile, UseInterceptors, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, UploadedFile, UseInterceptors, Patch, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -64,5 +64,11 @@ export class ManufacturersController {
   ) {
     const updated = await this.svc.updateBySuiWalletAddress(suiWalletAddress, body);
     return { data: updated };
+  }
+
+  @Delete(':suiWalletAddress')
+  async deleteBySui(@Param('suiWalletAddress') suiWalletAddress: string) {
+    const result = await this.svc.deleteBySuiWalletAddress(suiWalletAddress);
+    return { data: result };
   }
 }

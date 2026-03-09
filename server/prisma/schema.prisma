@@ -93,7 +93,6 @@ model Product {
   brand_wallet    String
   serialNumber    String   @unique
   batchNumber     String
-  metadataHash    String?
   manufactureDate DateTime
   expiryDate      DateTime
   extraData       Json?

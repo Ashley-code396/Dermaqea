@@ -115,7 +115,6 @@ export const ProductScalarFieldEnum = {
   brand_wallet: 'brand_wallet',
   serialNumber: 'serialNumber',
   batchNumber: 'batchNumber',
-  metadataHash: 'metadataHash',
   manufactureDate: 'manufactureDate',
   expiryDate: 'expiryDate',
   extraData: 'extraData',

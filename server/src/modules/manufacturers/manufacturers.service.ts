@@ -86,4 +86,47 @@ export class ManufacturersService {
     const updated = await this.prisma.manufacturer.update({ where: { id: manufacturer.id }, data: updateData });
     return updated;
   }
+
+  // Delete manufacturer and all associated data by SUI wallet address.
+  // Performs ordered deletes to respect foreign key constraints.
+  async deleteBySuiWalletAddress(suiWalletAddress: string) {
+    if (!suiWalletAddress) throw new Error('missing suiWalletAddress');
+
+    const manufacturer = await this.prisma.manufacturer.findFirst({ where: { suiWalletAddress } });
+    if (!manufacturer) throw new Error('manufacturer not found');
+
+    // Collect related product and batch ids
+    const products = await this.prisma.product.findMany({ where: { manufacturerId: manufacturer.id }, select: { id: true } });
+    const productIds = products.map((p) => p.id);
+
+    const batches = await this.prisma.batch.findMany({ where: { productId: { in: productIds } }, select: { id: true } });
+    const batchIds = batches.map((b) => b.id);
+
+    const serials = await this.prisma.serialRegistry.findMany({ where: { batchId: { in: batchIds } }, select: { id: true } });
+    const serialIds = serials.map((s) => s.id);
+
+    // Run deletes in a transaction
+    await this.prisma.$transaction([
+      // QR codes and related logs/alerts tied to serials
+      this.prisma.qrCode.deleteMany({ where: { serialId: { in: serialIds } } }),
+      this.prisma.securityAlert.deleteMany({ where: { serialId: { in: serialIds } } }),
+      this.prisma.scanLog.deleteMany({ where: { serialId: { in: serialIds } } }),
+
+      // Product twins for batches
+      this.prisma.productTwin.deleteMany({ where: { batchId: { in: batchIds } } }),
+
+      // Delete serials, batches, products
+      this.prisma.serialRegistry.deleteMany({ where: { batchId: { in: batchIds } } }),
+      this.prisma.batch.deleteMany({ where: { productId: { in: productIds } } }),
+      this.prisma.product.deleteMany({ where: { id: { in: productIds } } }),
+
+      // Manufacturer documents
+      this.prisma.manufacturerDocument.deleteMany({ where: { manufacturerId: manufacturer.id } }),
+
+      // Finally delete manufacturer
+      this.prisma.manufacturer.delete({ where: { id: manufacturer.id } }),
+    ]);
+
+    return { deleted: true };
+  }
 }

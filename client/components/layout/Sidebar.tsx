@@ -12,9 +12,9 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MOCK_MANUFACTURER } from "@/lib/mock-data";
 import useManufacturer from "@/lib/useManufacturer";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentNetwork } from "@mysten/dapp-kit-react";
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useEffect, useState } from "react";
 
@@ -35,9 +35,13 @@ export function Sidebar() {
   const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
   const { manufacturer } = useManufacturer(acctAddr);
 
-    const isVerified = manufacturer
-      ? (manufacturer.verified ?? manufacturer.verificationStatus === 'VERIFIED')
-      : MOCK_MANUFACTURER.verified;
+  const currentNetwork = useCurrentNetwork();
+
+    const isVerified = !!(
+      manufacturer && (
+        manufacturer.verified === true || manufacturer.verificationStatus === 'VERIFIED'
+      )
+    );
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -46,7 +50,7 @@ export function Sidebar() {
 
     // To avoid hydration mismatches, do NOT show dynamic wallet address until after mount.
     const connectedAddr = mounted
-      ? (acctAddr ?? (manufacturer ? (manufacturer.sui_address ?? manufacturer.suiWalletAddress) : MOCK_MANUFACTURER.sui_address) ?? "")
+      ? (acctAddr ?? (manufacturer ? (manufacturer.sui_address ?? manufacturer.suiWalletAddress) : null) ?? "")
       : "";
 
   return (
@@ -88,14 +92,12 @@ export function Sidebar() {
             <div
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs font-medium",
-                (manufacturer ? manufacturer.verificationStatus === 'VERIFIED' : MOCK_MANUFACTURER.verified)
+                isVerified
                   ? "bg-primary/20 text-primary"
                   : "bg-warning/20 text-warning"
               )}
               style={
-                (manufacturer ? manufacturer.verificationStatus === 'VERIFIED' : MOCK_MANUFACTURER.verified)
-                  ? { boxShadow: "0 0 12px #3DDC8440" }
-                  : undefined
+                isVerified ? { boxShadow: "0 0 12px #3DDC8440" } : undefined
               }
             >
                 {isVerified ? "Verified" : "Pending"}
@@ -109,7 +111,7 @@ export function Sidebar() {
               return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
             })()}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">Testnet</p>
+          <p className="mt-1 text-xs text-muted-foreground">{currentNetwork ? (currentNetwork.charAt(0).toUpperCase() + currentNetwork.slice(1)) : 'Unknown'}</p>
         </div>
       </div>
     </aside>

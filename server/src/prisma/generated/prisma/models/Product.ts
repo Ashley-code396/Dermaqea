@@ -30,7 +30,6 @@ export type ProductMinAggregateOutputType = {
   brand_wallet: string | null
   serialNumber: string | null
   batchNumber: string | null
-  metadataHash: string | null
   manufactureDate: Date | null
   expiryDate: Date | null
   objectId: string | null
@@ -45,7 +44,6 @@ export type ProductMaxAggregateOutputType = {
   brand_wallet: string | null
   serialNumber: string | null
   batchNumber: string | null
-  metadataHash: string | null
   manufactureDate: Date | null
   expiryDate: Date | null
   objectId: string | null
@@ -60,7 +58,6 @@ export type ProductCountAggregateOutputType = {
   brand_wallet: number
   serialNumber: number
   batchNumber: number
-  metadataHash: number
   manufactureDate: number
   expiryDate: number
   extraData: number
@@ -78,7 +75,6 @@ export type ProductMinAggregateInputType = {
   brand_wallet?: true
   serialNumber?: true
   batchNumber?: true
-  metadataHash?: true
   manufactureDate?: true
   expiryDate?: true
   objectId?: true
@@ -93,7 +89,6 @@ export type ProductMaxAggregateInputType = {
   brand_wallet?: true
   serialNumber?: true
   batchNumber?: true
-  metadataHash?: true
   manufactureDate?: true
   expiryDate?: true
   objectId?: true
@@ -108,7 +103,6 @@ export type ProductCountAggregateInputType = {
   brand_wallet?: true
   serialNumber?: true
   batchNumber?: true
-  metadataHash?: true
   manufactureDate?: true
   expiryDate?: true
   extraData?: true
@@ -197,7 +191,6 @@ export type ProductGroupByOutputType = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash: string | null
   manufactureDate: Date
   expiryDate: Date
   extraData: runtime.JsonValue | null
@@ -234,7 +227,6 @@ export type ProductWhereInput = {
   brand_wallet?: Prisma.StringFilter<"Product"> | string
   serialNumber?: Prisma.StringFilter<"Product"> | string
   batchNumber?: Prisma.StringFilter<"Product"> | string
-  metadataHash?: Prisma.StringNullableFilter<"Product"> | string | null
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
@@ -252,7 +244,6 @@ export type ProductOrderByWithRelationInput = {
   brand_wallet?: Prisma.SortOrder
   serialNumber?: Prisma.SortOrder
   batchNumber?: Prisma.SortOrder
-  metadataHash?: Prisma.SortOrderInput | Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -273,7 +264,6 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   product_name?: Prisma.StringFilter<"Product"> | string
   brand_wallet?: Prisma.StringFilter<"Product"> | string
   batchNumber?: Prisma.StringFilter<"Product"> | string
-  metadataHash?: Prisma.StringNullableFilter<"Product"> | string | null
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
@@ -291,7 +281,6 @@ export type ProductOrderByWithAggregationInput = {
   brand_wallet?: Prisma.SortOrder
   serialNumber?: Prisma.SortOrder
   batchNumber?: Prisma.SortOrder
-  metadataHash?: Prisma.SortOrderInput | Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -313,7 +302,6 @@ export type ProductScalarWhereWithAggregatesInput = {
   brand_wallet?: Prisma.StringWithAggregatesFilter<"Product"> | string
   serialNumber?: Prisma.StringWithAggregatesFilter<"Product"> | string
   batchNumber?: Prisma.StringWithAggregatesFilter<"Product"> | string
-  metadataHash?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   manufactureDate?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableWithAggregatesFilter<"Product">
@@ -329,7 +317,6 @@ export type ProductCreateInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -346,7 +333,6 @@ export type ProductUncheckedCreateInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -363,7 +349,6 @@ export type ProductUpdateInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -380,7 +365,6 @@ export type ProductUncheckedUpdateInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -397,7 +381,6 @@ export type ProductCreateManyInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -413,7 +396,6 @@ export type ProductUpdateManyMutationInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -428,7 +410,6 @@ export type ProductUncheckedUpdateManyInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -454,7 +435,6 @@ export type ProductCountOrderByAggregateInput = {
   brand_wallet?: Prisma.SortOrder
   serialNumber?: Prisma.SortOrder
   batchNumber?: Prisma.SortOrder
-  metadataHash?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrder
@@ -470,7 +450,6 @@ export type ProductMaxOrderByAggregateInput = {
   brand_wallet?: Prisma.SortOrder
   serialNumber?: Prisma.SortOrder
   batchNumber?: Prisma.SortOrder
-  metadataHash?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   objectId?: Prisma.SortOrder
@@ -485,7 +464,6 @@ export type ProductMinOrderByAggregateInput = {
   brand_wallet?: Prisma.SortOrder
   serialNumber?: Prisma.SortOrder
   batchNumber?: Prisma.SortOrder
-  metadataHash?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   objectId?: Prisma.SortOrder
@@ -561,7 +539,6 @@ export type ProductCreateWithoutManufacturerInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -577,7 +554,6 @@ export type ProductUncheckedCreateWithoutManufacturerInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -622,7 +598,6 @@ export type ProductScalarWhereInput = {
   brand_wallet?: Prisma.StringFilter<"Product"> | string
   serialNumber?: Prisma.StringFilter<"Product"> | string
   batchNumber?: Prisma.StringFilter<"Product"> | string
-  metadataHash?: Prisma.StringNullableFilter<"Product"> | string | null
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
@@ -638,7 +613,6 @@ export type ProductCreateWithoutBatchesInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -654,7 +628,6 @@ export type ProductUncheckedCreateWithoutBatchesInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -686,7 +659,6 @@ export type ProductUpdateWithoutBatchesInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -702,7 +674,6 @@ export type ProductUncheckedUpdateWithoutBatchesInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -718,7 +689,6 @@ export type ProductCreateManyManufacturerInput = {
   brand_wallet: string
   serialNumber: string
   batchNumber: string
-  metadataHash?: string | null
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -733,7 +703,6 @@ export type ProductUpdateWithoutManufacturerInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -749,7 +718,6 @@ export type ProductUncheckedUpdateWithoutManufacturerInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -765,7 +733,6 @@ export type ProductUncheckedUpdateManyWithoutManufacturerInput = {
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
   serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
   batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  metadataHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -811,7 +778,6 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   brand_wallet?: boolean
   serialNumber?: boolean
   batchNumber?: boolean
-  metadataHash?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
@@ -830,7 +796,6 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   brand_wallet?: boolean
   serialNumber?: boolean
   batchNumber?: boolean
-  metadataHash?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
@@ -847,7 +812,6 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   brand_wallet?: boolean
   serialNumber?: boolean
   batchNumber?: boolean
-  metadataHash?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
@@ -864,7 +828,6 @@ export type ProductSelectScalar = {
   brand_wallet?: boolean
   serialNumber?: boolean
   batchNumber?: boolean
-  metadataHash?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
@@ -874,7 +837,7 @@ export type ProductSelectScalar = {
   manufacturerId?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "product_name" | "brand_wallet" | "serialNumber" | "batchNumber" | "metadataHash" | "manufactureDate" | "expiryDate" | "extraData" | "objectId" | "createdAt" | "updatedAt" | "manufacturerId", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "product_name" | "brand_wallet" | "serialNumber" | "batchNumber" | "manufactureDate" | "expiryDate" | "extraData" | "objectId" | "createdAt" | "updatedAt" | "manufacturerId", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   manufacturer?: boolean | Prisma.ManufacturerDefaultArgs<ExtArgs>
   batches?: boolean | Prisma.Product$batchesArgs<ExtArgs>
@@ -899,7 +862,6 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     brand_wallet: string
     serialNumber: string
     batchNumber: string
-    metadataHash: string | null
     manufactureDate: Date
     expiryDate: Date
     extraData: runtime.JsonValue | null
@@ -1337,7 +1299,6 @@ export interface ProductFieldRefs {
   readonly brand_wallet: Prisma.FieldRef<"Product", 'String'>
   readonly serialNumber: Prisma.FieldRef<"Product", 'String'>
   readonly batchNumber: Prisma.FieldRef<"Product", 'String'>
-  readonly metadataHash: Prisma.FieldRef<"Product", 'String'>
   readonly manufactureDate: Prisma.FieldRef<"Product", 'DateTime'>
   readonly expiryDate: Prisma.FieldRef<"Product", 'DateTime'>
   readonly extraData: Prisma.FieldRef<"Product", 'Json'>

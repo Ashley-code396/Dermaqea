@@ -91,10 +91,10 @@ export default function NewProductPage() {
   };
 
   const generateAndDownloadTemplate = () => {
-    const headers = ["serial_number", "batch_number", "metadata_hash", "manufacture_date", "expiry_date"];
+    const headers = ["serial_number", "batch_number", "manufacture_date", "expiry_date"];
     const exampleRows = [
-      ["SN0001", "BATCH-A", "QmExampleHash1", "2026-01-01", "2027-01-01"],
-      ["SN0002", "BATCH-A", "QmExampleHash2", "2026-02-01", "2027-02-01"],
+      ["SN0001", "BATCH-A", "2026-01-01", "2027-01-01"],
+      ["SN0002", "BATCH-A", "2026-02-01", "2027-02-01"],
     ];
 
     const csv = [headers.join(",")].concat(exampleRows.map((r) => r.join(","))).join("\n");

@@ -82,7 +82,6 @@ export class ProductsService {
           manufacturer: { connect: { id: manufacturerRecord.id } },
           serialNumber: validRow.serial_number,
           batchNumber: validRow.batch_number,
-          metadataHash: validRow.metadata_hash || null,
           manufactureDate: validRow.manufacture_date,
           expiryDate: validRow.expiry_date,
           extraData: validRow.extra_data,
@@ -94,9 +93,10 @@ export class ProductsService {
     // 4️⃣ Extract vectors for Move function
     const payloadVectors = this.extractMoveVectors(storedProducts);
 
+    // Do not return created product objects or payload vectors to the client.
+    // Return a minimal acknowledgement with created count.
     return {
-      products: storedProducts,
-      payloadVectors,
+      created: storedProducts.length,
     };
   }
 
@@ -124,7 +124,6 @@ export class ProductsService {
     batch_number: ['Batch / Lot Number', 'batch', 'lot_number'],
     manufacture_date: ['Manufacture Date', 'production_date', 'mfg_date'],
     expiry_date: ['Expiry Date', 'shelf_life', 'exp_date'],
-    metadata_hash: ['Metadata Hash', 'ipfs', 'hash'],
   };
 
   private mapRowToCanonical(row: Record<string, any>) {
@@ -200,7 +199,8 @@ export class ProductsService {
     return {
       serialNumbers: products.map((p) => Buffer.from(p.serialNumber)),
       batchNumbers: products.map((p) => Buffer.from(p.batchNumber)),
-      metadataHashes: products.map((p) => (p.metadataHash ? Buffer.from(p.metadataHash) : Buffer.from([]))),
+  // metadata hashes removed from products; return empty buffers to preserve vector shape
+  metadataHashes: products.map(() => Buffer.from([])),
       manufactureDates: products.map((p) => Math.floor(p.manufactureDate.getTime() / 1000)),
       expiryDates: products.map((p) => Math.floor(p.expiryDate.getTime() / 1000)),
     };
