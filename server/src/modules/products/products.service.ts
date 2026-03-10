@@ -93,6 +93,53 @@ export class ProductsService {
     // 4️⃣ Extract vectors for Move function
     const payloadVectors = this.extractMoveVectors(storedProducts);
 
+    // 5️⃣ Create Batch records for each distinct batch_number found in the uploaded rows.
+    // Note: The existing schema ties Batch.productId to a product id. To minimally support
+    // grouping uploaded units into batches without a larger schema migration, we create
+    // a Batch record for each unique batchNumber and link it to the first created unit
+    // for that batch. We also set unitsProduced to the number of units inserted for that batch.
+    // This keeps the import flow simple while enabling batch-level queries.
+    const batchesByNumber: Record<string, typeof storedProducts> = {};
+    for (const p of storedProducts) {
+      const key = p.batchNumber || "";
+      batchesByNumber[key] = batchesByNumber[key] || [];
+      batchesByNumber[key].push(p as any);
+    }
+
+    for (const [batchNumber, productsForBatch] of Object.entries(batchesByNumber)) {
+      if (!batchNumber) continue;
+      // Try to find an existing batch with the same batchNumber for this manufacturer.
+      // This lets different product units (potentially different product_name values)
+      // be grouped into a single batch if they share the batchNumber and belong
+      // to the same manufacturer. We look up batches by relational filter on the
+      // batch's product.manufacturerId.
+      const repr = productsForBatch[0];
+      const existing = await this.prisma.batch.findFirst({
+        where: {
+          batchNumber,
+          product: { manufacturerId: manufacturerRecord.id },
+        },
+      });
+
+      if (existing) {
+        await this.prisma.batch.update({
+          where: { id: existing.id },
+          data: { unitsProduced: (existing.unitsProduced ?? 0) + productsForBatch.length },
+        });
+      } else {
+        // create a new batch and link to the representative product id
+        await this.prisma.batch.create({
+          data: {
+            productId: repr.id,
+            batchNumber,
+            manufactureDate: repr.manufactureDate,
+            expiryDate: repr.expiryDate,
+            unitsProduced: productsForBatch.length,
+          },
+        });
+      }
+    }
+
     // Do not return created product objects or payload vectors to the client.
     // Return a minimal acknowledgement with created count.
     return {

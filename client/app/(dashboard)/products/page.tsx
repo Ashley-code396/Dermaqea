@@ -8,16 +8,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 
 
-const statusVariant = { approved: "default", pending: "secondary", rejected: "destructive" } as const;
-
-// Define the Product type to match backend
+// Define the Product type returned by the backend (Prisma model)
 interface Product {
   id: string;
-  name: string;
-  sku: string;
-  category: string;
-  status: "approved" | "pending" | "rejected";
-  created_at: string;
+  product_name: string;
+  brand_wallet: string;
+  serialNumber: string;
+  batchNumber: string;
+  manufactureDate: string; // ISO
+  expiryDate: string; // ISO
+  extraData?: Record<string, any> | null;
+  objectId?: string | null;
+  createdAt: string;
 }
 
 export default function ProductsPage() {
@@ -120,28 +122,26 @@ export default function ProductsPage() {
       <Card className="border-border bg-card">
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product Name</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Serial #</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Manufacture Date</TableHead>
+                  <TableHead>Expiry Date</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {products.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell className="font-mono text-sm">{p.sku}</TableCell>
-                  <TableCell>{p.category}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[p.status]}>{p.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(p.created_at).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell className="font-medium">{p.product_name}</TableCell>
+                  <TableCell className="font-mono text-sm">{p.serialNumber}</TableCell>
+                  <TableCell>{p.batchNumber}</TableCell>
+                  <TableCell className="text-muted-foreground">{p.manufactureDate ? new Date(p.manufactureDate).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">{p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/products/${p.id}`}>View</Link>

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { MOCK_BATCHES } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import type { Batch } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,16 +24,36 @@ const statusVariant = {
 } as const;
 
 export default function BatchesPage() {
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+        const res = await fetch(`${base.replace(/\/$/, "")}/batches`);
+        if (!res.ok) throw new Error(`Failed to fetch batches: ${res.status}`);
+        const list = await res.json();
+        // sort by manufacture_date desc
+        const sorted = (list as Batch[]).sort((a, b) => new Date(b.manufacture_date).getTime() - new Date(a.manufacture_date).getTime());
+        setBatches(sorted);
+      } catch (err: any) {
+        console.error(err);
+        setError(err?.message ?? String(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchBatches();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Production Batches</h2>
-        <Button asChild>
-          <Link href="/batches/new" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create New Batch
-          </Link>
-        </Button>
       </div>
 
       <Card className="border-border bg-card">
@@ -49,28 +72,20 @@ export default function BatchesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_BATCHES.map((batch) => (
+              {batches.map((batch) => (
                 <TableRow key={batch.id}>
-                  <TableCell className="font-mono font-medium">
-                    #{batch.batch_number}
-                  </TableCell>
+                  <TableCell className="font-mono font-medium">#{batch.batch_number}</TableCell>
                   <TableCell>{batch.product?.name ?? "—"}</TableCell>
+                  <TableCell>{new Date(batch.manufacture_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(batch.expiry_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{(batch.unit_count ?? 0).toLocaleString()}</TableCell>
                   <TableCell>
-                    {new Date(batch.manufacture_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(batch.expiry_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{batch.unit_count.toLocaleString()}</TableCell>
-                  <TableCell>
-                    {batch.unit_count > 0
+                    {batch.unit_count && batch.unit_count > 0
                       ? `${Math.min(batch.unit_count, 6000).toLocaleString()} / ${batch.unit_count.toLocaleString()}`
                       : "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[batch.status]}>
-                      {batch.status}
-                    </Badge>
+                    <Badge variant={statusVariant[batch.status as keyof typeof statusVariant]}>{batch.status}</Badge>
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" asChild>
@@ -84,23 +99,18 @@ export default function BatchesPage() {
         </CardContent>
       </Card>
 
-      {MOCK_BATCHES.length === 0 && (
+      {!loading && batches.length === 0 && (
         <Card className="border-border bg-card">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Boxes className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 font-semibold">No batches yet</h3>
             <p className="mb-4 max-w-sm text-center text-sm text-muted-foreground">
-              Create your first production batch for an approved product.
+              Upload products (ERP import) including a batch number — the system will auto-group uploaded units into batches.
             </p>
-            <Button asChild>
-              <Link href="/batches/new" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create New Batch
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

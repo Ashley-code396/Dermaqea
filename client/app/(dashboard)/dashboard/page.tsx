@@ -9,17 +9,39 @@ import useManufacturer from '@/lib/useManufacturer';
 import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 import {
   MOCK_ACTIVITY,
-  MOCK_BATCHES,
   MOCK_PRODUCTS,
   MOCK_SCAN_DATA,
   MOCK_MANUFACTURER,
 } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import type { Batch } from "@/types";
 import { Package, Boxes, Download } from "lucide-react";
 
 export default function DashboardPage() {
   const approvedProducts = MOCK_PRODUCTS.filter((p) => p.status === "approved").length;
   const pendingProducts = MOCK_PRODUCTS.filter((p) => p.status === "pending").length;
-  const totalQRCodes = MOCK_BATCHES.reduce((sum, b) => sum + b.unit_count, 0);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [batchesLoading, setBatchesLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      setBatchesLoading(true);
+      try {
+        const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+        const res = await fetch(`${base.replace(/\/$/, "")}/batches`);
+        if (!res.ok) throw new Error('Failed to fetch batches');
+        const list = await res.json();
+        setBatches(list);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setBatchesLoading(false);
+      }
+    };
+    void fetchBatches();
+  }, []);
+
+  const totalQRCodes = batches.reduce((sum, b) => sum + (b.unit_count ?? 0), 0);
 
   const statusConfig = {
     VERIFIED: {
@@ -67,14 +89,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <StatsRow
-        totalProducts={MOCK_PRODUCTS.length}
-        approvedProducts={approvedProducts}
-        pendingProducts={pendingProducts}
-        totalBatches={MOCK_BATCHES.length}
-        totalQRCodes={totalQRCodes}
-        scansToday={247}
-      />
+          <StatsRow
+            totalProducts={MOCK_PRODUCTS.length}
+            approvedProducts={approvedProducts}
+            pendingProducts={pendingProducts}
+            totalBatches={batches.length}
+            totalQRCodes={totalQRCodes}
+            scansToday={247}
+          />
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
@@ -82,12 +104,6 @@ export default function DashboardPage() {
           <Link href="/products/new" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             Submit New Product
-          </Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/batches/new" className="flex items-center gap-2">
-            <Boxes className="h-4 w-4" />
-            Create New Batch
           </Link>
         </Button>
         <Button variant="outline" asChild>

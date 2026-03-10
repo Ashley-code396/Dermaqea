@@ -1,47 +1,94 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBatchDto } from './dto/create-batch.dto';
-
-export interface Batch {
-  id: string;
-  productId: string;
-  batchNumber: string;
-  manufacturedAt?: string;
-  expiresAt?: string;
-  createdAt: string;
-}
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class BatchesService {
-  private batches: Batch[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(): Batch[] {
-    return this.batches;
+  // Return batches shaped for the frontend (legacy snake_case fields used by the client)
+  async findAll() {
+    const batches = await this.prisma.batch.findMany({
+      include: { product: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return batches.map((b) => ({
+      id: b.id,
+      product_id: b.productId,
+      product: b.product ? { id: b.product.id, name: b.product.product_name } : undefined,
+      sui_object_id: b.product?.objectId ?? null,
+      batch_number: b.batchNumber,
+      manufacture_date: b.manufactureDate.toISOString().split('T')[0],
+      expiry_date: b.expiryDate.toISOString().split('T')[0],
+      unit_count: b.unitsProduced ?? 0,
+      facility: null,
+      stolen: false,
+      status: b.status.toLowerCase(),
+      created_at: b.createdAt.toISOString(),
+    }));
   }
 
-  findByProduct(productId: string): Batch[] {
-    return this.batches.filter((b) => b.productId === productId);
+  async findByProduct(productId: string) {
+    const batches = await this.prisma.batch.findMany({ where: { productId }, include: { product: true }, orderBy: { createdAt: 'desc' } });
+    return batches.map((b) => ({
+      id: b.id,
+      product_id: b.productId,
+      product: b.product ? { id: b.product.id, name: b.product.product_name } : undefined,
+      sui_object_id: b.product?.objectId ?? null,
+      batch_number: b.batchNumber,
+      manufacture_date: b.manufactureDate.toISOString().split('T')[0],
+      expiry_date: b.expiryDate.toISOString().split('T')[0],
+      unit_count: b.unitsProduced ?? 0,
+      facility: null,
+      stolen: false,
+      status: b.status.toLowerCase(),
+      created_at: b.createdAt.toISOString(),
+    }));
   }
 
-  findOne(id: string): Batch {
-    const b = this.batches.find((x) => x.id === id);
+  async findOne(id: string) {
+    const b = await this.prisma.batch.findUnique({ where: { id }, include: { product: true } });
     if (!b) throw new NotFoundException(`Batch ${id} not found`);
-    return b;
-  }
-
-  create(dto: CreateBatchDto): Batch {
-    const batch: Batch = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-      productId: dto.productId,
-      batchNumber: dto.batchNumber,
-      manufacturedAt: dto.manufacturedAt,
-      expiresAt: dto.expiresAt,
-      createdAt: new Date().toISOString(),
+    return {
+      id: b.id,
+      product_id: b.productId,
+      product: b.product ? { id: b.product.id, name: b.product.product_name } : undefined,
+      sui_object_id: b.product?.objectId ?? null,
+      batch_number: b.batchNumber,
+      manufacture_date: b.manufactureDate.toISOString().split('T')[0],
+      expiry_date: b.expiryDate.toISOString().split('T')[0],
+      unit_count: b.unitsProduced ?? 0,
+      facility: null,
+      stolen: false,
+      status: b.status.toLowerCase(),
+      created_at: b.createdAt.toISOString(),
     };
-    this.batches.push(batch);
-    return batch;
   }
 
-  count(): number {
-    return this.batches.length;
+  async count(): Promise<number> {
+    return this.prisma.batch.count();
+  }
+
+  async create(dto: CreateBatchDto) {
+    const b = await this.prisma.batch.create({
+      data: {
+        productId: dto.productId,
+        batchNumber: dto.batchNumber,
+        manufactureDate: dto.manufacturedAt ? new Date(dto.manufacturedAt) : new Date(),
+        expiryDate: dto.expiresAt ? new Date(dto.expiresAt) : new Date(),
+        unitsProduced: 0,
+      },
+    });
+
+    return {
+      id: b.id,
+      product_id: b.productId,
+      batch_number: b.batchNumber,
+      manufacture_date: b.manufactureDate.toISOString().split('T')[0],
+      expiry_date: b.expiryDate.toISOString().split('T')[0],
+      unit_count: b.unitsProduced ?? 0,
+      created_at: b.createdAt.toISOString(),
+    };
   }
 }

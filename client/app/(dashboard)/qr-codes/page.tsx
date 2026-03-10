@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { MOCK_QR_CODES, MOCK_BATCHES } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { MOCK_QR_CODES } from "@/lib/mock-data";
+import type { Batch } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,18 +25,36 @@ const statusVariant = {
 } as const;
 
 export default function QRCodesPage() {
-  const totalGenerated = MOCK_BATCHES.reduce(
-    (sum, b) => sum + Math.min(b.unit_count, 6000),
-    0
-  );
-  const totalUnits = MOCK_BATCHES.reduce((sum, b) => sum + b.unit_count, 0);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      setLoading(true);
+      try {
+        const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+        const res = await fetch(`${base.replace(/\/$/, "")}/batches`);
+        if (!res.ok) throw new Error('Failed to fetch batches');
+        const list = await res.json();
+        setBatches(list);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchBatches();
+  }, []);
+
+  const totalGenerated = batches.reduce((sum, b) => sum + Math.min(b.unit_count ?? 0, 6000), 0);
+  const totalUnits = batches.reduce((sum, b) => sum + (b.unit_count ?? 0), 0);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">QR Codes</h2>
         <Button variant="outline" asChild>
-          <Link href="/batches/batch-1" className="gap-2">
+          <Link href="/batches" className="gap-2">
             <Download className="h-4 w-4" />
             Download QR Codes
           </Link>
@@ -52,7 +74,7 @@ export default function QRCodesPage() {
           <CardHeader className="pb-2">
             <p className="text-sm text-muted-foreground">Across Batches</p>
             <p className="text-2xl font-semibold">
-              {MOCK_BATCHES.length}
+              {loading ? "—" : batches.length}
             </p>
           </CardHeader>
         </Card>
@@ -109,7 +131,7 @@ export default function QRCodesPage() {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/batches/batch-1`}>View Batch</Link>
+                      <Link href={`/batches`}>View Batch</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
