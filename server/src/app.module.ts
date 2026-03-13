@@ -5,10 +5,11 @@ import { ProductsModule } from './modules/products/products.module';
 import { BatchesModule } from './modules/batches/batches.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
+import { EnokiModule } from './modules/enoki/enoki.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ProductsModule, BatchesModule, StatsModule, ManufacturersModule, ConfigModule.forRoot()],
+  imports: [ProductsModule, BatchesModule, StatsModule, ManufacturersModule, EnokiModule, ConfigModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })

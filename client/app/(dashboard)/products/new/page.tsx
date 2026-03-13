@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -43,6 +43,8 @@ export default function NewProductPage() {
   const [attachedFileInfo, setAttachedFileInfo] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [backendResponse, setBackendResponse] = useState<any>(null);
+  const [minting, setMinting] = useState<Record<string, boolean>>({});
+  const [autoMint, setAutoMint] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,6 +92,26 @@ export default function NewProductPage() {
     }
   };
 
+  const handleMintBatch = async (batchId: string) => {
+    setMinting((s) => ({ ...s, [batchId]: true }));
+    try {
+      const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+      const resp = await fetch(`${base.replace(/\/$/, "")}/batches/${batchId}/mint`, { method: 'POST' });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(`Mint failed: ${resp.status} ${txt}`);
+      }
+      const json = await resp.json();
+      console.log('Mint result', json);
+      alert('Batch minted — check server logs / blockchain');
+    } catch (e: any) {
+      console.error(e);
+      alert(`Batch mint failed: ${e?.message ?? String(e)}`);
+    } finally {
+      setMinting((s) => ({ ...s, [batchId]: false }));
+    }
+  };
+
   const generateAndDownloadTemplate = () => {
     const headers = ["serial_number", "batch_number", "manufacture_date", "expiry_date"];
     const exampleRows = [
@@ -108,6 +130,25 @@ export default function NewProductPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  // After a successful backend response, if autoMint is enabled, mint each returned batch sequentially.
+  useEffect(() => {
+    if (!autoMint) return;
+    if (!backendResponse || !Array.isArray(backendResponse.batches)) return;
+
+    const mintAll = async () => {
+      for (const b of backendResponse.batches) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          await handleMintBatch(b.id);
+        } catch (e) {
+          // continue on error; handleMintBatch already alerts/logs
+        }
+      }
+    };
+
+    void mintAll();
+  }, [backendResponse, autoMint]);
 
   return (
     <div className="space-y-6 ml-4 md:ml-8">
@@ -165,6 +206,10 @@ export default function NewProductPage() {
                   Reset
                 </Button>
               </div>
+              <div className="mt-2 flex items-center gap-2">
+                <input id="autoMint" type="checkbox" className="h-4 w-4" checked={autoMint} onChange={(e) => setAutoMint(e.target.checked)} />
+                <label htmlFor="autoMint" className="text-sm">Automatically mint created batches after upload</label>
+              </div>
             </form>
           </Form>
 
@@ -176,6 +221,21 @@ export default function NewProductPage() {
               <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-muted p-3 text-sm">
                 {JSON.stringify(backendResponse, null, 2)}
               </pre>
+              {backendResponse.batches && backendResponse.batches.length > 0 && (
+                <div className="mt-4">
+                  <h5 className="font-medium">Actions</h5>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {backendResponse.batches.map((b: any) => (
+                      <div key={b.id} className="flex items-center gap-2">
+                        <div className="flex-1 text-sm">Batch <span className="font-mono">{b.batchNumber}</span> — {b.unitsProduced} units</div>
+                        <Button size="sm" onClick={() => void handleMintBatch(b.id)} disabled={!!minting[b.id]}>
+                          {minting[b.id] ? 'Minting…' : 'Mint this batch'}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

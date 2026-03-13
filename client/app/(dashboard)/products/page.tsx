@@ -24,6 +24,7 @@ interface Product {
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [minting, setMinting] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchProducts = async () => {
@@ -143,9 +144,37 @@ export default function ProductsPage() {
                   <TableCell className="text-muted-foreground">{p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '-'}</TableCell>
                   <TableCell className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/products/${p.id}`}>View</Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/products/${p.id}`}>View</Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={async () => {
+                          setMinting((s) => ({ ...s, [p.id]: true }));
+                          try {
+                            const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+                            const res = await fetch(`${base.replace(/\/$/, "")}/products/${p.id}/mint`, { method: 'POST' });
+                            if (!res.ok) {
+                              const txt = await res.text();
+                              throw new Error(`${res.status} ${txt}`);
+                            }
+                            const j = await res.json();
+                            console.log('mint result', j);
+                            alert('Product mint submitted (check server logs)');
+                          } catch (e: any) {
+                            console.error(e);
+                            alert(`Product mint failed: ${e?.message ?? String(e)}`);
+                          } finally {
+                            setMinting((s) => ({ ...s, [p.id]: false }));
+                          }
+                        }}
+                        disabled={!!minting[p.id]}
+                      >
+                        {minting[p.id] ? 'Minting…' : 'Mint'}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

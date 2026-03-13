@@ -25,6 +25,7 @@ const statusVariant = {
 
 export default function BatchesPage() {
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [minting, setMinting] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +50,28 @@ export default function BatchesPage() {
     };
     void fetchBatches();
   }, []);
+
+  const handleBatchMint = async (batchId: string) => {
+    setMinting((s) => ({ ...s, [batchId]: true }));
+    try {
+      const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
+      const res = await fetch(`${base.replace(/\/$/, "")}/batches/${batchId}/mint`, { method: 'POST' });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Mint failed: ${res.status} ${txt}`);
+      }
+      const json = await res.json();
+      // Show a simple success; better UX could show tx digest/hash
+      // eslint-disable-next-line no-console
+      console.log('Batch mint result', json);
+      alert('Batch mint transaction submitted (check server logs / blockchain).');
+    } catch (err: any) {
+      console.error(err);
+      alert(`Batch mint failed: ${err?.message ?? String(err)}`);
+    } finally {
+      setMinting((s) => ({ ...s, [batchId]: false }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -88,9 +111,19 @@ export default function BatchesPage() {
                     <Badge variant={statusVariant[batch.status as keyof typeof statusVariant]}>{batch.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/batches/${batch.id}`}>View</Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/batches/${batch.id}`}>View</Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => void handleBatchMint(batch.id)}
+                        disabled={!!minting[batch.id]}
+                      >
+                        {minting[batch.id] ? 'Minting…' : 'Batch Mint'}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

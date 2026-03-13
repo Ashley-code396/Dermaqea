@@ -106,6 +106,8 @@ export class ProductsService {
       batchesByNumber[key].push(p as any);
     }
 
+    const batchesCreated: Array<{ id: string; batchNumber: string; unitsProduced: number }> = [];
+
     for (const [batchNumber, productsForBatch] of Object.entries(batchesByNumber)) {
       if (!batchNumber) continue;
       // Try to find an existing batch with the same batchNumber for this manufacturer.
@@ -113,7 +115,7 @@ export class ProductsService {
       // be grouped into a single batch if they share the batchNumber and belong
       // to the same manufacturer. We look up batches by relational filter on the
       // batch's product.manufacturerId.
-      const repr = productsForBatch[0];
+  const repr = productsForBatch[0];
       const existing = await this.prisma.batch.findFirst({
         where: {
           batchNumber,
@@ -126,9 +128,11 @@ export class ProductsService {
           where: { id: existing.id },
           data: { unitsProduced: (existing.unitsProduced ?? 0) + productsForBatch.length },
         });
+        // track existing batch id
+        batchesCreated.push({ id: existing.id, batchNumber, unitsProduced: (existing.unitsProduced ?? 0) + productsForBatch.length });
       } else {
         // create a new batch and link to the representative product id
-        await this.prisma.batch.create({
+        const newBatch = await this.prisma.batch.create({
           data: {
             productId: repr.id,
             batchNumber,
@@ -137,13 +141,14 @@ export class ProductsService {
             unitsProduced: productsForBatch.length,
           },
         });
+        batchesCreated.push({ id: newBatch.id, batchNumber, unitsProduced: productsForBatch.length });
       }
     }
 
-    // Do not return created product objects or payload vectors to the client.
-    // Return a minimal acknowledgement with created count.
+    // Return created count and the affected batches so the frontend can act (e.g. mint on-chain)
     return {
       created: storedProducts.length,
+      batches: batchesCreated,
     };
   }
 
@@ -233,12 +238,44 @@ export class ProductsService {
       if (!row[r]) throw new BadRequestException(`Missing required field: ${r}`);
     }
 
-    row.manufacture_date = new Date(row.manufacture_date);
-    row.expiry_date = new Date(row.expiry_date);
+    const parseToDate = (input: any, fieldName: string) => {
+      if (input instanceof Date) return input;
+      if (typeof input === 'number') {
+        // Heuristic: large numbers (>1e12) are ms, >1e9 are seconds
+        if (input > 1e12) return new Date(input);
+        if (input > 1e9) return new Date(input * 1000);
+        // fallback: treat as days offset (Excel) -> convert from 1899-12-30
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        return new Date(excelEpoch.getTime() + Math.floor(input) * 24 * 60 * 60 * 1000);
+      }
+      if (typeof input === 'string') {
+        const s = input.trim();
+        // YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s);
+        // MM/DD/YYYY or M/D/YYYY
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+          const [m, d, y] = s.split('/').map((x) => parseInt(x, 10));
+          return new Date(y, m - 1, d);
+        }
+        // Unix timestamp in seconds or milliseconds string
+        if (/^\d{10,}$/.test(s)) {
+          const n = Number(s);
+          if (n > 1e12) return new Date(n);
+          if (n > 1e9) return new Date(n * 1000);
+        }
+        // Try Date.parse (ISO, RFC)
+        const parsed = Date.parse(s);
+        if (!isNaN(parsed)) return new Date(parsed);
+        // Try replacing dashes with slashes (some locales)
+        const alt = Date.parse(s.replace(/-/g, '/'));
+        if (!isNaN(alt)) return new Date(alt);
+      }
 
-    if (isNaN(row.manufacture_date.getTime()) || isNaN(row.expiry_date.getTime())) {
-      throw new BadRequestException('Invalid date format');
-    }
+      throw new BadRequestException(`Invalid date format for ${fieldName}: ${String(input)}`);
+    };
+
+    row.manufacture_date = parseToDate(row.manufacture_date, 'manufacture_date');
+    row.expiry_date = parseToDate(row.expiry_date, 'expiry_date');
 
     return row;
   }

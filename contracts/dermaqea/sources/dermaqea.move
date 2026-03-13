@@ -1,6 +1,6 @@
 module dermaqea::dermaqea;
 
-use dermaqea::admin::{Self, MinterCap};
+use dermaqea::admin;
 use dermaqea::serial_registry::{Self, SerialRegistry};
 use sui::package;
 use sui::clock::Clock;
@@ -19,26 +19,24 @@ fun init(otw: DERMAQEA, ctx: &mut TxContext) {
 
 
 public fun mint_new_product(
-        cap: &MinterCap,
         registry: &mut SerialRegistry,
         brand_wallet: address,
         product_name: String,
         serial_number: vector<u8>,
         batch_number: vector<u8>,
-        metadata_hash: vector<u8>,
         manufacture_date: u64,
         expiry_date: u64,
         clock: &Clock,
         ctx: &mut TxContext,
     ) {
         product::mint_product(
-            cap,
+            
             registry,
             brand_wallet,
             product_name,
             serial_number,
             batch_number,
-            metadata_hash,
+            
             manufacture_date,
             expiry_date,
             clock,
@@ -47,13 +45,11 @@ public fun mint_new_product(
     }
 
 public fun batch_mint_new_products(
-    cap: &MinterCap,
     registry: &mut SerialRegistry,
     brand_wallet: address,
     product_name: String,                 
     serial_numbers: vector<vector<u8>>,   
     batch_numbers: vector<vector<u8>>,
-    metadata_hashes: vector<vector<u8>>,
     manufacture_dates: vector<u64>,
     expiry_dates: vector<u64>,
     clock: &Clock,
@@ -66,14 +62,12 @@ public fun batch_mint_new_products(
     while (i < len) {
        
         product::mint_product(
-            cap,
             registry,
             brand_wallet,
             product_name,      // reused for every item
             serial_numbers[i],
             batch_numbers[i],
-            metadata_hashes[i],
-            manufacture_dates[i],
+                manufacture_dates[i],
             expiry_dates[i],
             clock,
             ctx,

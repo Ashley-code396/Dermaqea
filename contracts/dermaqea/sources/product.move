@@ -1,13 +1,10 @@
 module dermaqea::product;
 
-use sui::event;
-use sui::table::{Self, Table};
-use sui::clock::{Self, Clock};
-use dermaqea::serial_registry::{Self,SerialRegistry};
-use std::string::String;
 use dermaqea::admin::MinterCap;
-
-
+use dermaqea::serial_registry::{Self, SerialRegistry};
+use std::string::String;
+use sui::clock::{Self, Clock};
+use sui::event;
 
 
 const ENotAuthorized: u64 = 0;
@@ -17,13 +14,10 @@ const EProductFlagged: u64 = 3;
 const EProductCounterfeit: u64 = 4;
 const EInvalidStatus: u64 = 5;
 
-
-
 const STATUS_ACTIVE: u8 = 0;
 const STATUS_SOLD: u8 = 1;
 const STATUS_FLAGGED: u8 = 2;
 const STATUS_COUNTERFEIT: u8 = 3;
-
 
 // One physical skincare product unit ↔ one on-chain digital twin.
 public struct ProductTwin has key, store {
@@ -34,12 +28,10 @@ public struct ProductTwin has key, store {
     batch_number: vector<u8>,
     manufacture_date: u64,
     expiry_date: u64,
-    metadata_hash: vector<u8>,
     verification_count: u64,
     status: u8,
     current_owner: address,
 }
-
 
 public struct ProductMinted has copy, drop {
     product_id: address,
@@ -80,15 +72,15 @@ public struct OwnershipTransferred has copy, drop {
     to: address,
     transferred_at: u64,
 }
+
+
 #[allow(lint(self_transfer))]
 public(package) fun mint_product(
-    _cap: &MinterCap,
     registry: &mut SerialRegistry,
     brand_wallet: address,
     product_name: String,
     serial_number: vector<u8>,
     batch_number: vector<u8>,
-    metadata_hash: vector<u8>,
     manufacture_date: u64,
     expiry_date: u64,
     clock: &Clock,
@@ -96,31 +88,24 @@ public(package) fun mint_product(
 ) {
     let now = clock::timestamp_ms(clock);
 
-    
     assert!(expiry_date > now, EProductExpired);
 
-    assert!(
-        !serial_registry::has_serial(registry, &serial_number),
-        EDuplicateSerialNumber,
-    );
+    assert!(!serial_registry::has_serial(registry, &serial_number), EDuplicateSerialNumber);
     let twin = ProductTwin {
         id: object::new(ctx),
         brand_wallet,
         product_name,
         serial_number,
         batch_number,
-        metadata_hash,
         manufacture_date,
         expiry_date,
         verification_count: 0,
         status: STATUS_ACTIVE,
         current_owner: ctx.sender(),
     };
-   
 
     let product_id = object::uid_to_address(&twin.id);
 
-    
     serial_registry::add_serial(registry, twin.serial_number, product_id);
 
     event::emit(ProductMinted {
@@ -135,12 +120,7 @@ public(package) fun mint_product(
     transfer::transfer(twin, ctx.sender());
 }
 
-
-public fun verify_product(
-    twin: &mut ProductTwin,
-    clock: &Clock,
-    ctx: &mut TxContext,
-) {
+public fun verify_product(twin: &mut ProductTwin, clock: &Clock, ctx: &mut TxContext) {
     let now = clock::timestamp_ms(clock);
 
     // Reject flagged / counterfeit products.
@@ -164,11 +144,7 @@ public fun verify_product(
 /// Emitted by the frontend/backend when a scanned object ID does not exist
 /// (object not found on RPC). The backend calls this entry to record the
 /// attempt on-chain for audit purposes.
-entry fun report_counterfeit_attempt(
-    attempted_id: address,
-    clock: &Clock,
-    ctx: &mut TxContext,
-) {
+entry fun report_counterfeit_attempt(attempted_id: address, clock: &Clock, ctx: &TxContext) {
     event::emit(CounterfeitAttempted {
         attempted_id,
         scanner: ctx.sender(),
@@ -198,7 +174,6 @@ public fun update_status(
         updated_at: clock::timestamp_ms(clock),
     });
 }
-
 
 /// Transfer product ownership (e.g. retail sale: brand → consumer).
 /// Only the current owner can initiate transfer.
@@ -231,16 +206,21 @@ public fun transfer_ownership(
 public fun product_id(twin: &ProductTwin): address {
     object::uid_to_address(&twin.id)
 }
+
 public fun brand_wallet(twin: &ProductTwin): address { twin.brand_wallet }
+
 public fun product_name(twin: &ProductTwin): &String { &twin.product_name }
+
 public fun serial_number(twin: &ProductTwin): &vector<u8> { &twin.serial_number }
+
 public fun batch_number(twin: &ProductTwin): &vector<u8> { &twin.batch_number }
+
 public fun manufacture_date(twin: &ProductTwin): u64 { twin.manufacture_date }
+
 public fun expiry_date(twin: &ProductTwin): u64 { twin.expiry_date }
-public fun metadata_hash(twin: &ProductTwin): &vector<u8> { &twin.metadata_hash }
+
 public fun verification_count(twin: &ProductTwin): u64 { twin.verification_count }
+
 public fun status(twin: &ProductTwin): u8 { twin.status }
+
 public fun current_owner(twin: &ProductTwin): address { twin.current_owner }
-
-
-

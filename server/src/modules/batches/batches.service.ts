@@ -91,4 +91,39 @@ export class BatchesService {
       created_at: b.createdAt.toISOString(),
     };
   }
+
+  /**
+   * Build arguments for a batch mint operation using DB records.
+   * Returns an object shaped for the enoki.batch-mint controller.
+   */
+  async buildMintArgs(batchId: string) {
+    const b = await this.prisma.batch.findUnique({ where: { id: batchId }, include: { product: true } });
+    if (!b) throw new NotFoundException(`Batch ${batchId} not found`);
+
+    // Find all products that belong to the same manufacturer and share the same batch number
+    const products = await this.prisma.product.findMany({
+      where: {
+        batchNumber: b.batchNumber,
+        manufacturerId: b.product.manufacturerId,
+      },
+    });
+
+    const items = products.map((p) => ({
+      serialNumber: p.serialNumber,
+      batchNumber: p.batchNumber,
+      metadataHash: '',
+      manufactureDate: Math.floor(p.manufactureDate.getTime() / 1000),
+      expiryDate: Math.floor(p.expiryDate.getTime() / 1000),
+    }));
+
+    // Use the representative product as source for brand wallet and product name
+    const repr = b.product as any;
+
+    return {
+      serialRegistryId: repr?.objectId ?? null,
+      brandWalletAddress: repr?.brand_wallet ?? repr?.brandWallet ?? null,
+      productName: repr?.product_name ?? repr?.productName ?? 'Unknown product',
+      items,
+    };
+  }
 }
