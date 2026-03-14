@@ -1,7 +1,5 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { EnokiService } from './enoki.service';
-import { Transaction } from '@mysten/sui/transactions';
-import { bcs } from '@mysten/sui/bcs';
 
 @Controller('enoki')
 export class EnokiController {
@@ -46,15 +44,16 @@ export class EnokiController {
 
     return executedTx;
   }
-  @Post('batch-mint')
+  @Post('batch-mint/sponsor')
   @HttpCode(HttpStatus.OK)
-  async batchMintSponsored(
+  async createBatchMintSponsored(
     @Body()
     body: {
-      minterCapId: string;
+     
       serialRegistryId: string;
       brandWalletAddress: string;
       productName: string;
+      sender: string; // the client address that will sign
       items: Array<{
         serialNumber: string;
         batchNumber: string;
@@ -64,45 +63,7 @@ export class EnokiController {
       }>;
     },
   ) {
-    const {
-      minterCapId,
-      serialRegistryId,
-      brandWalletAddress,
-      productName,
-      items,
-    } = body;
-
-    const toBytes = (str: string) => Array.from(new TextEncoder().encode(str));
-
-    const serialNumbers = items.map((i) => toBytes(i.serialNumber));
-    const batchNumbers = items.map((i) => toBytes(i.batchNumber));
-    const metadataHashes = items.map((i) => toBytes(i.metadataHash));
-    const manufactureDates = items.map((i) => i.manufactureDate);
-    const expiryDates = items.map((i) => i.expiryDate);
-
-    const tx = new Transaction();
-    const packageId = process.env.PACKAGE_ID;
-
-    if (!packageId) {
-      throw new Error('PACKAGE_ID is not configured on the server.');
-    }
-
-    tx.moveCall({
-      target: `${packageId}::dermaqea::batch_mint_new_products`,
-      arguments: [
-        tx.object(minterCapId),
-        tx.object(serialRegistryId),
-        tx.pure.address(brandWalletAddress),
-        tx.pure.string(productName),
-        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(serialNumbers)),
-        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(batchNumbers)),
-        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(metadataHashes)),
-        tx.pure.vector('u64', manufactureDates),
-        tx.pure.vector('u64', expiryDates),
-        tx.object.clock(),
-      ],
-    });
-
-    return await this.enokiService.sponsorAndExecuteTransaction(tx);
+    const sponsored = await this.enokiService.createSponsoredBatchMint(body as any);
+    return sponsored;
   }
 }

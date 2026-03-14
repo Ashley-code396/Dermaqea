@@ -4,6 +4,8 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import { BatchesService } from '../batches/batches.service';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -14,7 +16,11 @@ import * as XLSX from 'xlsx';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly batchesService: BatchesService,
+  ) {}
 
   async findAll(): Promise<Product[]> {
     return this.prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
@@ -288,5 +294,14 @@ export class ProductsService {
       manufactureDates: products.map((p) => Math.floor(p.manufactureDate.getTime() / 1000)),
       expiryDates: products.map((p) => Math.floor(p.expiryDate.getTime() / 1000)),
     };
+  }
+
+  /**
+   * Mint a single product on-chain. Mint implementation has been moved to
+   * `BatchesService.mintProduct` so this method simply delegates to it.
+   */
+  async mint(id: string, sender: string) {
+    // Create a sponsored transaction for the client to sign. No admin key used.
+    return await this.batchesService.sponsorMintProduct(id, sender);
   }
 }

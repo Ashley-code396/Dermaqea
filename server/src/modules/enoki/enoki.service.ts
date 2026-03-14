@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnokiClient } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
+import { bcs } from '@mysten/sui/bcs';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { fromBase64, toBase64 } from '@mysten/bcs';
 
@@ -118,5 +119,149 @@ export class EnokiService {
       digest: sponsored.digest,
       signature,
     });
+  }
+
+  /**
+   * Builds and executes a batch mint transaction for multiple products.
+   * This moves the controller logic into the service so the controller can remain thin.
+   */
+  async batchMintSponsored(params: {
+    minterCapId: string;
+    serialRegistryId: string;
+    brandWalletAddress: string;
+    productName: string;
+    items: Array<{
+      serialNumber: string;
+      batchNumber: string;
+      metadataHash: string;
+      manufactureDate: number;
+      expiryDate: number;
+    }>;
+  }) {
+    const {
+      minterCapId,
+      serialRegistryId,
+      brandWalletAddress,
+      productName,
+      items,
+    } = params;
+
+    const toBytes = (str: string) => Array.from(new TextEncoder().encode(str));
+
+    const serialNumbers = items.map((i) => toBytes(i.serialNumber));
+    const batchNumbers = items.map((i) => toBytes(i.batchNumber));
+    const metadataHashes = items.map((i) => toBytes(i.metadataHash));
+    const manufactureDates = items.map((i) => i.manufactureDate);
+    const expiryDates = items.map((i) => i.expiryDate);
+
+    const tx = new Transaction();
+    const packageId = this.configService.get<string>('PACKAGE_ID');
+
+    if (!packageId) {
+      throw new Error('PACKAGE_ID is not configured on the server.');
+    }
+
+    tx.moveCall({
+      target: `${packageId}::dermaqea::batch_mint_new_products`,
+      arguments: [
+        tx.object(minterCapId),
+        tx.object(serialRegistryId),
+        tx.pure.address(brandWalletAddress),
+        tx.pure.string(productName),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(serialNumbers)),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(batchNumbers)),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(metadataHashes)),
+        tx.pure.vector('u64', manufactureDates),
+        tx.pure.vector('u64', expiryDates),
+        tx.object.clock(),
+      ],
+    });
+
+    return await this.sponsorAndExecuteTransaction(tx);
+  }
+
+  /**
+   * Build the transaction bytes (onlyTransactionKind) and call Enoki to create a sponsored transaction.
+   * Returns the sponsored transaction object (bytes, digest, etc.) which the client can sign.
+   */
+  async sponsorTransaction(
+    tx: Transaction,
+    sender: string,
+    allowedMoveCallTargets?: string[],
+    allowedAddresses?: string[],
+  ) {
+    const txBytes = await tx.build({ onlyTransactionKind: true });
+    return await this.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      sender,
+      allowedMoveCallTargets,
+      allowedAddresses,
+    });
+  }
+
+  /**
+   * Build a batch-mint transaction and create a sponsored transaction for the provided sender.
+   * This returns the sponsored payload so the client can sign and then call execute.
+   */
+  async createSponsoredBatchMint(params: {
+    minterCapId: string;
+    serialRegistryId: string;
+    brandWalletAddress: string;
+    productName: string;
+    items: Array<{
+      serialNumber: string;
+      batchNumber: string;
+      metadataHash: string;
+      manufactureDate: number;
+      expiryDate: number;
+    }>;
+    sender: string;
+    allowedMoveCallTargets?: string[];
+    allowedAddresses?: string[];
+  }) {
+    const {
+      minterCapId,
+      serialRegistryId,
+      brandWalletAddress,
+      productName,
+      items,
+      sender,
+      allowedMoveCallTargets,
+      allowedAddresses,
+    } = params;
+
+    const toBytes = (str: string) => Array.from(new TextEncoder().encode(str));
+
+    const serialNumbers = items.map((i) => toBytes(i.serialNumber));
+    const batchNumbers = items.map((i) => toBytes(i.batchNumber));
+    const metadataHashes = items.map((i) => toBytes(i.metadataHash));
+    const manufactureDates = items.map((i) => i.manufactureDate);
+    const expiryDates = items.map((i) => i.expiryDate);
+
+    const tx = new Transaction();
+
+    const packageId = this.configService.get<string>('PACKAGE_ID');
+
+    if (!packageId) {
+      throw new Error('PACKAGE_ID is not configured on the server.');
+    }
+
+    tx.moveCall({
+      target: `${packageId}::dermaqea::batch_mint_new_products`,
+      arguments: [
+        tx.object(minterCapId),
+        tx.object(serialRegistryId),
+        tx.pure.address(brandWalletAddress),
+        tx.pure.string(productName),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(serialNumbers)),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(batchNumbers)),
+        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(metadataHashes)),
+        tx.pure.vector('u64', manufactureDates),
+        tx.pure.vector('u64', expiryDates),
+        tx.object.clock(),
+      ],
+    });
+
+    return await this.sponsorTransaction(tx, sender, allowedMoveCallTargets, allowedAddresses);
   }
 }
