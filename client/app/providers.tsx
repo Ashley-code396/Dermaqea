@@ -41,6 +41,17 @@ function RegisterEnokiWallets() {
 
     // Wrap registration in try/catch and log errors to help diagnose registration failures.
     try {
+      // Log environment and runtime hints to aid debugging when registration fails.
+      // Avoid printing secret values; only log presence flags.
+      // eslint-disable-next-line no-console
+      console.log('[Enoki] registerEnokiWallets: starting', {
+        network,
+        hasApiKey: !!process.env.NEXT_PUBLIC_ENOKI_API_KEY,
+        hasGoogleId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        hasFacebookId: !!process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID,
+        hasTwitchId: !!process.env.NEXT_PUBLIC_TWITCH_CLIENT_ID,
+      });
+
       const result = registerEnokiWallets({
         apiKey: process.env.NEXT_PUBLIC_ENOKI_API_KEY ?? 'YOUR_PUBLIC_ENOKI_API_KEY',
         providers: {
@@ -53,9 +64,12 @@ function RegisterEnokiWallets() {
       });
 
       // registerEnokiWallets may return an unregister function or an object with unregister.
-      // Mark Enoki as registered on the window so UI can wait for registration to complete
+      // Only mark Enoki as registered if we received a truthy result.
       try {
-        (window as any).__ENOKI_REGISTERED = true;
+        const ok = !!result;
+        (window as any).__ENOKI_REGISTERED = ok;
+        // eslint-disable-next-line no-console
+        console.log('[Enoki] registerEnokiWallets: result', { ok, resultType: typeof result });
       } catch (e) {
         // ignore in non-browser environments
       }

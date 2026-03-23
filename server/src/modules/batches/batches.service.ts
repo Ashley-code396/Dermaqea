@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EnokiService } from '../enoki/enoki.service';
@@ -8,6 +8,7 @@ import { bcs } from '@mysten/sui/bcs';
 
 @Injectable()
 export class BatchesService {
+  private readonly logger = new Logger(BatchesService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly enokiService: EnokiService,
@@ -168,13 +169,33 @@ export class BatchesService {
     const packageId = this.configService.get<string>('PACKAGE_ID');
     if (!packageId) throw new BadRequestException('PACKAGE_ID not configured');
 
+    // Diagnostic: log the inputs we will pass on-chain (safe: no secrets)
+    this.logger.debug(`sponsorMintProduct inputs: serialNumber=${(p as any).serialNumber ?? p.serialNumber}, batchNumber=${(p as any).batchNumber ?? p.batchNumber}, manufactureDate=${p.manufactureDate.toISOString()}, expiryDate=${p.expiryDate.toISOString()}, sender=${sender}`);
+
+    // Pre-flight validation: expiry must be in the future (ms precision)
+    const expiryMs = new Date((p as any).expiryDate ?? p.expiryDate).getTime();
+    const nowMs = Date.now();
+    if (expiryMs <= nowMs) {
+      this.logger.warn(`sponsorMintProduct: rejecting mint because expiry (${expiryMs}) <= now (${nowMs})`);
+      throw new BadRequestException('Cannot mint expired product');
+    }
+
+    // Pre-flight validation: ensure serial is not already minted (check SerialRegistry.twinObjectId or Product.objectId)
+    const existingSerial = await this.prisma.serialRegistry.findUnique({ where: { serialNumber: (p as any).serialNumber ?? p.serialNumber } });
+    if (existingSerial && existingSerial.twinObjectId) {
+      this.logger.warn(`sponsorMintProduct: serial already minted on-chain: ${existingSerial.serialNumber} -> twinObjectId=${existingSerial.twinObjectId}`);
+      throw new ConflictException('Serial number already minted on-chain');
+    }
+
     const tx = new Transaction();
     const toBytes = (str: string) => Array.from(new TextEncoder().encode(str));
 
     const serialNumberVec = toBytes((p as any).serialNumber ?? p.serialNumber ?? '');
     const batchNumberVec = toBytes((p as any).batchNumber ?? p.batchNumber ?? '');
-    const manufactureDate = Math.floor(new Date((p as any).manufactureDate ?? p.manufactureDate).getTime() / 1000);
-    const expiryDate = Math.floor(new Date((p as any).expiryDate ?? p.expiryDate).getTime() / 1000);
+  // Move module expects timestamps in milliseconds (clock::timestamp_ms).
+  // Use BigInt for u64 values (milliseconds) to ensure correct serialization
+  const manufactureDate = BigInt(new Date((p as any).manufactureDate ?? p.manufactureDate).getTime());
+  const expiryDate = BigInt(new Date((p as any).expiryDate ?? p.expiryDate).getTime());
 
     tx.moveCall({
       target: `${packageId}::dermaqea::mint_new_product`,
@@ -190,8 +211,11 @@ export class BatchesService {
       ],
     });
 
-    // Use EnokiService to create a sponsored transaction (client will sign)
-    return await this.enokiService.sponsorTransaction(tx, sender);
+    // Use EnokiService to create a sponsored transaction (client will sign).
+    // Restrict allowed move call targets to the single-product entrypoint so
+    // that only `mint_new_product` can be invoked for this sponsored payload.
+    const singleTarget = `${packageId}::dermaqea::mint_new_product`;
+    return await this.enokiService.sponsorTransaction(tx, sender, [singleTarget]);
   }
 
   /**

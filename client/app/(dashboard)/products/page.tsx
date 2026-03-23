@@ -1,6 +1,9 @@
-'use client'; 
+"use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useCurrentAccount, useSignTransaction, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { isEnokiWallet } from "@mysten/enoki";
+import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,6 +26,11 @@ interface Product {
 }
 
 export default function ProductsPage() {
+  const currentAccount = useCurrentAccount();
+  const signTransaction = useSignTransaction();
+  const { mutateAsync: connectWalletAsync } = useConnectWallet();
+  const availableWallets = useWallets();
+  const { connectedAddress } = useWalletSync();
   const [products, setProducts] = useState<Product[]>([]);
   const [minting, setMinting] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -154,15 +162,83 @@ export default function ProductsPage() {
                         onClick={async () => {
                           setMinting((s) => ({ ...s, [p.id]: true }));
                           try {
+                            const signer = currentAccount?.address ?? connectedAddress ?? (typeof window !== 'undefined' ? localStorage.getItem('connectedAddress') : null);
+                            if (!signer) {
+                              // Prefer connecting the Enoki wallet if available; fall back to first available.
+                              const enoki = availableWallets?.find((w: any) => isEnokiWallet(w));
+                              const toConnect = enoki ?? (availableWallets && availableWallets.length > 0 ? availableWallets[0] : null);
+                              if (toConnect) {
+                                try {
+                                  await connectWalletAsync({ wallet: toConnect });
+                                  // Return so the user can re-trigger the mint after connecting.
+                                  return;
+                                } catch (e) {
+                                  console.warn('Automatic connect failed', e);
+                                }
+                              }
+
+                              return alert('Connect your wallet to sign the mint transaction');
+                            }
+                            if (!signTransaction?.mutateAsync) {
+                              return alert('Wallet signer unavailable. Open your wallet and connect to the dApp so you can sign the transaction.');
+                            }
+
                             const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
-                            const res = await fetch(`${base.replace(/\/$/, "")}/products/${p.id}/mint`, { method: 'POST' });
+                            const res = await fetch(`${base.replace(/\/$/, "")}/products/${p.id}/mint`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ sender: signer }),
+                            });
                             if (!res.ok) {
                               const txt = await res.text();
                               throw new Error(`${res.status} ${txt}`);
                             }
-                            const j = await res.json();
-                            console.log('mint result', j);
-                            alert('Product mint submitted (check server logs)');
+
+                            const sponsored = await res.json();
+                            // Prompt wallet to sign the sponsored transaction bytes
+                            let signature: string | undefined;
+                            try {
+                              const signed = await signTransaction.mutateAsync({ transaction: sponsored.bytes });
+                              signature = (signed as any)?.signature;
+                            } catch (err: any) {
+                              // If wallet isn't connected, attempt to prompt connect and return so user can retry.
+                              const msg = (err && err.message) ? String(err.message) : '';
+                              if (msg.includes('No wallet is connected') || msg.includes('WalletNotConnected')) {
+                                if (availableWallets && availableWallets.length > 0) {
+                                  try {
+                                    await connectWalletAsync({ wallet: availableWallets[0] });
+                                    // connected (or connect UI opened) — user should retry the action
+                                    return;
+                                  } catch (e) {
+                                    console.warn('Auto-connect after sign failure failed', e);
+                                  }
+                                }
+                                return alert('No wallet connected. Please open your wallet and connect to sign the transaction.');
+                              }
+                              throw err;
+                            }
+
+                            // Submit signature to execute the sponsored transaction
+                            const exec = await fetch(`${base.replace(/\/$/, "")}/enoki/execute`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ digest: sponsored.digest, signature }),
+                            });
+
+                            if (!exec.ok) {
+                              const txt = await exec.text();
+                              throw new Error(`Execute failed: ${exec.status} ${txt}`);
+                            }
+
+                            const execRes = await exec.json();
+                            console.log('mint executed', execRes);
+                            // Prefer to use the digest returned by the execute endpoint if present,
+                            // otherwise fall back to the original sponsored.digest we already have.
+                            const txDigest = execRes?.digest ?? sponsored.digest;
+                            const suiscanUrl = `https://suiscan.xyz/testnet/transaction/${txDigest}`;
+                            // Open Suiscan in a new tab and also notify the user.
+                            try { window.open(suiscanUrl, '_blank'); } catch (e) { /* ignore */ }
+                            alert(`Product mint executed — transaction digest: ${txDigest}. View on Suiscan.`);
                           } catch (e: any) {
                             console.error(e);
                             alert(`Product mint failed: ${e?.message ?? String(e)}`);

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignTransaction, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { isEnokiWallet } from "@mysten/enoki";
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useFieldArray, useForm } from "react-hook-form";
 import Link from "next/link";
@@ -30,8 +31,11 @@ type FormValues = {
 
 export default function NewProductPage() {
   const currentAccount = useCurrentAccount();
+  const signTx = useSignTransaction();
   const { connectedAddress } = useWalletSync();
   const effectiveAddress = currentAccount?.address ?? connectedAddress ?? "";
+  const { mutateAsync: connectWalletAsync } = useConnectWallet();
+  const availableWallets = useWallets();
 
   const form = useForm<FormValues>({
     defaultValues: { product_name: "", items: [{ manufacture_date: "", expiry_date: "" }] },
@@ -92,18 +96,89 @@ export default function NewProductPage() {
     }
   };
 
+
   const handleMintBatch = async (batchId: string) => {
     setMinting((s) => ({ ...s, [batchId]: true }));
     try {
+      // Debug: log wallet state to help diagnose why the client believes
+      // there's no connected wallet even when Enoki/zkLogin is used.
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[Mint] currentAccount', currentAccount);
+        // eslint-disable-next-line no-console
+        console.log('[Mint] connectedAddress (from WalletSync)', connectedAddress);
+        // eslint-disable-next-line no-console
+        console.log('[Mint] signTx (useSignTransaction)', signTx);
+        // eslint-disable-next-line no-console
+        console.log('[Mint] signTx.mutateAsync exists?', typeof signTx?.mutateAsync);
+        // eslint-disable-next-line no-console
+        console.log('[Mint] window.__ENOKI_REGISTERED', (window as any).__ENOKI_REGISTERED);
+      } catch (e) {
+        // ignore console errors
+      }
+
+      // prefer the live dapp-kit account but fall back to the persisted connectedAddress
+      // so we can give a clearer, actionable error when a user has a remembered address
+      // but hasn't re-connected their wallet in this session.
+      const signer = currentAccount?.address ?? connectedAddress;
+      if (!signer) {
+        const enoki = availableWallets?.find((w: any) => isEnokiWallet(w));
+        const toConnect = enoki ?? (availableWallets && availableWallets.length > 0 ? availableWallets[0] : null);
+        if (toConnect) {
+          try { await connectWalletAsync({ wallet: toConnect }); return; } catch (e) { console.warn('Auto-connect failed', e); }
+        }
+        return alert('Connect your wallet to sign the batch mint transaction');
+      }
+
+      // signing requires the signTx hook from dapp-kit to be functional. If the
+      // address is present in localStorage but the dapp-kit signer is not available
+      // the user must open their wallet and connect to the dApp so the page can prompt
+      // for the signature.
+      if (!signTx?.mutateAsync) {
+        return alert('Wallet signer unavailable. Open your wallet and connect to the dApp so you can sign the transaction.');
+      }
+
       const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
       const resp = await fetch(`${base.replace(/\/$/, "")}/batches/${batchId}/mint`, { method: 'POST' });
       if (!resp.ok) {
         const txt = await resp.text();
         throw new Error(`Mint failed: ${resp.status} ${txt}`);
       }
-      const json = await resp.json();
-      console.log('Mint result', json);
-      alert('Batch minted — check server logs / blockchain');
+
+      const sponsored = await resp.json();
+  // sign with connected wallet
+  let signature: string | undefined;
+      try {
+        const signed = await signTx.mutateAsync({ transaction: sponsored.bytes });
+        signature = (signed as any)?.signature;
+      } catch (err: any) {
+        const msg = (err && err.message) ? String(err.message) : '';
+        if (msg.includes('No wallet is connected') || msg.includes('WalletNotConnected')) {
+          if (availableWallets && availableWallets.length > 0) {
+            try { await connectWalletAsync({ wallet: availableWallets[0] }); return; } catch (e) { console.warn('Auto-connect after sign failure failed', e); }
+          }
+          return alert('No wallet connected. Please open your wallet and connect to sign the transaction.');
+        }
+        throw err;
+      }
+
+      const exec = await fetch(`${base.replace(/\/$/, "")}/enoki/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ digest: sponsored.digest, signature }),
+      });
+
+      if (!exec.ok) {
+        const txt = await exec.text();
+        throw new Error(`Execute failed: ${exec.status} ${txt}`);
+      }
+
+  const json = await exec.json();
+  console.log('Mint result', json);
+  const txDigest = json?.digest ?? sponsored.digest;
+  const suiscanUrl = `https://suiscan.xyz/testnet/transaction/${txDigest}`;
+  try { window.open(suiscanUrl, '_blank'); } catch (e) {}
+  alert(`Batch minted — transaction digest: ${txDigest}. View on Suiscan.`);
     } catch (e: any) {
       console.error(e);
       alert(`Batch mint failed: ${e?.message ?? String(e)}`);

@@ -12,13 +12,18 @@ const WalletSyncContext = createContext<WalletSyncContextType | undefined>(undef
 
 export function WalletSyncProvider({ children }: { children: React.ReactNode }) {
   const currentAccount = useCurrentAccount();
-  const [connectedAddress, setConnectedAddress] = useState<string | null>(() => {
+  // Avoid reading localStorage during SSR to prevent hydration mismatch.
+  // Initialize to null and sync from localStorage on mount.
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+
+  useEffect(() => {
     try {
-      return typeof window !== "undefined" ? localStorage.getItem("connectedAddress") : null;
+      const stored = typeof window !== "undefined" ? localStorage.getItem("connectedAddress") : null;
+      if (stored) setConnectedAddress(stored);
     } catch (e) {
-      return null;
+      // ignore
     }
-  });
+  }, []);
 
   // Sync dapp-kit current account into localStorage and provider state
   useEffect(() => {

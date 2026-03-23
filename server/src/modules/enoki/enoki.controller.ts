@@ -42,7 +42,9 @@ export class EnokiController {
       signature,
     });
 
-    return executedTx;
+    // Return the executed transaction result along with the digest so the UI
+    // can link to an external block explorer (Suiscan) immediately.
+    return { executedTx, digest };
   }
   @Post('batch-mint/sponsor')
   @HttpCode(HttpStatus.OK)

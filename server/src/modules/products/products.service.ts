@@ -289,10 +289,11 @@ export class ProductsService {
     return {
       serialNumbers: products.map((p) => Buffer.from(p.serialNumber)),
       batchNumbers: products.map((p) => Buffer.from(p.batchNumber)),
-  // metadata hashes removed from products; return empty buffers to preserve vector shape
-  metadataHashes: products.map(() => Buffer.from([])),
-      manufactureDates: products.map((p) => Math.floor(p.manufactureDate.getTime() / 1000)),
-      expiryDates: products.map((p) => Math.floor(p.expiryDate.getTime() / 1000)),
+      // metadata hashes removed from products; return empty buffers to preserve vector shape
+      metadataHashes: products.map(() => Buffer.from([])),
+      // Move clock::timestamp_ms uses milliseconds, so pass ms timestamps.
+      manufactureDates: products.map((p) => p.manufactureDate.getTime()),
+      expiryDates: products.map((p) => p.expiryDate.getTime()),
     };
   }
 
