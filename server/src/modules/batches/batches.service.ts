@@ -129,8 +129,9 @@ export class BatchesService {
     // Use the representative product as source for brand wallet and product name
     const repr = b.product as any;
 
+    const serialRegistryId = this.configService.get<string>('SERIAL_REGISTRY_ID') ?? null;
     return {
-      serialRegistryId: repr?.objectId ?? null,
+      serialRegistryId,
       brandWalletAddress: repr?.brand_wallet ?? repr?.brandWallet ?? null,
       productName: repr?.product_name ?? repr?.productName ?? 'Unknown product',
       items,
@@ -169,8 +170,10 @@ export class BatchesService {
     const packageId = this.configService.get<string>('PACKAGE_ID');
     if (!packageId) throw new BadRequestException('PACKAGE_ID not configured');
 
-    // Diagnostic: log the inputs we will pass on-chain (safe: no secrets)
-    this.logger.debug(`sponsorMintProduct inputs: serialNumber=${(p as any).serialNumber ?? p.serialNumber}, batchNumber=${(p as any).batchNumber ?? p.batchNumber}, manufactureDate=${p.manufactureDate.toISOString()}, expiryDate=${p.expiryDate.toISOString()}, sender=${sender}`);
+    // Diagnostic: log the exact payload to correlate with Move aborts.
+    this.logger.debug(
+      `sponsorMintProduct inputs: productId=${productId}, packageId=${packageId}, serialRegistryId=${serialRegistryId}, sender=${sender}, brandWallet=${productBrand}, serialNumber=${(p as any).serialNumber ?? p.serialNumber}, batchNumber=${(p as any).batchNumber ?? p.batchNumber}, manufactureDate=${p.manufactureDate.toISOString()}, expiryDate=${p.expiryDate.toISOString()}`,
+    );
 
     // Pre-flight validation: expiry must be in the future (ms precision)
     const expiryMs = new Date((p as any).expiryDate ?? p.expiryDate).getTime();
@@ -196,6 +199,9 @@ export class BatchesService {
   // Use BigInt for u64 values (milliseconds) to ensure correct serialization
   const manufactureDate = BigInt(new Date((p as any).manufactureDate ?? p.manufactureDate).getTime());
   const expiryDate = BigInt(new Date((p as any).expiryDate ?? p.expiryDate).getTime());
+    this.logger.debug(
+      `sponsorMintProduct move args: manufactureDateMs=${manufactureDate.toString()}, expiryDateMs=${expiryDate.toString()}, nowMs=${Date.now()}`,
+    );
 
     tx.moveCall({
       target: `${packageId}::dermaqea::mint_new_product`,
@@ -243,5 +249,27 @@ export class BatchesService {
       items,
       sender,
     });
+  }
+
+  /**
+   * Return QR payloads for the serials in a batch.
+   * Payload shape: { sui_object_id, serial_number, batch_number }
+   */
+  async getQrPayloads(batchId: string) {
+    const b = await this.prisma.batch.findUnique({ where: { id: batchId }, include: { product: true, serials: true } });
+    if (!b) throw new NotFoundException(`Batch ${batchId} not found`);
+
+    const objectId = (b.product as any)?.objectId ?? null;
+    const batchNumber = b.batchNumber;
+
+    const payloads = (b.serials ?? []).map((s) => ({
+      sui_object_id: objectId,
+      serial_number: s.serialNumber,
+      batch_number: batchNumber,
+      // include any existing payload/hash if present so the client can use it
+      payload_hash: (s as any).payloadHash ?? null,
+    }));
+
+    return payloads;
   }
 }

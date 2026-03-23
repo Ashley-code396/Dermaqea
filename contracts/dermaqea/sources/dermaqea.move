@@ -10,7 +10,7 @@ use dermaqea::product;
 
 public struct DERMAQEA has drop {}
 
-fun init(otw: DERMAQEA, ctx: &mut TxContext) {
+fun init(otw: DERMAQEA, ctx: &mut TxContext) { 
     package::claim_and_keep(otw, ctx);
     admin::create_admin_cap(ctx);
 

@@ -90,7 +90,8 @@ public(package) fun mint_product(
 
     assert!(expiry_date > now, EProductExpired);
 
-    assert!(!serial_registry::has_serial(registry, &serial_number), EDuplicateSerialNumber);
+    // Ensure serial uniqueness scoped to the brand wallet (brand + serial_number)
+    assert!(!serial_registry::has_serial(registry, brand_wallet, &serial_number), EDuplicateSerialNumber);
     let twin = ProductTwin {
         id: object::new(ctx),
         brand_wallet,
@@ -106,7 +107,8 @@ public(package) fun mint_product(
 
     let product_id = object::uid_to_address(&twin.id);
 
-    serial_registry::add_serial(registry, twin.serial_number, product_id);
+    // Persist the serial under the brand scope
+    serial_registry::add_serial(registry, brand_wallet, twin.serial_number, product_id, ctx);
 
     event::emit(ProductMinted {
         product_id,

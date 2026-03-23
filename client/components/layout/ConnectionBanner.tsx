@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useCurrentAccount, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { isEnokiWallet } from "@mysten/enoki";
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 
 function short(addr?: string | null) {
@@ -26,7 +27,8 @@ export function ConnectionBanner() {
     }
 
     try {
-      await connectWallet({ wallet: wallets[0] });
+      const preferred = wallets.find((wallet) => isEnokiWallet(wallet as any)) ?? wallets[0];
+      await connectWallet({ wallet: preferred });
     } catch (e) {
       console.warn("Connection attempt failed", e);
       alert("Unable to open wallet. Please open your wallet and connect manually.");

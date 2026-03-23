@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnokiClient } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
@@ -12,7 +12,7 @@ export class EnokiService {
   private readonly logger = new Logger(EnokiService.name);
   private enokiClient: EnokiClient;
   private network: 'testnet' | 'mainnet' | 'devnet';
-  private suiClient?: SuiGrpcClient;
+  private grpcClient?: SuiGrpcClient;
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('ENOKI_SECRET_KEY');
@@ -53,11 +53,69 @@ export class EnokiService {
     this.network = this.configService.get<'testnet' | 'mainnet' | 'devnet'>('SUI_NETWORK', 'testnet');
     // lazy Sui gRPC client — created on demand when building transactions that
     // require object resolution (tx.object(...) or tx.object.clock()).
-    this.suiClient = undefined;
+    this.grpcClient = undefined;
   }
 
   getEnokiClient() {
     return this.enokiClient;
+  }
+
+  private mapDryRunAbortToHttpError(error: unknown): Error {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e: any = error;
+    const details: string[] = [];
+    const errors = Array.isArray(e?.errors) ? e.errors : [];
+    for (const item of errors) {
+      if (item?.message) details.push(String(item.message));
+    }
+    const fullText = [String(e?.message || ''), ...details].join(' | ');
+    const lower = fullText.toLowerCase();
+
+    // Known `dermaqea::product` aborts:
+    // 0 ENotAuthorized
+    // 1 EDuplicateSerialNumber
+    // 2 EProductExpired
+    // 3 EProductFlagged
+    // 4 EProductCounterfeit
+    // 5 EInvalidStatus
+    if (
+      lower.includes('moduleid') &&
+      lower.includes('name: identifier("product")') &&
+      lower.includes('abort') &&
+      (lower.includes(', 1)') || lower.includes('eduplicateserialnumber'))
+    ) {
+      return new ConflictException('Mint rejected by Move dry-run: duplicate serial number already exists on-chain.');
+    }
+    if (
+      lower.includes('moduleid') &&
+      lower.includes('name: identifier("product")') &&
+      lower.includes('abort') &&
+      (lower.includes(', 2)') || lower.includes('eproductexpired'))
+    ) {
+      return new BadRequestException('Mint rejected by Move dry-run: product expiry is not in the future.');
+    }
+
+    if (lower.includes('dry run failed')) {
+      return new BadRequestException(`Mint dry-run failed on-chain: ${fullText}`);
+    }
+
+    return e instanceof Error ? e : new Error(String(error));
+  }
+
+  private getGrpcClient(): SuiGrpcClient {
+    if (this.grpcClient) return this.grpcClient;
+
+    const baseUrl = this.configService.get<string>('SUI_GRPC_URL');
+    if (!baseUrl) {
+      throw new Error('SUI_GRPC_URL is required to initialize SuiGrpcClient');
+    }
+
+    this.grpcClient = new SuiGrpcClient({
+      network: this.network,
+      baseUrl,
+    });
+
+    return this.grpcClient;
   }
 
   /**
@@ -69,7 +127,12 @@ export class EnokiService {
     allowedMoveCallTargets?: string[];
     allowedAddresses?: string[];
   }) {
-    try {
+    const maxRetries = Number(this.configService.get<number>('ENOKI_MAX_RETRIES') ?? 3);
+    const baseBackoffMs = Number(this.configService.get<number>('ENOKI_BACKOFF_MS') ?? 1000);
+    let attempt = 0;
+    while (true) {
+      attempt += 1;
+      try {
       const packageId = this.configService.get<string>('PACKAGE_ID');
       const defaultTargets = packageId
         ? [
@@ -81,18 +144,37 @@ export class EnokiService {
       // Log a compact summary to help debug dry-run failures (do not log full secrets)
       this.logger.debug(`createSponsoredTransaction: sender=${params.sender}, allowedTargets=${
         (params.allowedMoveCallTargets || defaultTargets).join(',')
-      }, bytesLen=${params.transactionKindBytes.length}`);
+      }, bytesLen=${params.transactionKindBytes.length}, attempt=${attempt}`);
 
-      return await this.enokiClient.createSponsoredTransaction({
+      const res = await this.enokiClient.createSponsoredTransaction({
         network: this.network,
         transactionKindBytes: params.transactionKindBytes,
         sender: params.sender,
         allowedMoveCallTargets: params.allowedMoveCallTargets || defaultTargets,
         allowedAddresses: params.allowedAddresses || [],
       });
+
+      return res;
     } catch (error) {
-      this.logger.error(`Failed to create sponsored transaction: ${error}`);
-      throw error;
+      // Determine if the error looks like a transient connect timeout and retry if allowed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e: any = error;
+      this.logger.error(`Failed to create sponsored transaction (attempt ${attempt}): ${e}`);
+
+      const isConnectTimeout = e?.cause && String(e.cause.code || '').toLowerCase().includes('und_err_connect_timeout');
+      const isFetchFailed = String(e?.message || '').toLowerCase().includes('fetch failed');
+
+      if (attempt < maxRetries && (isConnectTimeout || isFetchFailed)) {
+        const delay = baseBackoffMs * attempt;
+        this.logger.warn(`Retrying createSponsoredTransaction after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, delay));
+        // loop to retry
+      } else {
+        this.logger.error(`createSponsoredTransaction final failure after ${attempt} attempts.`);
+        throw this.mapDryRunAbortToHttpError(error);
+      }
+    }
     }
   }
 
@@ -133,19 +215,8 @@ export class EnokiService {
     // Ensure we have an RPC client to resolve object inputs when building
     // the transaction bytes (clock/object references, etc.). Prefer an
     // explicit RPC URL via SUI_RPC_URL, otherwise derive from network.
-    if (!this.suiClient) {
-      // Prefer explicit gRPC endpoint env var, otherwise fall back to known public fullnode gRPC endpoints.
-      const grpcUrl =
-        this.configService.get<string>('SUI_GRPC_URL') ||
-        (this.network === 'mainnet'
-          ? 'https://fullnode.mainnet.sui.io:443'
-          : this.network === 'devnet'
-          ? 'https://fullnode.devnet.sui.io:443'
-          : 'http://127.0.0.1:9000');
-      this.suiClient = new SuiGrpcClient({ network: this.network, baseUrl: grpcUrl });
-    }
-
-    const txBytes = await tx.build({ onlyTransactionKind: true, client: this.suiClient });
+    const grpcClient = this.getGrpcClient();
+    const txBytes = await tx.build({ onlyTransactionKind: true, client: grpcClient });
 
     const defaultTargets = [
       `${this.configService.get<string>('PACKAGE_ID')}::dermaqea::batch_mint_new_products`,
@@ -182,7 +253,6 @@ export class EnokiService {
     items: Array<{
       serialNumber: string;
       batchNumber: string;
-      metadataHash: string;
       manufactureDate: number;
       expiryDate: number;
     }>;
@@ -198,7 +268,6 @@ export class EnokiService {
 
     const serialNumbers = items.map((i) => toBytes(i.serialNumber));
     const batchNumbers = items.map((i) => toBytes(i.batchNumber));
-    const metadataHashes = items.map((i) => toBytes(i.metadataHash));
   // Use BigInt for u64 values to ensure correct serialization for Move u64
   const manufactureDates = items.map((i) => BigInt(i.manufactureDate));
   const expiryDates = items.map((i) => BigInt(i.expiryDate));
@@ -221,7 +290,6 @@ export class EnokiService {
         tx.pure.string(productName),
         tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(serialNumbers)),
         tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(batchNumbers)),
-        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(metadataHashes)),
         tx.pure.vector('u64', manufactureDates),
         tx.pure.vector('u64', expiryDates),
         tx.object.clock(),
@@ -243,18 +311,41 @@ export class EnokiService {
   ) {
     // Build transaction bytes using an RPC client so any object references
     // (e.g. tx.object(...), tx.object.clock()) are resolved.
-    if (!this.suiClient) {
-      const grpcUrl =
-        this.configService.get<string>('SUI_GRPC_URL') ||
-        (this.network === 'mainnet'
-          ? 'https://fullnode.mainnet.sui.io:443'
-          : this.network === 'devnet'
-          ? 'https://fullnode.devnet.sui.io:443'
-          : 'http://127.0.0.1:9000');
-      this.suiClient = new SuiGrpcClient({ network: this.network, baseUrl: grpcUrl });
-    }
+    const grpcClient = this.getGrpcClient();
+    // Build transaction bytes using the configured gRPC client. Wrap in try/catch
+    // with one retry after recreating the client to handle transient fetch errors
+    // or incorrect client initialization.
+    let txBytes: Uint8Array;
+    try {
+      txBytes = await tx.build({ onlyTransactionKind: true, client: grpcClient });
+    } catch (err) {
+      // Log the details to help diagnose network / grpc-web transport failures.
+      const grpcEnv = this.configService.get<string>('SUI_GRPC_URL') || '<not-set>';
+      this.logger.error(`Transaction build failed using SUI gRPC URL=${grpcEnv}: ${err}`);
 
-    const txBytes = await tx.build({ onlyTransactionKind: true, client: this.suiClient });
+      // Attempt to recreate the SuiGrpcClient once and retry (handles transient DNS/connectivity)
+      try {
+        const retryGrpcUrl = this.configService.get<string>('SUI_GRPC_URL');
+        if (!retryGrpcUrl) {
+          throw new Error('SUI_GRPC_URL is required to retry transaction build');
+        }
+        this.logger.debug(`Retrying transaction build with recreated SuiGrpcClient using ${retryGrpcUrl}`);
+        this.grpcClient = new SuiGrpcClient({ network: this.network, baseUrl: retryGrpcUrl });
+        const grpcClient = this.getGrpcClient();
+        txBytes = await tx.build({ onlyTransactionKind: true, client: grpcClient });
+      } catch (err2) {
+        // Final failure — include both errors in the log for debugging.
+        this.logger.error(`Retry transaction build also failed: ${err2}`);
+        const errText = `${String(err)} | ${String(err2)}`.toLowerCase();
+        if (errText.includes('mutable parameter provided, immutable parameter expected')) {
+          throw new BadRequestException(
+            'Batch mint transaction argument mismatch: one object argument mutability does not match the Move function signature.',
+          );
+        }
+        // Re-throw a clearer error explaining the gRPC connectivity problem.
+        throw new Error(`Failed to build transaction bytes via Sui gRPC (attempts failed). Check SUI_GRPC_URL/network connectivity. Original error: ${String(err)}; Retry error: ${String(err2)}`);
+      }
+    }
     return await this.createSponsoredTransaction({
       transactionKindBytes: toBase64(txBytes),
       sender,
@@ -275,7 +366,6 @@ export class EnokiService {
     items: Array<{
       serialNumber: string;
       batchNumber: string;
-      metadataHash: string;
       manufactureDate: number;
       expiryDate: number;
     }>;
@@ -298,7 +388,6 @@ export class EnokiService {
 
   const serialNumbers = items.map((i) => toBytes(i.serialNumber));
   const batchNumbers = items.map((i) => toBytes(i.batchNumber));
-  const metadataHashes = items.map((i) => toBytes(i.metadataHash));
   // Ensure we pass u64 values as BigInt so the transaction builder and BCS
   // serialize them correctly for Move's clock::timestamp_ms expectations.
   const manufactureDates = items.map((i) => BigInt(i.manufactureDate));
@@ -326,7 +415,6 @@ export class EnokiService {
         tx.pure.string(productName),
         tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(serialNumbers)),
         tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(batchNumbers)),
-        tx.pure(bcs.vector(bcs.vector(bcs.U8)).serialize(metadataHashes)),
         tx.pure.vector('u64', manufactureDates),
         tx.pure.vector('u64', expiryDates),
         tx.object.clock(),

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useCurrentAccount, useSignTransaction, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { useConnectWallet, useCurrentAccount, useSignTransaction, useWallets } from "@mysten/dapp-kit";
 import { isEnokiWallet } from "@mysten/enoki";
+import { toast } from 'sonner';
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useFieldArray, useForm } from "react-hook-form";
 import Link from "next/link";
@@ -31,11 +32,72 @@ type FormValues = {
 
 export default function NewProductPage() {
   const currentAccount = useCurrentAccount();
+  const { mutate: connectWallet } = useConnectWallet();
   const signTx = useSignTransaction();
   const { connectedAddress } = useWalletSync();
   const effectiveAddress = currentAccount?.address ?? connectedAddress ?? "";
-  const { mutateAsync: connectWalletAsync } = useConnectWallet();
   const availableWallets = useWallets();
+  const reconnectEnoki = async () => {
+    const enokiWallet = (availableWallets || []).find((w: any) => isEnokiWallet(w));
+    if (!enokiWallet) return false;
+    return await new Promise<boolean>((resolve) => {
+      connectWallet(
+        { wallet: enokiWallet as any },
+        {
+          onSuccess: () => resolve(true),
+          onError: () => resolve(false),
+        },
+      );
+    });
+  };
+  const signWithReconnect = async (transaction: string) => {
+    let lastErr: any;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const signed = await signTx.mutateAsync({ transaction });
+        const signature = (signed as any)?.signature as string | undefined;
+        if (!signature) throw new Error("Signature missing from wallet response.");
+        return signature;
+      } catch (err: any) {
+        lastErr = err;
+        const msg = String(err?.message ?? "");
+        if (!(msg.includes("No wallet is connected") || msg.includes("WalletNotConnected"))) throw err;
+        // eslint-disable-next-line no-await-in-loop
+        await reconnectEnoki();
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 400));
+      }
+    }
+    throw lastErr ?? new Error("Wallet not ready for signing.");
+  };
+  // helper: poll for signer/provider presence without opening popups
+  const waitForSigner = async (timeoutMs = 15000, intervalMs = 1000) => {
+    const start = Date.now();
+    const tId = toast.loading('Waiting for Enoki to be available to sign...');
+    try {
+      while (Date.now() - start < timeoutMs) {
+      // allow either live dapp-kit account or remembered wallet address
+      const signerAddr = currentAccount?.address ?? connectedAddress;
+        const signerReady = !!signTx?.mutateAsync && !!signerAddr;
+        if (signerReady) {
+          toast.success('Enoki available — proceeding to sign');
+          return true;
+        }
+        // wait and poll
+        if ((window as any).__ENOKI_REGISTERED && !currentAccount?.address) {
+          // Best effort reconnect if wallet session is stale.
+          // eslint-disable-next-line no-await-in-loop
+          await reconnectEnoki();
+        }
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, intervalMs));
+      }
+      toast.error('Timed out waiting for Enoki. Please open Enoki and ensure it is connected to this site.');
+      return false;
+    } finally {
+      toast.dismiss(tId);
+    }
+  };
 
   const form = useForm<FormValues>({
     defaultValues: { product_name: "", items: [{ manufacture_date: "", expiry_date: "" }] },
@@ -117,17 +179,9 @@ export default function NewProductPage() {
         // ignore console errors
       }
 
-      // prefer the live dapp-kit account but fall back to the persisted connectedAddress
-      // so we can give a clearer, actionable error when a user has a remembered address
-      // but hasn't re-connected their wallet in this session.
-      const signer = currentAccount?.address ?? connectedAddress;
+      const signer = currentAccount?.address ?? connectedAddress ?? null;
       if (!signer) {
-        const enoki = availableWallets?.find((w: any) => isEnokiWallet(w));
-        const toConnect = enoki ?? (availableWallets && availableWallets.length > 0 ? availableWallets[0] : null);
-        if (toConnect) {
-          try { await connectWalletAsync({ wallet: toConnect }); return; } catch (e) { console.warn('Auto-connect failed', e); }
-        }
-        return alert('Connect your wallet to sign the batch mint transaction');
+        return alert("No wallet address found. Connect Enoki and retry.");
       }
 
       // signing requires the signTx hook from dapp-kit to be functional. If the
@@ -135,32 +189,31 @@ export default function NewProductPage() {
       // the user must open their wallet and connect to the dApp so the page can prompt
       // for the signature.
       if (!signTx?.mutateAsync) {
-        return alert('Wallet signer unavailable. Open your wallet and connect to the dApp so you can sign the transaction.');
+        // Provide more actionable diagnostic information so the user (or dev) can see what's available.
+        return alert("Wallet signer unavailable. Reconnect Enoki and retry.");
       }
 
       const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
       const resp = await fetch(`${base.replace(/\/$/, "")}/batches/${batchId}/mint`, { method: 'POST' });
       if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(`Mint failed: ${resp.status} ${txt}`);
+        let bodyText = await resp.text();
+        try {
+          const json = JSON.parse(bodyText);
+          // If server returns structured error, show a friendly toast
+          if (resp.status === 409 && json?.message?.toLowerCase().includes('duplicate')) {
+            toast.error('Mint rejected: one or more serial numbers in this batch are already minted on-chain. Please check your CSV and try again.');
+          } else {
+            toast.error(`Mint failed: ${json?.message ?? bodyText}`);
+          }
+        } catch (e) {
+          toast.error(`Mint failed: ${resp.status} ${bodyText}`);
+        }
+        throw new Error(`Mint failed: ${resp.status} ${bodyText}`);
       }
 
       const sponsored = await resp.json();
   // sign with connected wallet
-  let signature: string | undefined;
-      try {
-        const signed = await signTx.mutateAsync({ transaction: sponsored.bytes });
-        signature = (signed as any)?.signature;
-      } catch (err: any) {
-        const msg = (err && err.message) ? String(err.message) : '';
-        if (msg.includes('No wallet is connected') || msg.includes('WalletNotConnected')) {
-          if (availableWallets && availableWallets.length > 0) {
-            try { await connectWalletAsync({ wallet: availableWallets[0] }); return; } catch (e) { console.warn('Auto-connect after sign failure failed', e); }
-          }
-          return alert('No wallet connected. Please open your wallet and connect to sign the transaction.');
-        }
-        throw err;
-      }
+      const signature = await signWithReconnect(sponsored.bytes);
 
       const exec = await fetch(`${base.replace(/\/$/, "")}/enoki/execute`, {
         method: 'POST',
@@ -289,6 +342,26 @@ export default function NewProductPage() {
           </Form>
 
           {error && <p className="mt-2 text-sm text-destructive">Error: {error}</p>}
+
+          {/* Quick Enoki debug + action panel */}
+          <div className="mt-4 p-3 rounded-md bg-muted text-sm">
+            <div className="mb-2 font-medium">Wallet status</div>
+            <div className="text-xs">Detected address: <span className="font-mono">{effectiveAddress || 'none'}</span></div>
+            <div className="text-xs">Enoki registered: <span className="font-mono">{(window as any).__ENOKI_REGISTERED ? 'true' : 'false'}</span></div>
+            <div className="text-xs">Available wallets: <span className="font-mono">{(availableWallets || []).map((w:any)=>w.walletName || w.name).join(', ') || 'none'}</span></div>
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => { window.location.reload(); }}>Refresh page</Button>
+              <Button size="sm" onClick={async () => {
+                // Do not open a wallet popup. Instead, show toasts and poll for the
+                // provider to become available. When available, the user can retry
+                // the mint and it will sign without a popup.
+                const ok = await waitForSigner();
+                if (!ok) {
+                  // already notified via toast
+                }
+              }}>Wait for Enoki</Button>
+            </div>
+          </div>
 
           {backendResponse && (
             <div className="mt-6">

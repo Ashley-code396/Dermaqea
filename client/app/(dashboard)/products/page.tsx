@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useCurrentAccount, useSignTransaction, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { useConnectWallet, useCurrentAccount, useSignTransaction, useWallets } from "@mysten/dapp-kit";
 import { isEnokiWallet } from "@mysten/enoki";
+import { toast } from 'sonner';
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,48 @@ interface Product {
 
 export default function ProductsPage() {
   const currentAccount = useCurrentAccount();
+  const { mutate: connectWallet } = useConnectWallet();
   const signTransaction = useSignTransaction();
-  const { mutateAsync: connectWalletAsync } = useConnectWallet();
   const availableWallets = useWallets();
   const { connectedAddress } = useWalletSync();
   const [products, setProducts] = useState<Product[]>([]);
   const [minting, setMinting] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const reconnectEnoki = async () => {
+    const enokiWallet = (availableWallets || []).find((w: any) => isEnokiWallet(w));
+    if (!enokiWallet) return false;
+    return await new Promise<boolean>((resolve) => {
+      connectWallet(
+        { wallet: enokiWallet as any },
+        {
+          onSuccess: () => resolve(true),
+          onError: () => resolve(false),
+        },
+      );
+    });
+  };
+  const signWithReconnect = async (transaction: string) => {
+    let lastErr: any;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const signed = await signTransaction.mutateAsync({ transaction });
+        const signature = (signed as any)?.signature as string | undefined;
+        if (!signature) throw new Error("Signature missing from wallet response.");
+        return signature;
+      } catch (err: any) {
+        lastErr = err;
+        const msg = String(err?.message ?? "");
+        if (!(msg.includes("No wallet is connected") || msg.includes("WalletNotConnected"))) throw err;
+        // Try to rebind Enoki wallet session, then retry sign.
+        // eslint-disable-next-line no-await-in-loop
+        await reconnectEnoki();
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 400));
+      }
+    }
+    throw lastErr ?? new Error("Wallet not ready for signing.");
+  };
   const fetchProducts = async () => {
     setLoading(true);
     setErrorMessage(null);
@@ -162,25 +197,13 @@ export default function ProductsPage() {
                         onClick={async () => {
                           setMinting((s) => ({ ...s, [p.id]: true }));
                           try {
-                            const signer = currentAccount?.address ?? connectedAddress ?? (typeof window !== 'undefined' ? localStorage.getItem('connectedAddress') : null);
+                            const signer = currentAccount?.address ?? connectedAddress ?? (typeof window !== "undefined" ? localStorage.getItem("connectedAddress") : null);
                             if (!signer) {
-                              // Prefer connecting the Enoki wallet if available; fall back to first available.
-                              const enoki = availableWallets?.find((w: any) => isEnokiWallet(w));
-                              const toConnect = enoki ?? (availableWallets && availableWallets.length > 0 ? availableWallets[0] : null);
-                              if (toConnect) {
-                                try {
-                                  await connectWalletAsync({ wallet: toConnect });
-                                  // Return so the user can re-trigger the mint after connecting.
-                                  return;
-                                } catch (e) {
-                                  console.warn('Automatic connect failed', e);
-                                }
-                              }
-
-                              return alert('Connect your wallet to sign the mint transaction');
+                              return alert("No wallet address found. Connect Enoki and retry.");
                             }
+
                             if (!signTransaction?.mutateAsync) {
-                              return alert('Wallet signer unavailable. Open your wallet and connect to the dApp so you can sign the transaction.');
+                              return alert("Wallet signer unavailable. Reconnect Enoki and retry.");
                             }
 
                             const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
@@ -190,33 +213,23 @@ export default function ProductsPage() {
                               body: JSON.stringify({ sender: signer }),
                             });
                             if (!res.ok) {
-                              const txt = await res.text();
-                              throw new Error(`${res.status} ${txt}`);
+                              const body = await res.text();
+                              try {
+                                const json = JSON.parse(body);
+                                if (res.status === 409 && json?.message?.toLowerCase().includes('duplicate')) {
+                                  toast.error('Mint rejected: duplicate serial number found on-chain. Confirm your serials and try again.');
+                                } else {
+                                  toast.error(`Mint failed: ${json?.message ?? body}`);
+                                }
+                              } catch (e) {
+                                toast.error(`Mint failed: ${res.status} ${body}`);
+                              }
+                              throw new Error(`Mint failed: ${res.status} ${body}`);
                             }
 
                             const sponsored = await res.json();
                             // Prompt wallet to sign the sponsored transaction bytes
-                            let signature: string | undefined;
-                            try {
-                              const signed = await signTransaction.mutateAsync({ transaction: sponsored.bytes });
-                              signature = (signed as any)?.signature;
-                            } catch (err: any) {
-                              // If wallet isn't connected, attempt to prompt connect and return so user can retry.
-                              const msg = (err && err.message) ? String(err.message) : '';
-                              if (msg.includes('No wallet is connected') || msg.includes('WalletNotConnected')) {
-                                if (availableWallets && availableWallets.length > 0) {
-                                  try {
-                                    await connectWalletAsync({ wallet: availableWallets[0] });
-                                    // connected (or connect UI opened) — user should retry the action
-                                    return;
-                                  } catch (e) {
-                                    console.warn('Auto-connect after sign failure failed', e);
-                                  }
-                                }
-                                return alert('No wallet connected. Please open your wallet and connect to sign the transaction.');
-                              }
-                              throw err;
-                            }
+                            const signature = await signWithReconnect(sponsored.bytes);
 
                             // Submit signature to execute the sponsored transaction
                             const exec = await fetch(`${base.replace(/\/$/, "")}/enoki/execute`, {

@@ -1,2 +1,2 @@
-export const PACKAGE_ID = "0x5cf68385fdba29816d7850b7ad04aeac1dddacf7efa5c2108e804eb29b3c4563";
-export const REGISTRY_ID = "0xf9fce1bc7c6e53509091aee8b82b662428ab7924e226632f40e8abb238dc087b";
+export const PACKAGE_ID = "0x9e3d22f075d354a1797f8a69309a3c46781faaed24781d6d47e194fbe1c38956";
+export const REGISTRY_ID = "0xe477afab56b7900fab9a894b58796e87389bb8f9a5e7ea60fea0989d5afc8604";

@@ -4,7 +4,7 @@ import { createDAppKit, DAppKitProvider } from '@mysten/dapp-kit-react';
 import { SuiGrpcClient } from '@mysten/sui/grpc';
 import { SuiClientProvider } from '@mysten/dapp-kit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WalletProvider } from '@mysten/dapp-kit';
 import { WalletSyncProvider } from '@/components/blockchain/WalletSyncProvider';
 import { useCurrentClient, useCurrentNetwork } from '@mysten/dapp-kit-react';
@@ -16,13 +16,15 @@ const GRPC_URLS = {
   devnet:  'https://fullnode.devnet.sui.io:443',
 } as const;
 
+const OVERRIDE_GRPC_URL = process.env.NEXT_PUBLIC_SUI_GRPC_URL;
+
 type Network = keyof typeof GRPC_URLS;
 
 const dAppKit = createDAppKit({
   networks: ['devnet', 'testnet', 'mainnet'],
   defaultNetwork: 'testnet',
   createClient: (network) =>
-    new SuiGrpcClient({ network, baseUrl: GRPC_URLS[network as Network] }),
+    new SuiGrpcClient({ network, baseUrl: OVERRIDE_GRPC_URL || GRPC_URLS[network as Network] }),
 });
 
 declare module '@mysten/dapp-kit-react' {
@@ -36,11 +38,15 @@ function RegisterEnokiWallets() {
   const client = useCurrentClient();
   const network = useCurrentNetwork();
 
+  const unregisterRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!isEnokiNetwork(network)) return;
 
-    // Wrap registration in try/catch and log errors to help diagnose registration failures.
-    try {
+    let mounted = true;
+
+    // Use an async registration flow in case registerEnokiWallets returns a Promise.
+    (async () => {
       // Log environment and runtime hints to aid debugging when registration fails.
       // Avoid printing secret values; only log presence flags.
       // eslint-disable-next-line no-console
@@ -52,55 +58,63 @@ function RegisterEnokiWallets() {
         hasTwitchId: !!process.env.NEXT_PUBLIC_TWITCH_CLIENT_ID,
       });
 
-      const result = registerEnokiWallets({
-        apiKey: process.env.NEXT_PUBLIC_ENOKI_API_KEY ?? 'YOUR_PUBLIC_ENOKI_API_KEY',
-        providers: {
-          google:   { clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID   ?? 'YOUR_GOOGLE_CLIENT_ID' },
-          facebook: { clientId: process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID ?? 'YOUR_FACEBOOK_CLIENT_ID' },
-          twitch:   { clientId: process.env.NEXT_PUBLIC_TWITCH_CLIENT_ID   ?? 'YOUR_TWITCH_CLIENT_ID' },
-        },
-        client,
-        network,
-      });
-
-      // registerEnokiWallets may return an unregister function or an object with unregister.
-      // Only mark Enoki as registered if we received a truthy result.
       try {
-        const ok = !!result;
-        (window as any).__ENOKI_REGISTERED = ok;
+        const maybePromise = registerEnokiWallets({
+          apiKey: process.env.NEXT_PUBLIC_ENOKI_API_KEY ?? 'YOUR_PUBLIC_ENOKI_API_KEY',
+          providers: {
+            google:   { clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID   ?? 'YOUR_GOOGLE_CLIENT_ID' },
+            facebook: { clientId: process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID ?? 'YOUR_FACEBOOK_CLIENT_ID' },
+            twitch:   { clientId: process.env.NEXT_PUBLIC_TWITCH_CLIENT_ID   ?? 'YOUR_TWITCH_CLIENT_ID' },
+          },
+          client,
+          network,
+        });
+
+        // Await if the registration returns a Promise
+        const result = (maybePromise && typeof (maybePromise as any).then === 'function') ? await (maybePromise as any) : maybePromise;
+
+        // registerEnokiWallets may return an unregister function or an object with unregister.
+        // Only mark Enoki as registered if we received a truthy result.
+        try {
+          const ok = !!result;
+          (window as any).__ENOKI_REGISTERED = ok;
+          // eslint-disable-next-line no-console
+          console.log('[Enoki] registerEnokiWallets: result', { ok, resultType: typeof result });
+        } catch (e) {
+          // ignore in non-browser environments
+        }
+
+        // Normalize unregister function if provided in several shapes
+        let unregisterFn: (() => void) | null = null;
+        if (result) {
+          if (typeof (result as any).unregister === 'function') {
+            unregisterFn = (result as any).unregister.bind(result);
+          } else if (typeof result === 'function') {
+            unregisterFn = result as any;
+          }
+        }
+
+        // Save to ref for cleanup
+        unregisterRef.current = unregisterFn;
+
+        if (!result && mounted) {
+          // eslint-disable-next-line no-console
+          console.warn('[Enoki] registerEnokiWallets returned falsy result; registration may have failed or been skipped.');
+        }
+      } catch (err) {
         // eslint-disable-next-line no-console
-        console.log('[Enoki] registerEnokiWallets: result', { ok, resultType: typeof result });
-      } catch (e) {
-        // ignore in non-browser environments
+        console.error('[Enoki] registerEnokiWallets failed:', err);
+        // Also provide a helpful hint for configuration issues
+        // eslint-disable-next-line no-console
+        console.info('[Enoki] Check NEXT_PUBLIC_ENOKI_API_KEY and provider client IDs (NEXT_PUBLIC_GOOGLE_CLIENT_ID, etc.) and ensure redirect URIs are registered with Google/Enoki.');
       }
+    })();
 
-      // Create a cleanup wrapper that will unset the flag and then call the original unregister
-      const makeCleanup = (orig?: (() => void) | null) => {
-        return () => {
-          try { (window as any).__ENOKI_REGISTERED = false; } catch (e) {}
-          try { if (typeof orig === 'function') orig(); } catch (e) { /* ignore */ }
-        };
-      };
-
-      if (result && typeof (result as any).unregister === 'function') {
-        return makeCleanup((result as any).unregister.bind(result));
-      }
-
-      // If the call returned a function directly, return a wrapped cleanup
-      if (typeof result === 'function') {
-        return makeCleanup(result as any);
-      }
-
-      // Otherwise return a cleanup that only unsets the flag
-      return makeCleanup();
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[Enoki] registerEnokiWallets failed:', err);
-      // Also provide a helpful hint for configuration issues
-      // eslint-disable-next-line no-console
-      console.info('[Enoki] Check NEXT_PUBLIC_ENOKI_API_KEY and provider client IDs (NEXT_PUBLIC_GOOGLE_CLIENT_ID, etc.) and ensure redirect URIs are registered with Google/Enoki.');
-    }
-    return undefined;
+    return () => {
+      mounted = false;
+      try { (window as any).__ENOKI_REGISTERED = false; } catch (e) { /* ignore */ }
+      try { if (typeof unregisterRef.current === 'function') unregisterRef.current(); } catch (e) { /* ignore */ }
+    };
   }, [client, network]);
 
   return null;
@@ -111,13 +125,13 @@ export function SuiProvider({ children }: { children: React.ReactNode }) {
 
   // Provide Sui client context using gRPC clients only (cast to any to satisfy provider typing)
   const networks: Record<string, any> = {
-    devnet: new SuiGrpcClient({ network: 'devnet', baseUrl: GRPC_URLS.devnet }),
-    testnet: new SuiGrpcClient({ network: 'testnet', baseUrl: GRPC_URLS.testnet }),
-    mainnet: new SuiGrpcClient({ network: 'mainnet', baseUrl: GRPC_URLS.mainnet }),
+    devnet: new SuiGrpcClient({ network: 'devnet', baseUrl: OVERRIDE_GRPC_URL || GRPC_URLS.devnet }),
+    testnet: new SuiGrpcClient({ network: 'testnet', baseUrl: OVERRIDE_GRPC_URL || GRPC_URLS.testnet }),
+    mainnet: new SuiGrpcClient({ network: 'mainnet', baseUrl: OVERRIDE_GRPC_URL || GRPC_URLS.mainnet }),
   };
 
   const createSuiClient = (name: string, config: any) => {
-    const baseUrl = (config && (config.url ?? config.baseUrl)) ?? GRPC_URLS[name as Network];
+    const baseUrl = OVERRIDE_GRPC_URL || (config && (config.url ?? config.baseUrl)) || GRPC_URLS[name as Network];
     return new SuiGrpcClient({ network: name as Network, baseUrl }) as any;
   };
 

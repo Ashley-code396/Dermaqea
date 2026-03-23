@@ -36,4 +36,5 @@ export class BatchesController {
     // The service will throw clear errors if anything is misconfigured.
     return await this.batchesService.createSponsoredBatchMint(id, brandWallet ?? '');
   }
+ 
 }
