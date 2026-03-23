@@ -3,6 +3,7 @@ import { Shield, QrCode, BarChart3, Zap } from "lucide-react";
 import HeroImage from "@/components/HeroImage";
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/layout/NavBar";
+import Footer from "@/components/layout/Footer";
 
 export default function LandingPage() {
   return (
@@ -149,30 +150,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-primary/50 dark:border-primary/70 py-12">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <span
-              className="text-primary"
-              style={{ fontFamily: "var(--font-syne)" }}
-            >
-              Dermaqea
-            </span>
-            <div className="flex gap-8 text-sm text-muted-foreground">
-              <Link href="/create-account/enoki" className="hover:text-foreground">
-                Create account
-              </Link>
-              <Link href="/dashboard" className="hover:text-foreground">
-                Sign in
-              </Link>
-            </div>
-          </div>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Product authentication powered by the Sui blockchain.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
