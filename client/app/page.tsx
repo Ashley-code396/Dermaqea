@@ -64,11 +64,7 @@ export default function LandingPage() {
               title="Blockchain verification"
               description="Every product gets a unique on-chain identity. Consumers scan to verify authenticity."
             />
-            <FeatureCard
-              icon={<QrCode className="h-8 w-8" />}
-              title="QR code generation"
-              description="Batch-generate print-ready QR codes. Mint as Sui objects, export PDF or CSV."
-            />
+            {/* QR code generation feature removed from public landing. */}
             <FeatureCard
               icon={<BarChart3 className="h-8 w-8" />}
               title="Anti-counterfeiting"
@@ -110,10 +106,10 @@ export default function LandingPage() {
                 2
               </span>
               <div>
-                <h3 className="font-semibold">Submit products</h3>
+                <h3 className="font-semibold">Configure your brand</h3>
                 <p className="mt-1 text-muted-foreground">
-                  Add ingredients, certifications, and images. Products get a
-                  unique ID after approval.
+                  Add your company details and verification documents so customers
+                  can trust your products and supply chain.
                 </p>
               </div>
             </li>
@@ -122,10 +118,10 @@ export default function LandingPage() {
                 3
               </span>
               <div>
-                <h3 className="font-semibold">Create batches & QR codes</h3>
+                <h3 className="font-semibold">Monitor & protect</h3>
                 <p className="mt-1 text-muted-foreground">
-                  Create production batches, mint QR codes on Sui, and download
-                  print-ready labels.
+                  Track activity and get alerts on suspicious patterns to protect
+                  your brand and customers.
                 </p>
               </div>
             </li>

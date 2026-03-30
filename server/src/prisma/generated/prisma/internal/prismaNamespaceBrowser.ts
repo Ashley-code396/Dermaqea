@@ -54,10 +54,7 @@ export const ModelName = {
   Manufacturer: 'Manufacturer',
   ManufacturerDocument: 'ManufacturerDocument',
   Product: 'Product',
-  Batch: 'Batch',
-  ProductTwin: 'ProductTwin',
-  SerialRegistry: 'SerialRegistry',
-  QrCode: 'QrCode',
+  Code: 'Code',
   ScanLog: 'ScanLog',
   SecurityAlert: 'SecurityAlert',
   Admin: 'Admin'
@@ -113,12 +110,18 @@ export const ProductScalarFieldEnum = {
   id: 'id',
   product_name: 'product_name',
   brand_wallet: 'brand_wallet',
-  serialNumber: 'serialNumber',
-  batchNumber: 'batchNumber',
   manufactureDate: 'manufactureDate',
   expiryDate: 'expiryDate',
   extraData: 'extraData',
-  objectId: 'objectId',
+  name: 'name',
+  sku: 'sku',
+  category: 'category',
+  description: 'description',
+  ingredients: 'ingredients',
+  certifications: 'certifications',
+  images: 'images',
+  status: 'status',
+  rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   manufacturerId: 'manufacturerId'
@@ -127,62 +130,21 @@ export const ProductScalarFieldEnum = {
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
 
 
-export const BatchScalarFieldEnum = {
+export const CodeScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
-  batchNumber: 'batchNumber',
-  manufactureDate: 'manufactureDate',
-  expiryDate: 'expiryDate',
-  unitsProduced: 'unitsProduced',
-  status: 'status',
-  createdAt: 'createdAt'
-} as const
-
-export type BatchScalarFieldEnum = (typeof BatchScalarFieldEnum)[keyof typeof BatchScalarFieldEnum]
-
-
-export const ProductTwinScalarFieldEnum = {
-  id: 'id',
-  batchId: 'batchId',
-  serialNumber: 'serialNumber',
-  twinObjectId: 'twinObjectId',
-  onchainTxHash: 'onchainTxHash',
-  mintedAt: 'mintedAt'
-} as const
-
-export type ProductTwinScalarFieldEnum = (typeof ProductTwinScalarFieldEnum)[keyof typeof ProductTwinScalarFieldEnum]
-
-
-export const SerialRegistryScalarFieldEnum = {
-  id: 'id',
-  batchId: 'batchId',
-  serialNumber: 'serialNumber',
-  twinObjectId: 'twinObjectId',
-  payloadHash: 'payloadHash',
-  signature: 'signature',
-  qrData: 'qrData',
-  activationStatus: 'activationStatus',
-  firstScanAt: 'firstScanAt',
-  createdAt: 'createdAt'
-} as const
-
-export type SerialRegistryScalarFieldEnum = (typeof SerialRegistryScalarFieldEnum)[keyof typeof SerialRegistryScalarFieldEnum]
-
-
-export const QrCodeScalarFieldEnum = {
-  id: 'id',
-  serialId: 'serialId',
-  qrImageUrl: 'qrImageUrl',
+  codeValue: 'codeValue',
   generatedAt: 'generatedAt',
-  downloadedAt: 'downloadedAt'
+  downloadedAt: 'downloadedAt',
+  printedAt: 'printedAt'
 } as const
 
-export type QrCodeScalarFieldEnum = (typeof QrCodeScalarFieldEnum)[keyof typeof QrCodeScalarFieldEnum]
+export type CodeScalarFieldEnum = (typeof CodeScalarFieldEnum)[keyof typeof CodeScalarFieldEnum]
 
 
 export const ScanLogScalarFieldEnum = {
   id: 'id',
-  serialId: 'serialId',
+  codeId: 'codeId',
   ipAddress: 'ipAddress',
   country: 'country',
   city: 'city',
@@ -197,7 +159,7 @@ export type ScanLogScalarFieldEnum = (typeof ScanLogScalarFieldEnum)[keyof typeo
 
 export const SecurityAlertScalarFieldEnum = {
   id: 'id',
-  serialId: 'serialId',
+  codeId: 'codeId',
   alertType: 'alertType',
   severity: 'severity',
   resolved: 'resolved',

@@ -26,7 +26,7 @@ export type AggregateScanLog = {
 
 export type ScanLogMinAggregateOutputType = {
   id: string | null
-  serialId: string | null
+  codeId: string | null
   ipAddress: string | null
   country: string | null
   city: string | null
@@ -38,7 +38,7 @@ export type ScanLogMinAggregateOutputType = {
 
 export type ScanLogMaxAggregateOutputType = {
   id: string | null
-  serialId: string | null
+  codeId: string | null
   ipAddress: string | null
   country: string | null
   city: string | null
@@ -50,7 +50,7 @@ export type ScanLogMaxAggregateOutputType = {
 
 export type ScanLogCountAggregateOutputType = {
   id: number
-  serialId: number
+  codeId: number
   ipAddress: number
   country: number
   city: number
@@ -64,7 +64,7 @@ export type ScanLogCountAggregateOutputType = {
 
 export type ScanLogMinAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   ipAddress?: true
   country?: true
   city?: true
@@ -76,7 +76,7 @@ export type ScanLogMinAggregateInputType = {
 
 export type ScanLogMaxAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   ipAddress?: true
   country?: true
   city?: true
@@ -88,7 +88,7 @@ export type ScanLogMaxAggregateInputType = {
 
 export type ScanLogCountAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   ipAddress?: true
   country?: true
   city?: true
@@ -173,7 +173,7 @@ export type ScanLogGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 
 export type ScanLogGroupByOutputType = {
   id: string
-  serialId: string
+  codeId: string
   ipAddress: string | null
   country: string | null
   city: string | null
@@ -206,7 +206,7 @@ export type ScanLogWhereInput = {
   OR?: Prisma.ScanLogWhereInput[]
   NOT?: Prisma.ScanLogWhereInput | Prisma.ScanLogWhereInput[]
   id?: Prisma.StringFilter<"ScanLog"> | string
-  serialId?: Prisma.StringFilter<"ScanLog"> | string
+  codeId?: Prisma.StringFilter<"ScanLog"> | string
   ipAddress?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   country?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   city?: Prisma.StringNullableFilter<"ScanLog"> | string | null
@@ -214,12 +214,12 @@ export type ScanLogWhereInput = {
   isValidSignature?: Prisma.BoolFilter<"ScanLog"> | boolean
   isGeoAnomaly?: Prisma.BoolFilter<"ScanLog"> | boolean
   scannedAt?: Prisma.DateTimeFilter<"ScanLog"> | Date | string
-  serial?: Prisma.XOR<Prisma.SerialRegistryScalarRelationFilter, Prisma.SerialRegistryWhereInput>
+  code?: Prisma.XOR<Prisma.CodeScalarRelationFilter, Prisma.CodeWhereInput>
 }
 
 export type ScanLogOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -227,7 +227,7 @@ export type ScanLogOrderByWithRelationInput = {
   isValidSignature?: Prisma.SortOrder
   isGeoAnomaly?: Prisma.SortOrder
   scannedAt?: Prisma.SortOrder
-  serial?: Prisma.SerialRegistryOrderByWithRelationInput
+  code?: Prisma.CodeOrderByWithRelationInput
 }
 
 export type ScanLogWhereUniqueInput = Prisma.AtLeast<{
@@ -235,7 +235,7 @@ export type ScanLogWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.ScanLogWhereInput | Prisma.ScanLogWhereInput[]
   OR?: Prisma.ScanLogWhereInput[]
   NOT?: Prisma.ScanLogWhereInput | Prisma.ScanLogWhereInput[]
-  serialId?: Prisma.StringFilter<"ScanLog"> | string
+  codeId?: Prisma.StringFilter<"ScanLog"> | string
   ipAddress?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   country?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   city?: Prisma.StringNullableFilter<"ScanLog"> | string | null
@@ -243,12 +243,12 @@ export type ScanLogWhereUniqueInput = Prisma.AtLeast<{
   isValidSignature?: Prisma.BoolFilter<"ScanLog"> | boolean
   isGeoAnomaly?: Prisma.BoolFilter<"ScanLog"> | boolean
   scannedAt?: Prisma.DateTimeFilter<"ScanLog"> | Date | string
-  serial?: Prisma.XOR<Prisma.SerialRegistryScalarRelationFilter, Prisma.SerialRegistryWhereInput>
+  code?: Prisma.XOR<Prisma.CodeScalarRelationFilter, Prisma.CodeWhereInput>
 }, "id">
 
 export type ScanLogOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -266,7 +266,7 @@ export type ScanLogScalarWhereWithAggregatesInput = {
   OR?: Prisma.ScanLogScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ScanLogScalarWhereWithAggregatesInput | Prisma.ScanLogScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"ScanLog"> | string
-  serialId?: Prisma.StringWithAggregatesFilter<"ScanLog"> | string
+  codeId?: Prisma.StringWithAggregatesFilter<"ScanLog"> | string
   ipAddress?: Prisma.StringNullableWithAggregatesFilter<"ScanLog"> | string | null
   country?: Prisma.StringNullableWithAggregatesFilter<"ScanLog"> | string | null
   city?: Prisma.StringNullableWithAggregatesFilter<"ScanLog"> | string | null
@@ -285,12 +285,12 @@ export type ScanLogCreateInput = {
   isValidSignature: boolean
   isGeoAnomaly?: boolean
   scannedAt?: Date | string
-  serial: Prisma.SerialRegistryCreateNestedOneWithoutScansInput
+  code: Prisma.CodeCreateNestedOneWithoutScansInput
 }
 
 export type ScanLogUncheckedCreateInput = {
   id?: string
-  serialId: string
+  codeId: string
   ipAddress?: string | null
   country?: string | null
   city?: string | null
@@ -309,12 +309,12 @@ export type ScanLogUpdateInput = {
   isValidSignature?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isGeoAnomaly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   scannedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  serial?: Prisma.SerialRegistryUpdateOneRequiredWithoutScansNestedInput
+  code?: Prisma.CodeUpdateOneRequiredWithoutScansNestedInput
 }
 
 export type ScanLogUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  serialId?: Prisma.StringFieldUpdateOperationsInput | string
+  codeId?: Prisma.StringFieldUpdateOperationsInput | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -326,7 +326,7 @@ export type ScanLogUncheckedUpdateInput = {
 
 export type ScanLogCreateManyInput = {
   id?: string
-  serialId: string
+  codeId: string
   ipAddress?: string | null
   country?: string | null
   city?: string | null
@@ -349,7 +349,7 @@ export type ScanLogUpdateManyMutationInput = {
 
 export type ScanLogUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  serialId?: Prisma.StringFieldUpdateOperationsInput | string
+  codeId?: Prisma.StringFieldUpdateOperationsInput | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -371,7 +371,7 @@ export type ScanLogOrderByRelationAggregateInput = {
 
 export type ScanLogCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   country?: Prisma.SortOrder
   city?: Prisma.SortOrder
@@ -383,7 +383,7 @@ export type ScanLogCountOrderByAggregateInput = {
 
 export type ScanLogMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   country?: Prisma.SortOrder
   city?: Prisma.SortOrder
@@ -395,7 +395,7 @@ export type ScanLogMaxOrderByAggregateInput = {
 
 export type ScanLogMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   country?: Prisma.SortOrder
   city?: Prisma.SortOrder
@@ -405,45 +405,45 @@ export type ScanLogMinOrderByAggregateInput = {
   scannedAt?: Prisma.SortOrder
 }
 
-export type ScanLogCreateNestedManyWithoutSerialInput = {
-  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput> | Prisma.ScanLogCreateWithoutSerialInput[] | Prisma.ScanLogUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutSerialInput | Prisma.ScanLogCreateOrConnectWithoutSerialInput[]
-  createMany?: Prisma.ScanLogCreateManySerialInputEnvelope
+export type ScanLogCreateNestedManyWithoutCodeInput = {
+  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput> | Prisma.ScanLogCreateWithoutCodeInput[] | Prisma.ScanLogUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutCodeInput | Prisma.ScanLogCreateOrConnectWithoutCodeInput[]
+  createMany?: Prisma.ScanLogCreateManyCodeInputEnvelope
   connect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
 }
 
-export type ScanLogUncheckedCreateNestedManyWithoutSerialInput = {
-  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput> | Prisma.ScanLogCreateWithoutSerialInput[] | Prisma.ScanLogUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutSerialInput | Prisma.ScanLogCreateOrConnectWithoutSerialInput[]
-  createMany?: Prisma.ScanLogCreateManySerialInputEnvelope
+export type ScanLogUncheckedCreateNestedManyWithoutCodeInput = {
+  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput> | Prisma.ScanLogCreateWithoutCodeInput[] | Prisma.ScanLogUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutCodeInput | Prisma.ScanLogCreateOrConnectWithoutCodeInput[]
+  createMany?: Prisma.ScanLogCreateManyCodeInputEnvelope
   connect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
 }
 
-export type ScanLogUpdateManyWithoutSerialNestedInput = {
-  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput> | Prisma.ScanLogCreateWithoutSerialInput[] | Prisma.ScanLogUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutSerialInput | Prisma.ScanLogCreateOrConnectWithoutSerialInput[]
-  upsert?: Prisma.ScanLogUpsertWithWhereUniqueWithoutSerialInput | Prisma.ScanLogUpsertWithWhereUniqueWithoutSerialInput[]
-  createMany?: Prisma.ScanLogCreateManySerialInputEnvelope
+export type ScanLogUpdateManyWithoutCodeNestedInput = {
+  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput> | Prisma.ScanLogCreateWithoutCodeInput[] | Prisma.ScanLogUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutCodeInput | Prisma.ScanLogCreateOrConnectWithoutCodeInput[]
+  upsert?: Prisma.ScanLogUpsertWithWhereUniqueWithoutCodeInput | Prisma.ScanLogUpsertWithWhereUniqueWithoutCodeInput[]
+  createMany?: Prisma.ScanLogCreateManyCodeInputEnvelope
   set?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   disconnect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   delete?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   connect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
-  update?: Prisma.ScanLogUpdateWithWhereUniqueWithoutSerialInput | Prisma.ScanLogUpdateWithWhereUniqueWithoutSerialInput[]
-  updateMany?: Prisma.ScanLogUpdateManyWithWhereWithoutSerialInput | Prisma.ScanLogUpdateManyWithWhereWithoutSerialInput[]
+  update?: Prisma.ScanLogUpdateWithWhereUniqueWithoutCodeInput | Prisma.ScanLogUpdateWithWhereUniqueWithoutCodeInput[]
+  updateMany?: Prisma.ScanLogUpdateManyWithWhereWithoutCodeInput | Prisma.ScanLogUpdateManyWithWhereWithoutCodeInput[]
   deleteMany?: Prisma.ScanLogScalarWhereInput | Prisma.ScanLogScalarWhereInput[]
 }
 
-export type ScanLogUncheckedUpdateManyWithoutSerialNestedInput = {
-  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput> | Prisma.ScanLogCreateWithoutSerialInput[] | Prisma.ScanLogUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutSerialInput | Prisma.ScanLogCreateOrConnectWithoutSerialInput[]
-  upsert?: Prisma.ScanLogUpsertWithWhereUniqueWithoutSerialInput | Prisma.ScanLogUpsertWithWhereUniqueWithoutSerialInput[]
-  createMany?: Prisma.ScanLogCreateManySerialInputEnvelope
+export type ScanLogUncheckedUpdateManyWithoutCodeNestedInput = {
+  create?: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput> | Prisma.ScanLogCreateWithoutCodeInput[] | Prisma.ScanLogUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.ScanLogCreateOrConnectWithoutCodeInput | Prisma.ScanLogCreateOrConnectWithoutCodeInput[]
+  upsert?: Prisma.ScanLogUpsertWithWhereUniqueWithoutCodeInput | Prisma.ScanLogUpsertWithWhereUniqueWithoutCodeInput[]
+  createMany?: Prisma.ScanLogCreateManyCodeInputEnvelope
   set?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   disconnect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   delete?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
   connect?: Prisma.ScanLogWhereUniqueInput | Prisma.ScanLogWhereUniqueInput[]
-  update?: Prisma.ScanLogUpdateWithWhereUniqueWithoutSerialInput | Prisma.ScanLogUpdateWithWhereUniqueWithoutSerialInput[]
-  updateMany?: Prisma.ScanLogUpdateManyWithWhereWithoutSerialInput | Prisma.ScanLogUpdateManyWithWhereWithoutSerialInput[]
+  update?: Prisma.ScanLogUpdateWithWhereUniqueWithoutCodeInput | Prisma.ScanLogUpdateWithWhereUniqueWithoutCodeInput[]
+  updateMany?: Prisma.ScanLogUpdateManyWithWhereWithoutCodeInput | Prisma.ScanLogUpdateManyWithWhereWithoutCodeInput[]
   deleteMany?: Prisma.ScanLogScalarWhereInput | Prisma.ScanLogScalarWhereInput[]
 }
 
@@ -451,7 +451,7 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
-export type ScanLogCreateWithoutSerialInput = {
+export type ScanLogCreateWithoutCodeInput = {
   id?: string
   ipAddress?: string | null
   country?: string | null
@@ -462,7 +462,7 @@ export type ScanLogCreateWithoutSerialInput = {
   scannedAt?: Date | string
 }
 
-export type ScanLogUncheckedCreateWithoutSerialInput = {
+export type ScanLogUncheckedCreateWithoutCodeInput = {
   id?: string
   ipAddress?: string | null
   country?: string | null
@@ -473,30 +473,30 @@ export type ScanLogUncheckedCreateWithoutSerialInput = {
   scannedAt?: Date | string
 }
 
-export type ScanLogCreateOrConnectWithoutSerialInput = {
+export type ScanLogCreateOrConnectWithoutCodeInput = {
   where: Prisma.ScanLogWhereUniqueInput
-  create: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput>
+  create: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput>
 }
 
-export type ScanLogCreateManySerialInputEnvelope = {
-  data: Prisma.ScanLogCreateManySerialInput | Prisma.ScanLogCreateManySerialInput[]
+export type ScanLogCreateManyCodeInputEnvelope = {
+  data: Prisma.ScanLogCreateManyCodeInput | Prisma.ScanLogCreateManyCodeInput[]
   skipDuplicates?: boolean
 }
 
-export type ScanLogUpsertWithWhereUniqueWithoutSerialInput = {
+export type ScanLogUpsertWithWhereUniqueWithoutCodeInput = {
   where: Prisma.ScanLogWhereUniqueInput
-  update: Prisma.XOR<Prisma.ScanLogUpdateWithoutSerialInput, Prisma.ScanLogUncheckedUpdateWithoutSerialInput>
-  create: Prisma.XOR<Prisma.ScanLogCreateWithoutSerialInput, Prisma.ScanLogUncheckedCreateWithoutSerialInput>
+  update: Prisma.XOR<Prisma.ScanLogUpdateWithoutCodeInput, Prisma.ScanLogUncheckedUpdateWithoutCodeInput>
+  create: Prisma.XOR<Prisma.ScanLogCreateWithoutCodeInput, Prisma.ScanLogUncheckedCreateWithoutCodeInput>
 }
 
-export type ScanLogUpdateWithWhereUniqueWithoutSerialInput = {
+export type ScanLogUpdateWithWhereUniqueWithoutCodeInput = {
   where: Prisma.ScanLogWhereUniqueInput
-  data: Prisma.XOR<Prisma.ScanLogUpdateWithoutSerialInput, Prisma.ScanLogUncheckedUpdateWithoutSerialInput>
+  data: Prisma.XOR<Prisma.ScanLogUpdateWithoutCodeInput, Prisma.ScanLogUncheckedUpdateWithoutCodeInput>
 }
 
-export type ScanLogUpdateManyWithWhereWithoutSerialInput = {
+export type ScanLogUpdateManyWithWhereWithoutCodeInput = {
   where: Prisma.ScanLogScalarWhereInput
-  data: Prisma.XOR<Prisma.ScanLogUpdateManyMutationInput, Prisma.ScanLogUncheckedUpdateManyWithoutSerialInput>
+  data: Prisma.XOR<Prisma.ScanLogUpdateManyMutationInput, Prisma.ScanLogUncheckedUpdateManyWithoutCodeInput>
 }
 
 export type ScanLogScalarWhereInput = {
@@ -504,7 +504,7 @@ export type ScanLogScalarWhereInput = {
   OR?: Prisma.ScanLogScalarWhereInput[]
   NOT?: Prisma.ScanLogScalarWhereInput | Prisma.ScanLogScalarWhereInput[]
   id?: Prisma.StringFilter<"ScanLog"> | string
-  serialId?: Prisma.StringFilter<"ScanLog"> | string
+  codeId?: Prisma.StringFilter<"ScanLog"> | string
   ipAddress?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   country?: Prisma.StringNullableFilter<"ScanLog"> | string | null
   city?: Prisma.StringNullableFilter<"ScanLog"> | string | null
@@ -514,7 +514,7 @@ export type ScanLogScalarWhereInput = {
   scannedAt?: Prisma.DateTimeFilter<"ScanLog"> | Date | string
 }
 
-export type ScanLogCreateManySerialInput = {
+export type ScanLogCreateManyCodeInput = {
   id?: string
   ipAddress?: string | null
   country?: string | null
@@ -525,7 +525,7 @@ export type ScanLogCreateManySerialInput = {
   scannedAt?: Date | string
 }
 
-export type ScanLogUpdateWithoutSerialInput = {
+export type ScanLogUpdateWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -536,7 +536,7 @@ export type ScanLogUpdateWithoutSerialInput = {
   scannedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type ScanLogUncheckedUpdateWithoutSerialInput = {
+export type ScanLogUncheckedUpdateWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -547,7 +547,7 @@ export type ScanLogUncheckedUpdateWithoutSerialInput = {
   scannedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type ScanLogUncheckedUpdateManyWithoutSerialInput = {
+export type ScanLogUncheckedUpdateManyWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -562,7 +562,7 @@ export type ScanLogUncheckedUpdateManyWithoutSerialInput = {
 
 export type ScanLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   ipAddress?: boolean
   country?: boolean
   city?: boolean
@@ -570,12 +570,12 @@ export type ScanLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   isValidSignature?: boolean
   isGeoAnomaly?: boolean
   scannedAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scanLog"]>
 
 export type ScanLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   ipAddress?: boolean
   country?: boolean
   city?: boolean
@@ -583,12 +583,12 @@ export type ScanLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isValidSignature?: boolean
   isGeoAnomaly?: boolean
   scannedAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scanLog"]>
 
 export type ScanLogSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   ipAddress?: boolean
   country?: boolean
   city?: boolean
@@ -596,12 +596,12 @@ export type ScanLogSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isValidSignature?: boolean
   isGeoAnomaly?: boolean
   scannedAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scanLog"]>
 
 export type ScanLogSelectScalar = {
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   ipAddress?: boolean
   country?: boolean
   city?: boolean
@@ -611,25 +611,25 @@ export type ScanLogSelectScalar = {
   scannedAt?: boolean
 }
 
-export type ScanLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serialId" | "ipAddress" | "country" | "city" | "deviceInfo" | "isValidSignature" | "isGeoAnomaly" | "scannedAt", ExtArgs["result"]["scanLog"]>
+export type ScanLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "codeId" | "ipAddress" | "country" | "city" | "deviceInfo" | "isValidSignature" | "isGeoAnomaly" | "scannedAt", ExtArgs["result"]["scanLog"]>
 export type ScanLogInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 export type ScanLogIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 export type ScanLogIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 
 export type $ScanLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ScanLog"
   objects: {
-    serial: Prisma.$SerialRegistryPayload<ExtArgs>
+    code: Prisma.$CodePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    serialId: string
+    codeId: string
     ipAddress: string | null
     country: string | null
     city: string | null
@@ -1031,7 +1031,7 @@ readonly fields: ScanLogFieldRefs;
  */
 export interface Prisma__ScanLogClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  serial<T extends Prisma.SerialRegistryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SerialRegistryDefaultArgs<ExtArgs>>): Prisma.Prisma__SerialRegistryClient<runtime.Types.Result.GetResult<Prisma.$SerialRegistryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  code<T extends Prisma.CodeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CodeDefaultArgs<ExtArgs>>): Prisma.Prisma__CodeClient<runtime.Types.Result.GetResult<Prisma.$CodePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1062,7 +1062,7 @@ export interface Prisma__ScanLogClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface ScanLogFieldRefs {
   readonly id: Prisma.FieldRef<"ScanLog", 'String'>
-  readonly serialId: Prisma.FieldRef<"ScanLog", 'String'>
+  readonly codeId: Prisma.FieldRef<"ScanLog", 'String'>
   readonly ipAddress: Prisma.FieldRef<"ScanLog", 'String'>
   readonly country: Prisma.FieldRef<"ScanLog", 'String'>
   readonly city: Prisma.FieldRef<"ScanLog", 'String'>

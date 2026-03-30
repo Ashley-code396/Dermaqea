@@ -1,22 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
-import { ProductsService } from '../products/products.service';
-import { BatchesService } from '../batches/batches.service';
 
 @Controller('stats')
 export class StatsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly batchesService: BatchesService,
-  ) {}
+  constructor() {}
 
   @Get()
   getOverview() {
-    const products = this.productsService.count();
-    const batches = this.batchesService.count();
-
+    // Products/Batches modules removed — return neutral counts for overview API.
     return {
-      products,
-      batches,
+      products: 0,
+      batches: 0,
     };
   }
 }

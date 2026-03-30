@@ -28,11 +28,14 @@ export type ProductMinAggregateOutputType = {
   id: string | null
   product_name: string | null
   brand_wallet: string | null
-  serialNumber: string | null
-  batchNumber: string | null
   manufactureDate: Date | null
   expiryDate: Date | null
-  objectId: string | null
+  name: string | null
+  sku: string | null
+  category: string | null
+  description: string | null
+  status: $Enums.ProductStatus | null
+  rejectionReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
   manufacturerId: string | null
@@ -42,11 +45,14 @@ export type ProductMaxAggregateOutputType = {
   id: string | null
   product_name: string | null
   brand_wallet: string | null
-  serialNumber: string | null
-  batchNumber: string | null
   manufactureDate: Date | null
   expiryDate: Date | null
-  objectId: string | null
+  name: string | null
+  sku: string | null
+  category: string | null
+  description: string | null
+  status: $Enums.ProductStatus | null
+  rejectionReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
   manufacturerId: string | null
@@ -56,12 +62,18 @@ export type ProductCountAggregateOutputType = {
   id: number
   product_name: number
   brand_wallet: number
-  serialNumber: number
-  batchNumber: number
   manufactureDate: number
   expiryDate: number
   extraData: number
-  objectId: number
+  name: number
+  sku: number
+  category: number
+  description: number
+  ingredients: number
+  certifications: number
+  images: number
+  status: number
+  rejectionReason: number
   createdAt: number
   updatedAt: number
   manufacturerId: number
@@ -73,11 +85,14 @@ export type ProductMinAggregateInputType = {
   id?: true
   product_name?: true
   brand_wallet?: true
-  serialNumber?: true
-  batchNumber?: true
   manufactureDate?: true
   expiryDate?: true
-  objectId?: true
+  name?: true
+  sku?: true
+  category?: true
+  description?: true
+  status?: true
+  rejectionReason?: true
   createdAt?: true
   updatedAt?: true
   manufacturerId?: true
@@ -87,11 +102,14 @@ export type ProductMaxAggregateInputType = {
   id?: true
   product_name?: true
   brand_wallet?: true
-  serialNumber?: true
-  batchNumber?: true
   manufactureDate?: true
   expiryDate?: true
-  objectId?: true
+  name?: true
+  sku?: true
+  category?: true
+  description?: true
+  status?: true
+  rejectionReason?: true
   createdAt?: true
   updatedAt?: true
   manufacturerId?: true
@@ -101,12 +119,18 @@ export type ProductCountAggregateInputType = {
   id?: true
   product_name?: true
   brand_wallet?: true
-  serialNumber?: true
-  batchNumber?: true
   manufactureDate?: true
   expiryDate?: true
   extraData?: true
-  objectId?: true
+  name?: true
+  sku?: true
+  category?: true
+  description?: true
+  ingredients?: true
+  certifications?: true
+  images?: true
+  status?: true
+  rejectionReason?: true
   createdAt?: true
   updatedAt?: true
   manufacturerId?: true
@@ -189,12 +213,18 @@ export type ProductGroupByOutputType = {
   id: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date
   expiryDate: Date
   extraData: runtime.JsonValue | null
-  objectId: string | null
+  name: string | null
+  sku: string | null
+  category: string | null
+  description: string | null
+  ingredients: runtime.JsonValue | null
+  certifications: runtime.JsonValue | null
+  images: runtime.JsonValue | null
+  status: $Enums.ProductStatus
+  rejectionReason: string | null
   createdAt: Date
   updatedAt: Date
   manufacturerId: string
@@ -225,66 +255,90 @@ export type ProductWhereInput = {
   id?: Prisma.StringFilter<"Product"> | string
   product_name?: Prisma.StringFilter<"Product"> | string
   brand_wallet?: Prisma.StringFilter<"Product"> | string
-  serialNumber?: Prisma.StringFilter<"Product"> | string
-  batchNumber?: Prisma.StringFilter<"Product"> | string
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
-  objectId?: Prisma.StringNullableFilter<"Product"> | string | null
+  name?: Prisma.StringNullableFilter<"Product"> | string | null
+  sku?: Prisma.StringNullableFilter<"Product"> | string | null
+  category?: Prisma.StringNullableFilter<"Product"> | string | null
+  description?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.JsonNullableFilter<"Product">
+  certifications?: Prisma.JsonNullableFilter<"Product">
+  images?: Prisma.JsonNullableFilter<"Product">
+  status?: Prisma.EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+  rejectionReason?: Prisma.StringNullableFilter<"Product"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   manufacturerId?: Prisma.StringFilter<"Product"> | string
   manufacturer?: Prisma.XOR<Prisma.ManufacturerScalarRelationFilter, Prisma.ManufacturerWhereInput>
-  batches?: Prisma.BatchListRelationFilter
+  codes?: Prisma.CodeListRelationFilter
 }
 
 export type ProductOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   product_name?: Prisma.SortOrder
   brand_wallet?: Prisma.SortOrder
-  serialNumber?: Prisma.SortOrder
-  batchNumber?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrderInput | Prisma.SortOrder
-  objectId?: Prisma.SortOrderInput | Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
+  sku?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  ingredients?: Prisma.SortOrderInput | Prisma.SortOrder
+  certifications?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   manufacturerId?: Prisma.SortOrder
   manufacturer?: Prisma.ManufacturerOrderByWithRelationInput
-  batches?: Prisma.BatchOrderByRelationAggregateInput
+  codes?: Prisma.CodeOrderByRelationAggregateInput
 }
 
 export type ProductWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  serialNumber?: string
   AND?: Prisma.ProductWhereInput | Prisma.ProductWhereInput[]
   OR?: Prisma.ProductWhereInput[]
   NOT?: Prisma.ProductWhereInput | Prisma.ProductWhereInput[]
   product_name?: Prisma.StringFilter<"Product"> | string
   brand_wallet?: Prisma.StringFilter<"Product"> | string
-  batchNumber?: Prisma.StringFilter<"Product"> | string
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
-  objectId?: Prisma.StringNullableFilter<"Product"> | string | null
+  name?: Prisma.StringNullableFilter<"Product"> | string | null
+  sku?: Prisma.StringNullableFilter<"Product"> | string | null
+  category?: Prisma.StringNullableFilter<"Product"> | string | null
+  description?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.JsonNullableFilter<"Product">
+  certifications?: Prisma.JsonNullableFilter<"Product">
+  images?: Prisma.JsonNullableFilter<"Product">
+  status?: Prisma.EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+  rejectionReason?: Prisma.StringNullableFilter<"Product"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   manufacturerId?: Prisma.StringFilter<"Product"> | string
   manufacturer?: Prisma.XOR<Prisma.ManufacturerScalarRelationFilter, Prisma.ManufacturerWhereInput>
-  batches?: Prisma.BatchListRelationFilter
-}, "id" | "serialNumber">
+  codes?: Prisma.CodeListRelationFilter
+}, "id">
 
 export type ProductOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   product_name?: Prisma.SortOrder
   brand_wallet?: Prisma.SortOrder
-  serialNumber?: Prisma.SortOrder
-  batchNumber?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrderInput | Prisma.SortOrder
-  objectId?: Prisma.SortOrderInput | Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
+  sku?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  ingredients?: Prisma.SortOrderInput | Prisma.SortOrder
+  certifications?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   manufacturerId?: Prisma.SortOrder
@@ -300,12 +354,18 @@ export type ProductScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Product"> | string
   product_name?: Prisma.StringWithAggregatesFilter<"Product"> | string
   brand_wallet?: Prisma.StringWithAggregatesFilter<"Product"> | string
-  serialNumber?: Prisma.StringWithAggregatesFilter<"Product"> | string
-  batchNumber?: Prisma.StringWithAggregatesFilter<"Product"> | string
   manufactureDate?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableWithAggregatesFilter<"Product">
-  objectId?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  name?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  sku?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  category?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  description?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  ingredients?: Prisma.JsonNullableWithAggregatesFilter<"Product">
+  certifications?: Prisma.JsonNullableWithAggregatesFilter<"Product">
+  images?: Prisma.JsonNullableWithAggregatesFilter<"Product">
+  status?: Prisma.EnumProductStatusWithAggregatesFilter<"Product"> | $Enums.ProductStatus
+  rejectionReason?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   manufacturerId?: Prisma.StringWithAggregatesFilter<"Product"> | string
@@ -315,76 +375,106 @@ export type ProductCreateInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   manufacturer: Prisma.ManufacturerCreateNestedOneWithoutProductsInput
-  batches?: Prisma.BatchCreateNestedManyWithoutProductInput
+  codes?: Prisma.CodeCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   manufacturerId: string
-  batches?: Prisma.BatchUncheckedCreateNestedManyWithoutProductInput
+  codes?: Prisma.CodeUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   manufacturer?: Prisma.ManufacturerUpdateOneRequiredWithoutProductsNestedInput
-  batches?: Prisma.BatchUpdateManyWithoutProductNestedInput
+  codes?: Prisma.CodeUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   manufacturerId?: Prisma.StringFieldUpdateOperationsInput | string
-  batches?: Prisma.BatchUncheckedUpdateManyWithoutProductNestedInput
+  codes?: Prisma.CodeUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductCreateManyInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   manufacturerId: string
@@ -394,12 +484,18 @@ export type ProductUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -408,12 +504,18 @@ export type ProductUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   manufacturerId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -433,12 +535,18 @@ export type ProductCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   product_name?: Prisma.SortOrder
   brand_wallet?: Prisma.SortOrder
-  serialNumber?: Prisma.SortOrder
-  batchNumber?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
   extraData?: Prisma.SortOrder
-  objectId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  ingredients?: Prisma.SortOrder
+  certifications?: Prisma.SortOrder
+  images?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   manufacturerId?: Prisma.SortOrder
@@ -448,11 +556,14 @@ export type ProductMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   product_name?: Prisma.SortOrder
   brand_wallet?: Prisma.SortOrder
-  serialNumber?: Prisma.SortOrder
-  batchNumber?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
-  objectId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   manufacturerId?: Prisma.SortOrder
@@ -462,19 +573,22 @@ export type ProductMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   product_name?: Prisma.SortOrder
   brand_wallet?: Prisma.SortOrder
-  serialNumber?: Prisma.SortOrder
-  batchNumber?: Prisma.SortOrder
   manufactureDate?: Prisma.SortOrder
   expiryDate?: Prisma.SortOrder
-  objectId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   manufacturerId?: Prisma.SortOrder
 }
 
-export type ProductScalarRelationFilter = {
-  is?: Prisma.ProductWhereInput
-  isNot?: Prisma.ProductWhereInput
+export type ProductNullableScalarRelationFilter = {
+  is?: Prisma.ProductWhereInput | null
+  isNot?: Prisma.ProductWhereInput | null
 }
 
 export type ProductCreateNestedManyWithoutManufacturerInput = {
@@ -519,48 +633,66 @@ export type ProductUncheckedUpdateManyWithoutManufacturerNestedInput = {
   deleteMany?: Prisma.ProductScalarWhereInput | Prisma.ProductScalarWhereInput[]
 }
 
-export type ProductCreateNestedOneWithoutBatchesInput = {
-  create?: Prisma.XOR<Prisma.ProductCreateWithoutBatchesInput, Prisma.ProductUncheckedCreateWithoutBatchesInput>
-  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutBatchesInput
+export type EnumProductStatusFieldUpdateOperationsInput = {
+  set?: $Enums.ProductStatus
+}
+
+export type ProductCreateNestedOneWithoutCodesInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutCodesInput, Prisma.ProductUncheckedCreateWithoutCodesInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutCodesInput
   connect?: Prisma.ProductWhereUniqueInput
 }
 
-export type ProductUpdateOneRequiredWithoutBatchesNestedInput = {
-  create?: Prisma.XOR<Prisma.ProductCreateWithoutBatchesInput, Prisma.ProductUncheckedCreateWithoutBatchesInput>
-  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutBatchesInput
-  upsert?: Prisma.ProductUpsertWithoutBatchesInput
+export type ProductUpdateOneWithoutCodesNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutCodesInput, Prisma.ProductUncheckedCreateWithoutCodesInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutCodesInput
+  upsert?: Prisma.ProductUpsertWithoutCodesInput
+  disconnect?: Prisma.ProductWhereInput | boolean
+  delete?: Prisma.ProductWhereInput | boolean
   connect?: Prisma.ProductWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutBatchesInput, Prisma.ProductUpdateWithoutBatchesInput>, Prisma.ProductUncheckedUpdateWithoutBatchesInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutCodesInput, Prisma.ProductUpdateWithoutCodesInput>, Prisma.ProductUncheckedUpdateWithoutCodesInput>
 }
 
 export type ProductCreateWithoutManufacturerInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  batches?: Prisma.BatchCreateNestedManyWithoutProductInput
+  codes?: Prisma.CodeCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateWithoutManufacturerInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  batches?: Prisma.BatchUncheckedCreateNestedManyWithoutProductInput
+  codes?: Prisma.CodeUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductCreateOrConnectWithoutManufacturerInput = {
@@ -596,88 +728,118 @@ export type ProductScalarWhereInput = {
   id?: Prisma.StringFilter<"Product"> | string
   product_name?: Prisma.StringFilter<"Product"> | string
   brand_wallet?: Prisma.StringFilter<"Product"> | string
-  serialNumber?: Prisma.StringFilter<"Product"> | string
-  batchNumber?: Prisma.StringFilter<"Product"> | string
   manufactureDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   expiryDate?: Prisma.DateTimeFilter<"Product"> | Date | string
   extraData?: Prisma.JsonNullableFilter<"Product">
-  objectId?: Prisma.StringNullableFilter<"Product"> | string | null
+  name?: Prisma.StringNullableFilter<"Product"> | string | null
+  sku?: Prisma.StringNullableFilter<"Product"> | string | null
+  category?: Prisma.StringNullableFilter<"Product"> | string | null
+  description?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.JsonNullableFilter<"Product">
+  certifications?: Prisma.JsonNullableFilter<"Product">
+  images?: Prisma.JsonNullableFilter<"Product">
+  status?: Prisma.EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+  rejectionReason?: Prisma.StringNullableFilter<"Product"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   manufacturerId?: Prisma.StringFilter<"Product"> | string
 }
 
-export type ProductCreateWithoutBatchesInput = {
+export type ProductCreateWithoutCodesInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   manufacturer: Prisma.ManufacturerCreateNestedOneWithoutProductsInput
 }
 
-export type ProductUncheckedCreateWithoutBatchesInput = {
+export type ProductUncheckedCreateWithoutCodesInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   manufacturerId: string
 }
 
-export type ProductCreateOrConnectWithoutBatchesInput = {
+export type ProductCreateOrConnectWithoutCodesInput = {
   where: Prisma.ProductWhereUniqueInput
-  create: Prisma.XOR<Prisma.ProductCreateWithoutBatchesInput, Prisma.ProductUncheckedCreateWithoutBatchesInput>
+  create: Prisma.XOR<Prisma.ProductCreateWithoutCodesInput, Prisma.ProductUncheckedCreateWithoutCodesInput>
 }
 
-export type ProductUpsertWithoutBatchesInput = {
-  update: Prisma.XOR<Prisma.ProductUpdateWithoutBatchesInput, Prisma.ProductUncheckedUpdateWithoutBatchesInput>
-  create: Prisma.XOR<Prisma.ProductCreateWithoutBatchesInput, Prisma.ProductUncheckedCreateWithoutBatchesInput>
+export type ProductUpsertWithoutCodesInput = {
+  update: Prisma.XOR<Prisma.ProductUpdateWithoutCodesInput, Prisma.ProductUncheckedUpdateWithoutCodesInput>
+  create: Prisma.XOR<Prisma.ProductCreateWithoutCodesInput, Prisma.ProductUncheckedCreateWithoutCodesInput>
   where?: Prisma.ProductWhereInput
 }
 
-export type ProductUpdateToOneWithWhereWithoutBatchesInput = {
+export type ProductUpdateToOneWithWhereWithoutCodesInput = {
   where?: Prisma.ProductWhereInput
-  data: Prisma.XOR<Prisma.ProductUpdateWithoutBatchesInput, Prisma.ProductUncheckedUpdateWithoutBatchesInput>
+  data: Prisma.XOR<Prisma.ProductUpdateWithoutCodesInput, Prisma.ProductUncheckedUpdateWithoutCodesInput>
 }
 
-export type ProductUpdateWithoutBatchesInput = {
+export type ProductUpdateWithoutCodesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   manufacturer?: Prisma.ManufacturerUpdateOneRequiredWithoutProductsNestedInput
 }
 
-export type ProductUncheckedUpdateWithoutBatchesInput = {
+export type ProductUncheckedUpdateWithoutCodesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   manufacturerId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -687,12 +849,18 @@ export type ProductCreateManyManufacturerInput = {
   id?: string
   product_name: string
   brand_wallet: string
-  serialNumber: string
-  batchNumber: string
   manufactureDate: Date | string
   expiryDate: Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: string | null
+  name?: string | null
+  sku?: string | null
+  category?: string | null
+  description?: string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ProductStatus
+  rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -701,42 +869,60 @@ export type ProductUpdateWithoutManufacturerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  batches?: Prisma.BatchUpdateManyWithoutProductNestedInput
+  codes?: Prisma.CodeUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateWithoutManufacturerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  batches?: Prisma.BatchUncheckedUpdateManyWithoutProductNestedInput
+  codes?: Prisma.CodeUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateManyWithoutManufacturerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   product_name?: Prisma.StringFieldUpdateOperationsInput | string
   brand_wallet?: Prisma.StringFieldUpdateOperationsInput | string
-  serialNumber?: Prisma.StringFieldUpdateOperationsInput | string
-  batchNumber?: Prisma.StringFieldUpdateOperationsInput | string
   manufactureDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   extraData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  objectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  certifications?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -747,11 +933,11 @@ export type ProductUncheckedUpdateManyWithoutManufacturerInput = {
  */
 
 export type ProductCountOutputType = {
-  batches: number
+  codes: number
 }
 
 export type ProductCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  batches?: boolean | ProductCountOutputTypeCountBatchesArgs
+  codes?: boolean | ProductCountOutputTypeCountCodesArgs
 }
 
 /**
@@ -767,8 +953,8 @@ export type ProductCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
 /**
  * ProductCountOutputType without action
  */
-export type ProductCountOutputTypeCountBatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.BatchWhereInput
+export type ProductCountOutputTypeCountCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CodeWhereInput
 }
 
 
@@ -776,17 +962,23 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   id?: boolean
   product_name?: boolean
   brand_wallet?: boolean
-  serialNumber?: boolean
-  batchNumber?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
-  objectId?: boolean
+  name?: boolean
+  sku?: boolean
+  category?: boolean
+  description?: boolean
+  ingredients?: boolean
+  certifications?: boolean
+  images?: boolean
+  status?: boolean
+  rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   manufacturerId?: boolean
   manufacturer?: boolean | Prisma.ManufacturerDefaultArgs<ExtArgs>
-  batches?: boolean | Prisma.Product$batchesArgs<ExtArgs>
+  codes?: boolean | Prisma.Product$codesArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["product"]>
 
@@ -794,12 +986,18 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   product_name?: boolean
   brand_wallet?: boolean
-  serialNumber?: boolean
-  batchNumber?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
-  objectId?: boolean
+  name?: boolean
+  sku?: boolean
+  category?: boolean
+  description?: boolean
+  ingredients?: boolean
+  certifications?: boolean
+  images?: boolean
+  status?: boolean
+  rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   manufacturerId?: boolean
@@ -810,12 +1008,18 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   product_name?: boolean
   brand_wallet?: boolean
-  serialNumber?: boolean
-  batchNumber?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
-  objectId?: boolean
+  name?: boolean
+  sku?: boolean
+  category?: boolean
+  description?: boolean
+  ingredients?: boolean
+  certifications?: boolean
+  images?: boolean
+  status?: boolean
+  rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   manufacturerId?: boolean
@@ -826,21 +1030,27 @@ export type ProductSelectScalar = {
   id?: boolean
   product_name?: boolean
   brand_wallet?: boolean
-  serialNumber?: boolean
-  batchNumber?: boolean
   manufactureDate?: boolean
   expiryDate?: boolean
   extraData?: boolean
-  objectId?: boolean
+  name?: boolean
+  sku?: boolean
+  category?: boolean
+  description?: boolean
+  ingredients?: boolean
+  certifications?: boolean
+  images?: boolean
+  status?: boolean
+  rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   manufacturerId?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "product_name" | "brand_wallet" | "serialNumber" | "batchNumber" | "manufactureDate" | "expiryDate" | "extraData" | "objectId" | "createdAt" | "updatedAt" | "manufacturerId", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "product_name" | "brand_wallet" | "manufactureDate" | "expiryDate" | "extraData" | "name" | "sku" | "category" | "description" | "ingredients" | "certifications" | "images" | "status" | "rejectionReason" | "createdAt" | "updatedAt" | "manufacturerId", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   manufacturer?: boolean | Prisma.ManufacturerDefaultArgs<ExtArgs>
-  batches?: boolean | Prisma.Product$batchesArgs<ExtArgs>
+  codes?: boolean | Prisma.Product$codesArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProductIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -854,18 +1064,24 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "Product"
   objects: {
     manufacturer: Prisma.$ManufacturerPayload<ExtArgs>
-    batches: Prisma.$BatchPayload<ExtArgs>[]
+    codes: Prisma.$CodePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     product_name: string
     brand_wallet: string
-    serialNumber: string
-    batchNumber: string
     manufactureDate: Date
     expiryDate: Date
     extraData: runtime.JsonValue | null
-    objectId: string | null
+    name: string | null
+    sku: string | null
+    category: string | null
+    description: string | null
+    ingredients: runtime.JsonValue | null
+    certifications: runtime.JsonValue | null
+    images: runtime.JsonValue | null
+    status: $Enums.ProductStatus
+    rejectionReason: string | null
     createdAt: Date
     updatedAt: Date
     manufacturerId: string
@@ -1264,7 +1480,7 @@ readonly fields: ProductFieldRefs;
 export interface Prisma__ProductClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   manufacturer<T extends Prisma.ManufacturerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ManufacturerDefaultArgs<ExtArgs>>): Prisma.Prisma__ManufacturerClient<runtime.Types.Result.GetResult<Prisma.$ManufacturerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  batches<T extends Prisma.Product$batchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$batchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  codes<T extends Prisma.Product$codesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$codesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1297,12 +1513,18 @@ export interface ProductFieldRefs {
   readonly id: Prisma.FieldRef<"Product", 'String'>
   readonly product_name: Prisma.FieldRef<"Product", 'String'>
   readonly brand_wallet: Prisma.FieldRef<"Product", 'String'>
-  readonly serialNumber: Prisma.FieldRef<"Product", 'String'>
-  readonly batchNumber: Prisma.FieldRef<"Product", 'String'>
   readonly manufactureDate: Prisma.FieldRef<"Product", 'DateTime'>
   readonly expiryDate: Prisma.FieldRef<"Product", 'DateTime'>
   readonly extraData: Prisma.FieldRef<"Product", 'Json'>
-  readonly objectId: Prisma.FieldRef<"Product", 'String'>
+  readonly name: Prisma.FieldRef<"Product", 'String'>
+  readonly sku: Prisma.FieldRef<"Product", 'String'>
+  readonly category: Prisma.FieldRef<"Product", 'String'>
+  readonly description: Prisma.FieldRef<"Product", 'String'>
+  readonly ingredients: Prisma.FieldRef<"Product", 'Json'>
+  readonly certifications: Prisma.FieldRef<"Product", 'Json'>
+  readonly images: Prisma.FieldRef<"Product", 'Json'>
+  readonly status: Prisma.FieldRef<"Product", 'ProductStatus'>
+  readonly rejectionReason: Prisma.FieldRef<"Product", 'String'>
   readonly createdAt: Prisma.FieldRef<"Product", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Product", 'DateTime'>
   readonly manufacturerId: Prisma.FieldRef<"Product", 'String'>
@@ -1702,27 +1924,27 @@ export type ProductDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
- * Product.batches
+ * Product.codes
  */
-export type Product$batchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Product$codesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Batch
+   * Select specific fields to fetch from the Code
    */
-  select?: Prisma.BatchSelect<ExtArgs> | null
+  select?: Prisma.CodeSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Batch
+   * Omit specific fields from the Code
    */
-  omit?: Prisma.BatchOmit<ExtArgs> | null
+  omit?: Prisma.CodeOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.BatchInclude<ExtArgs> | null
-  where?: Prisma.BatchWhereInput
-  orderBy?: Prisma.BatchOrderByWithRelationInput | Prisma.BatchOrderByWithRelationInput[]
-  cursor?: Prisma.BatchWhereUniqueInput
+  include?: Prisma.CodeInclude<ExtArgs> | null
+  where?: Prisma.CodeWhereInput
+  orderBy?: Prisma.CodeOrderByWithRelationInput | Prisma.CodeOrderByWithRelationInput[]
+  cursor?: Prisma.CodeWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.BatchScalarFieldEnum | Prisma.BatchScalarFieldEnum[]
+  distinct?: Prisma.CodeScalarFieldEnum | Prisma.CodeScalarFieldEnum[]
 }
 
 /**

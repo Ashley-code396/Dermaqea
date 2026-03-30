@@ -27,15 +27,6 @@ export const ProductStatus = {
 export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
 
 
-export const BatchStatus = {
-  ACTIVE: 'ACTIVE',
-  EXHAUSTED: 'EXHAUSTED',
-  RECALLED: 'RECALLED'
-} as const
-
-export type BatchStatus = (typeof BatchStatus)[keyof typeof BatchStatus]
-
-
 export const ActivationStatus = {
   UNSCANNED: 'UNSCANNED',
   ACTIVATED: 'ACTIVATED',

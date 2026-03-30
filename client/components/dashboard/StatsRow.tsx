@@ -56,18 +56,18 @@ export function StatsRow({
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Total Products"
+        title="Total Manufacturers"
         value={totalProducts}
-        subtext={`${approvedProducts} approved / ${pendingProducts} pending`}
+        subtext={`${approvedProducts} verified / ${pendingProducts} pending`}
         icon={<Package className="h-6 w-6" />}
       />
       <StatCard
-        title="Active Batches"
+        title="Active Facilities"
         value={totalBatches}
         icon={<Boxes className="h-6 w-6" />}
       />
       <StatCard
-        title="QR Codes Generated"
+        title="System Events"
         value={totalQRCodes.toLocaleString()}
         icon={<QrCode className="h-6 w-6" />}
       />

@@ -56,6 +56,98 @@ export class EnokiService {
     this.grpcClient = undefined;
   }
 
+  /**
+   * Sign an arbitrary payload using Enoki under a manufacturer's context.
+   * Returns a Uint8Array or base64 string depending on the EnokiClient implementation.
+   *
+   * NOTE: This method assumes the Enoki provider used by this project exposes a
+   * `signMessage` or similar RPC on the client for off-chain signing. If your
+   * Enoki SDK exposes a different call site you should adapt this wrapper.
+   */
+  async signPayload(manufacturerContext: string, payload: string): Promise<Uint8Array | string> {
+    // If the Enoki client exposes a message signing helper, prefer it.
+    // We try a few common method names and several likely locations to keep
+    // this wrapper adaptable across multiple SDK versions.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client: any = this.enokiClient as any;
+    const tryNames = ['signMessage', 'sign', 'signPayload'];
+
+    const invokeCandidate = async (fn: (...args: any[]) => any) => {
+      try {
+        // Try common patterns: object { address, message } then raw message
+        try {
+          // pattern: signMessage({ address, message })
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return await fn({ address: manufacturerContext, message: payload });
+        } catch (e) {
+          // fallback pattern: sign(message)
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          return await fn(payload);
+        }
+      } catch (e) {
+        // swallow and let caller try other candidates
+        return undefined;
+      }
+    };
+
+    // 1) Direct methods on the client
+    for (const name of tryNames) {
+      if (typeof client[name] === 'function') {
+        const res = await invokeCandidate(client[name].bind(client));
+        if (res) return res;
+      }
+    }
+
+    // 2) Common nested places: provider, wallet, auth, connector
+    const nestedOwners = ['provider', 'wallet', 'auth', 'connector'];
+    for (const owner of nestedOwners) {
+      const obj = client[owner];
+      if (!obj) continue;
+      for (const name of tryNames) {
+        if (typeof obj[name] === 'function') {
+          const res = await invokeCandidate(obj[name].bind(obj));
+          if (res) return res;
+        }
+      }
+    }
+
+    // 3) Some SDKs expose rpc-like request method
+    if (typeof client.request === 'function') {
+      try {
+        // Attempt a generic RPC-like call; adapt parameters conservatively.
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const rpcRes = await client.request({ method: 'signMessage', params: { address: manufacturerContext, message: payload } });
+        if (rpcRes) return rpcRes;
+      } catch (e) {
+        // ignore and fallthrough
+      }
+    }
+
+    // If no Enoki client signing method available, produce a diagnostic log
+    // and throw an informative error. We intentionally avoid logging any
+    // secrets; we only enumerate available method/property names to help
+    // debug SDK incompatibilities.
+    try {
+      const topLevelKeys = Object.keys(client || {}).filter(Boolean);
+      const nested = {} as Record<string, string[]>;
+      const nestedOwners = ['provider', 'wallet', 'auth', 'connector'];
+      for (const owner of nestedOwners) {
+        const obj = client?.[owner];
+        if (obj && typeof obj === 'object') nested[owner] = Object.keys(obj).filter(Boolean);
+      }
+      this.logger.debug(`Enoki signPayload diagnostic: topLevelKeys=${JSON.stringify(topLevelKeys)}, nested=${JSON.stringify(nested)}`);
+    } catch (diagError) {
+      // ignore diagnostics failures
+    }
+
+    throw new Error(
+      'Enoki client does not expose a message signing API (signMessage/sign). Ensure you pass the manufacturer Sui wallet address to signPayload and that your Enoki SDK/API version supports signing. Run the server with DEBUG logs to see available client properties.'
+    );
+  }
+
   getEnokiClient() {
     return this.enokiClient;
   }

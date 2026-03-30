@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ProductsModule } from './modules/products/products.module';
-import { BatchesModule } from './modules/batches/batches.module';
+// Products, Batches and QrCodes features removed
 import { StatsModule } from './modules/stats/stats.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
 import { EnokiModule } from './modules/enoki/enoki.module';
-import { QrCodesModule } from './modules/qr-codes/qr-codes.module';
+import { CodesModule } from './modules/codes/codes.module';
+import { ProductsModule } from './modules/products/products.module';
+// QrCodesModule removed
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ProductsModule, BatchesModule, StatsModule, ManufacturersModule, EnokiModule, QrCodesModule, ConfigModule.forRoot()],
+  imports: [StatsModule, ManufacturersModule, EnokiModule, CodesModule, ProductsModule, ConfigModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })

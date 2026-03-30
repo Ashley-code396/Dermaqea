@@ -99,25 +99,15 @@ export class ManufacturersService {
     const products = await this.prisma.product.findMany({ where: { manufacturerId: manufacturer.id }, select: { id: true } });
     const productIds = products.map((p) => p.id);
 
-    const batches = await this.prisma.batch.findMany({ where: { productId: { in: productIds } }, select: { id: true } });
-    const batchIds = batches.map((b) => b.id);
+    // With Batch removed, codes are linked directly to products. Find codes for these products.
+    const codes = await this.prisma.code.findMany({ where: { productId: { in: productIds } }, select: { id: true } });
+    const codeIds = codes.map((c) => c.id);
 
-    const serials = await this.prisma.serialRegistry.findMany({ where: { batchId: { in: batchIds } }, select: { id: true } });
-    const serialIds = serials.map((s) => s.id);
-
-    // Run deletes in a transaction
+    // Run deletes in a transaction: remove scan logs and alerts referencing these codes, then delete codes and products
     await this.prisma.$transaction([
-      // QR codes and related logs/alerts tied to serials
-      this.prisma.qrCode.deleteMany({ where: { serialId: { in: serialIds } } }),
-      this.prisma.securityAlert.deleteMany({ where: { serialId: { in: serialIds } } }),
-      this.prisma.scanLog.deleteMany({ where: { serialId: { in: serialIds } } }),
-
-      // Product twins for batches
-      this.prisma.productTwin.deleteMany({ where: { batchId: { in: batchIds } } }),
-
-      // Delete serials, batches, products
-      this.prisma.serialRegistry.deleteMany({ where: { batchId: { in: batchIds } } }),
-      this.prisma.batch.deleteMany({ where: { productId: { in: productIds } } }),
+      this.prisma.scanLog.deleteMany({ where: { codeId: { in: codeIds } } }),
+      this.prisma.securityAlert.deleteMany({ where: { codeId: { in: codeIds } } }),
+      this.prisma.code.deleteMany({ where: { id: { in: codeIds } } }),
       this.prisma.product.deleteMany({ where: { id: { in: productIds } } }),
 
       // Manufacturer documents

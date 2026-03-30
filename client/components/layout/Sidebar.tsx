@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Package,
-  Boxes,
-  QrCode,
-  BarChart3,
-  User,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, BarChart3, User, Settings, Boxes, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useManufacturer from "@/lib/useManufacturer";
 import { useCurrentAccount } from "@mysten/dapp-kit";
@@ -20,10 +12,9 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/products", label: "Products", icon: Package },
-  { href: "/batches", label: "Batches", icon: Boxes },
-  { href: "/qr-codes", label: "QR Codes", icon: QrCode },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/products", label: "Products", icon: Boxes },
+  { href: "/codes", label: "Codes", icon: Download },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

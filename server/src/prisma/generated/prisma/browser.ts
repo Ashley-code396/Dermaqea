@@ -33,25 +33,10 @@ export type ManufacturerDocument = Prisma.ManufacturerDocumentModel
  */
 export type Product = Prisma.ProductModel
 /**
- * Model Batch
+ * Model Code
  * 
  */
-export type Batch = Prisma.BatchModel
-/**
- * Model ProductTwin
- * 
- */
-export type ProductTwin = Prisma.ProductTwinModel
-/**
- * Model SerialRegistry
- * 
- */
-export type SerialRegistry = Prisma.SerialRegistryModel
-/**
- * Model QrCode
- * 
- */
-export type QrCode = Prisma.QrCodeModel
+export type Code = Prisma.CodeModel
 /**
  * Model ScanLog
  * 

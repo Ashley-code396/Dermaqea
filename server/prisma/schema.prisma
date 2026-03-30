@@ -21,11 +21,7 @@ enum ProductStatus {
   REJECTED
 }
 
-enum BatchStatus {
-  ACTIVE
-  EXHAUSTED
-  RECALLED
-}
+// Batch model removed; per new design codes are tied directly to products
 
 enum ActivationStatus {
   UNSCANNED
@@ -91,97 +87,58 @@ model Product {
   id              String   @id @default(uuid())
   product_name    String
   brand_wallet    String
-  serialNumber    String   @unique
-  batchNumber     String
+  // serialNumber and batchNumber removed — codes and units are tracked via `Code` records
   manufactureDate DateTime
   expiryDate      DateTime
   extraData       Json?
-  objectId        String?   // returned by Move function
+  // Additional client-friendly fields collected from the frontend
+  name            String?
+  sku             String?
+  category        String?
+  description     String?
+  ingredients     Json?
+  certifications  Json?
+  images          Json?
+  status          ProductStatus @default(PENDING)
+  rejectionReason String?
+  // objectId removed (not used)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   manufacturerId  String
   manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id])
+  // codes linked to product
+  codes           Code[]
 
-  batches         Batch[]
+  // serials removed: use `Code` model to track units and lifecycle
 
   @@index([manufacturerId])
 }
 
-//Batches
-model Batch {
-  id               String       @id @default(uuid())
-  productId        String
-  batchNumber      String
-  manufactureDate  DateTime
-  expiryDate       DateTime
-  unitsProduced    Int
-  status           BatchStatus  @default(ACTIVE)
-  createdAt        DateTime     @default(now())
-
-  product          Product      @relation(fields: [productId], references: [id])
-  serials          SerialRegistry[]
-  twins            ProductTwin[]
-
-  // unique constraint ensures no duplicate batch for same product
-  @@unique([productId, batchNumber])
-}
-
-//Products-Twin (Sui Binding)
-// Represents the on-chain twin object created per batch serial
-model ProductTwin {
-  id              String   @id @default(uuid())
-  batchId         String
-  serialNumber    String
-  twinObjectId    String   @unique
-  onchainTxHash   String
-  mintedAt        DateTime @default(now())
-
-  batch           Batch    @relation(fields: [batchId], references: [id])
-  serial          SerialRegistry?
-
-  @@index([batchId])
-}
-
 //Serial Registry
-// Serial numbers are uploaded by the manufacturer; backend does NOT generate them
-model SerialRegistry {
-  id               String           @id @default(uuid())
-  batchId          String
-  serialNumber     String           @unique
-  twinObjectId     String?          @unique
-  payloadHash      String?          @unique
-  signature        String?
-  qrData           String?
-  activationStatus ActivationStatus @default(UNSCANNED)
-  firstScanAt      DateTime?
-  createdAt        DateTime         @default(now())
+// SerialRegistry removed: codes now link directly to products via Code.productId
 
-  batch            Batch            @relation(fields: [batchId], references: [id])
-  scans            ScanLog[]
-  alerts           SecurityAlert[]
-  twin             ProductTwin?     @relation(fields: [twinObjectId], references: [twinObjectId])
-  qrCode           QrCode?
+// Codes
+// Backend-generated codes (previously QrCode). Stores the generated code and metadata.
+model Code {
+  id           String   @id @default(uuid())
+  productId    String?
+  codeValue    String?
+  generatedAt  DateTime @default(now())
+  downloadedAt DateTime?
+  printedAt    DateTime?
 
-  @@index([serialNumber])
-}
+  product      Product? @relation(fields: [productId], references: [id])
+  scans         ScanLog[]
+  alerts        SecurityAlert[]
 
-//QR Codes
-// QR code generated after payload & signature are ready
-model QrCode {
-  id             String   @id @default(uuid())
-  serialId       String   @unique
-  qrImageUrl     String
-  generatedAt    DateTime @default(now())
-  downloadedAt   DateTime?
-
-  serial         SerialRegistry @relation(fields: [serialId], references: [id])
+  @@index([productId])
 }
 
 //Scan Logs
 model ScanLog {
   id                String   @id @default(uuid())
-  serialId          String
+  codeId            String
   ipAddress         String?
   country           String?
   city              String?
@@ -190,22 +147,22 @@ model ScanLog {
   isGeoAnomaly      Boolean @default(false)
   scannedAt         DateTime @default(now())
 
-  serial            SerialRegistry @relation(fields: [serialId], references: [id])
+  code              Code @relation(fields: [codeId], references: [id])
 
-  @@index([serialId])
+  @@index([codeId])
   @@index([scannedAt])
 }
 
 //Security Alerts
 model SecurityAlert {
   id         String    @id @default(uuid())
-  serialId   String
+  codeId     String
   alertType  AlertType
   severity   Severity
   resolved   Boolean   @default(false)
   createdAt  DateTime  @default(now())
 
-  serial     SerialRegistry @relation(fields: [serialId], references: [id])
+  code       Code @relation(fields: [codeId], references: [id])
 }
 
 //Admins

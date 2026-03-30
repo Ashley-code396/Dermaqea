@@ -14,34 +14,14 @@ import {
   MOCK_MANUFACTURER,
 } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
-import type { Batch } from "@/types";
 import { Package, Boxes, Download } from "lucide-react";
 
 export default function DashboardPage() {
   const approvedProducts = MOCK_PRODUCTS.filter((p) => p.status === "approved").length;
   const pendingProducts = MOCK_PRODUCTS.filter((p) => p.status === "pending").length;
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [batchesLoading, setBatchesLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBatches = async () => {
-      setBatchesLoading(true);
-      try {
-        const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
-        const res = await fetch(`${base.replace(/\/$/, "")}/batches`);
-        if (!res.ok) throw new Error('Failed to fetch batches');
-        const list = await res.json();
-        setBatches(list);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setBatchesLoading(false);
-      }
-    };
-    void fetchBatches();
-  }, []);
-
-  const totalQRCodes = batches.reduce((sum, b) => sum + (b.unit_count ?? 0), 0);
+  // batches / qr-code functionality has been removed from the UI; keep placeholders
+  const [batches] = useState([] as any[]);
+  const totalQRCodes = 0;
 
   const statusConfig = {
     VERIFIED: {
@@ -101,15 +81,15 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
         <Button asChild>
-          <Link href="/products/new" className="flex items-center gap-2">
+          <Link href="/profile" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            Submit New Product
+            View Profile
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/batches/batch-1" className="flex items-center gap-2">
+          <Link href="/analytics" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Download QR Codes
+            View Analytics
           </Link>
         </Button>
       </div>

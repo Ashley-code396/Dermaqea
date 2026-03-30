@@ -26,7 +26,7 @@ export type AggregateSecurityAlert = {
 
 export type SecurityAlertMinAggregateOutputType = {
   id: string | null
-  serialId: string | null
+  codeId: string | null
   alertType: $Enums.AlertType | null
   severity: $Enums.Severity | null
   resolved: boolean | null
@@ -35,7 +35,7 @@ export type SecurityAlertMinAggregateOutputType = {
 
 export type SecurityAlertMaxAggregateOutputType = {
   id: string | null
-  serialId: string | null
+  codeId: string | null
   alertType: $Enums.AlertType | null
   severity: $Enums.Severity | null
   resolved: boolean | null
@@ -44,7 +44,7 @@ export type SecurityAlertMaxAggregateOutputType = {
 
 export type SecurityAlertCountAggregateOutputType = {
   id: number
-  serialId: number
+  codeId: number
   alertType: number
   severity: number
   resolved: number
@@ -55,7 +55,7 @@ export type SecurityAlertCountAggregateOutputType = {
 
 export type SecurityAlertMinAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   alertType?: true
   severity?: true
   resolved?: true
@@ -64,7 +64,7 @@ export type SecurityAlertMinAggregateInputType = {
 
 export type SecurityAlertMaxAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   alertType?: true
   severity?: true
   resolved?: true
@@ -73,7 +73,7 @@ export type SecurityAlertMaxAggregateInputType = {
 
 export type SecurityAlertCountAggregateInputType = {
   id?: true
-  serialId?: true
+  codeId?: true
   alertType?: true
   severity?: true
   resolved?: true
@@ -155,7 +155,7 @@ export type SecurityAlertGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 
 export type SecurityAlertGroupByOutputType = {
   id: string
-  serialId: string
+  codeId: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
   resolved: boolean
@@ -185,22 +185,22 @@ export type SecurityAlertWhereInput = {
   OR?: Prisma.SecurityAlertWhereInput[]
   NOT?: Prisma.SecurityAlertWhereInput | Prisma.SecurityAlertWhereInput[]
   id?: Prisma.StringFilter<"SecurityAlert"> | string
-  serialId?: Prisma.StringFilter<"SecurityAlert"> | string
+  codeId?: Prisma.StringFilter<"SecurityAlert"> | string
   alertType?: Prisma.EnumAlertTypeFilter<"SecurityAlert"> | $Enums.AlertType
   severity?: Prisma.EnumSeverityFilter<"SecurityAlert"> | $Enums.Severity
   resolved?: Prisma.BoolFilter<"SecurityAlert"> | boolean
   createdAt?: Prisma.DateTimeFilter<"SecurityAlert"> | Date | string
-  serial?: Prisma.XOR<Prisma.SerialRegistryScalarRelationFilter, Prisma.SerialRegistryWhereInput>
+  code?: Prisma.XOR<Prisma.CodeScalarRelationFilter, Prisma.CodeWhereInput>
 }
 
 export type SecurityAlertOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   alertType?: Prisma.SortOrder
   severity?: Prisma.SortOrder
   resolved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  serial?: Prisma.SerialRegistryOrderByWithRelationInput
+  code?: Prisma.CodeOrderByWithRelationInput
 }
 
 export type SecurityAlertWhereUniqueInput = Prisma.AtLeast<{
@@ -208,17 +208,17 @@ export type SecurityAlertWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.SecurityAlertWhereInput | Prisma.SecurityAlertWhereInput[]
   OR?: Prisma.SecurityAlertWhereInput[]
   NOT?: Prisma.SecurityAlertWhereInput | Prisma.SecurityAlertWhereInput[]
-  serialId?: Prisma.StringFilter<"SecurityAlert"> | string
+  codeId?: Prisma.StringFilter<"SecurityAlert"> | string
   alertType?: Prisma.EnumAlertTypeFilter<"SecurityAlert"> | $Enums.AlertType
   severity?: Prisma.EnumSeverityFilter<"SecurityAlert"> | $Enums.Severity
   resolved?: Prisma.BoolFilter<"SecurityAlert"> | boolean
   createdAt?: Prisma.DateTimeFilter<"SecurityAlert"> | Date | string
-  serial?: Prisma.XOR<Prisma.SerialRegistryScalarRelationFilter, Prisma.SerialRegistryWhereInput>
+  code?: Prisma.XOR<Prisma.CodeScalarRelationFilter, Prisma.CodeWhereInput>
 }, "id">
 
 export type SecurityAlertOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   alertType?: Prisma.SortOrder
   severity?: Prisma.SortOrder
   resolved?: Prisma.SortOrder
@@ -233,7 +233,7 @@ export type SecurityAlertScalarWhereWithAggregatesInput = {
   OR?: Prisma.SecurityAlertScalarWhereWithAggregatesInput[]
   NOT?: Prisma.SecurityAlertScalarWhereWithAggregatesInput | Prisma.SecurityAlertScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"SecurityAlert"> | string
-  serialId?: Prisma.StringWithAggregatesFilter<"SecurityAlert"> | string
+  codeId?: Prisma.StringWithAggregatesFilter<"SecurityAlert"> | string
   alertType?: Prisma.EnumAlertTypeWithAggregatesFilter<"SecurityAlert"> | $Enums.AlertType
   severity?: Prisma.EnumSeverityWithAggregatesFilter<"SecurityAlert"> | $Enums.Severity
   resolved?: Prisma.BoolWithAggregatesFilter<"SecurityAlert"> | boolean
@@ -246,12 +246,12 @@ export type SecurityAlertCreateInput = {
   severity: $Enums.Severity
   resolved?: boolean
   createdAt?: Date | string
-  serial: Prisma.SerialRegistryCreateNestedOneWithoutAlertsInput
+  code: Prisma.CodeCreateNestedOneWithoutAlertsInput
 }
 
 export type SecurityAlertUncheckedCreateInput = {
   id?: string
-  serialId: string
+  codeId: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
   resolved?: boolean
@@ -264,12 +264,12 @@ export type SecurityAlertUpdateInput = {
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
   resolved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  serial?: Prisma.SerialRegistryUpdateOneRequiredWithoutAlertsNestedInput
+  code?: Prisma.CodeUpdateOneRequiredWithoutAlertsNestedInput
 }
 
 export type SecurityAlertUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  serialId?: Prisma.StringFieldUpdateOperationsInput | string
+  codeId?: Prisma.StringFieldUpdateOperationsInput | string
   alertType?: Prisma.EnumAlertTypeFieldUpdateOperationsInput | $Enums.AlertType
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
   resolved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -278,7 +278,7 @@ export type SecurityAlertUncheckedUpdateInput = {
 
 export type SecurityAlertCreateManyInput = {
   id?: string
-  serialId: string
+  codeId: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
   resolved?: boolean
@@ -295,7 +295,7 @@ export type SecurityAlertUpdateManyMutationInput = {
 
 export type SecurityAlertUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  serialId?: Prisma.StringFieldUpdateOperationsInput | string
+  codeId?: Prisma.StringFieldUpdateOperationsInput | string
   alertType?: Prisma.EnumAlertTypeFieldUpdateOperationsInput | $Enums.AlertType
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
   resolved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -314,7 +314,7 @@ export type SecurityAlertOrderByRelationAggregateInput = {
 
 export type SecurityAlertCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   alertType?: Prisma.SortOrder
   severity?: Prisma.SortOrder
   resolved?: Prisma.SortOrder
@@ -323,7 +323,7 @@ export type SecurityAlertCountOrderByAggregateInput = {
 
 export type SecurityAlertMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   alertType?: Prisma.SortOrder
   severity?: Prisma.SortOrder
   resolved?: Prisma.SortOrder
@@ -332,52 +332,52 @@ export type SecurityAlertMaxOrderByAggregateInput = {
 
 export type SecurityAlertMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  serialId?: Prisma.SortOrder
+  codeId?: Prisma.SortOrder
   alertType?: Prisma.SortOrder
   severity?: Prisma.SortOrder
   resolved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
-export type SecurityAlertCreateNestedManyWithoutSerialInput = {
-  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput> | Prisma.SecurityAlertCreateWithoutSerialInput[] | Prisma.SecurityAlertUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutSerialInput | Prisma.SecurityAlertCreateOrConnectWithoutSerialInput[]
-  createMany?: Prisma.SecurityAlertCreateManySerialInputEnvelope
+export type SecurityAlertCreateNestedManyWithoutCodeInput = {
+  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput> | Prisma.SecurityAlertCreateWithoutCodeInput[] | Prisma.SecurityAlertUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutCodeInput | Prisma.SecurityAlertCreateOrConnectWithoutCodeInput[]
+  createMany?: Prisma.SecurityAlertCreateManyCodeInputEnvelope
   connect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
 }
 
-export type SecurityAlertUncheckedCreateNestedManyWithoutSerialInput = {
-  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput> | Prisma.SecurityAlertCreateWithoutSerialInput[] | Prisma.SecurityAlertUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutSerialInput | Prisma.SecurityAlertCreateOrConnectWithoutSerialInput[]
-  createMany?: Prisma.SecurityAlertCreateManySerialInputEnvelope
+export type SecurityAlertUncheckedCreateNestedManyWithoutCodeInput = {
+  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput> | Prisma.SecurityAlertCreateWithoutCodeInput[] | Prisma.SecurityAlertUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutCodeInput | Prisma.SecurityAlertCreateOrConnectWithoutCodeInput[]
+  createMany?: Prisma.SecurityAlertCreateManyCodeInputEnvelope
   connect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
 }
 
-export type SecurityAlertUpdateManyWithoutSerialNestedInput = {
-  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput> | Prisma.SecurityAlertCreateWithoutSerialInput[] | Prisma.SecurityAlertUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutSerialInput | Prisma.SecurityAlertCreateOrConnectWithoutSerialInput[]
-  upsert?: Prisma.SecurityAlertUpsertWithWhereUniqueWithoutSerialInput | Prisma.SecurityAlertUpsertWithWhereUniqueWithoutSerialInput[]
-  createMany?: Prisma.SecurityAlertCreateManySerialInputEnvelope
+export type SecurityAlertUpdateManyWithoutCodeNestedInput = {
+  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput> | Prisma.SecurityAlertCreateWithoutCodeInput[] | Prisma.SecurityAlertUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutCodeInput | Prisma.SecurityAlertCreateOrConnectWithoutCodeInput[]
+  upsert?: Prisma.SecurityAlertUpsertWithWhereUniqueWithoutCodeInput | Prisma.SecurityAlertUpsertWithWhereUniqueWithoutCodeInput[]
+  createMany?: Prisma.SecurityAlertCreateManyCodeInputEnvelope
   set?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   disconnect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   delete?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   connect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
-  update?: Prisma.SecurityAlertUpdateWithWhereUniqueWithoutSerialInput | Prisma.SecurityAlertUpdateWithWhereUniqueWithoutSerialInput[]
-  updateMany?: Prisma.SecurityAlertUpdateManyWithWhereWithoutSerialInput | Prisma.SecurityAlertUpdateManyWithWhereWithoutSerialInput[]
+  update?: Prisma.SecurityAlertUpdateWithWhereUniqueWithoutCodeInput | Prisma.SecurityAlertUpdateWithWhereUniqueWithoutCodeInput[]
+  updateMany?: Prisma.SecurityAlertUpdateManyWithWhereWithoutCodeInput | Prisma.SecurityAlertUpdateManyWithWhereWithoutCodeInput[]
   deleteMany?: Prisma.SecurityAlertScalarWhereInput | Prisma.SecurityAlertScalarWhereInput[]
 }
 
-export type SecurityAlertUncheckedUpdateManyWithoutSerialNestedInput = {
-  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput> | Prisma.SecurityAlertCreateWithoutSerialInput[] | Prisma.SecurityAlertUncheckedCreateWithoutSerialInput[]
-  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutSerialInput | Prisma.SecurityAlertCreateOrConnectWithoutSerialInput[]
-  upsert?: Prisma.SecurityAlertUpsertWithWhereUniqueWithoutSerialInput | Prisma.SecurityAlertUpsertWithWhereUniqueWithoutSerialInput[]
-  createMany?: Prisma.SecurityAlertCreateManySerialInputEnvelope
+export type SecurityAlertUncheckedUpdateManyWithoutCodeNestedInput = {
+  create?: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput> | Prisma.SecurityAlertCreateWithoutCodeInput[] | Prisma.SecurityAlertUncheckedCreateWithoutCodeInput[]
+  connectOrCreate?: Prisma.SecurityAlertCreateOrConnectWithoutCodeInput | Prisma.SecurityAlertCreateOrConnectWithoutCodeInput[]
+  upsert?: Prisma.SecurityAlertUpsertWithWhereUniqueWithoutCodeInput | Prisma.SecurityAlertUpsertWithWhereUniqueWithoutCodeInput[]
+  createMany?: Prisma.SecurityAlertCreateManyCodeInputEnvelope
   set?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   disconnect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   delete?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
   connect?: Prisma.SecurityAlertWhereUniqueInput | Prisma.SecurityAlertWhereUniqueInput[]
-  update?: Prisma.SecurityAlertUpdateWithWhereUniqueWithoutSerialInput | Prisma.SecurityAlertUpdateWithWhereUniqueWithoutSerialInput[]
-  updateMany?: Prisma.SecurityAlertUpdateManyWithWhereWithoutSerialInput | Prisma.SecurityAlertUpdateManyWithWhereWithoutSerialInput[]
+  update?: Prisma.SecurityAlertUpdateWithWhereUniqueWithoutCodeInput | Prisma.SecurityAlertUpdateWithWhereUniqueWithoutCodeInput[]
+  updateMany?: Prisma.SecurityAlertUpdateManyWithWhereWithoutCodeInput | Prisma.SecurityAlertUpdateManyWithWhereWithoutCodeInput[]
   deleteMany?: Prisma.SecurityAlertScalarWhereInput | Prisma.SecurityAlertScalarWhereInput[]
 }
 
@@ -389,7 +389,7 @@ export type EnumSeverityFieldUpdateOperationsInput = {
   set?: $Enums.Severity
 }
 
-export type SecurityAlertCreateWithoutSerialInput = {
+export type SecurityAlertCreateWithoutCodeInput = {
   id?: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
@@ -397,7 +397,7 @@ export type SecurityAlertCreateWithoutSerialInput = {
   createdAt?: Date | string
 }
 
-export type SecurityAlertUncheckedCreateWithoutSerialInput = {
+export type SecurityAlertUncheckedCreateWithoutCodeInput = {
   id?: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
@@ -405,30 +405,30 @@ export type SecurityAlertUncheckedCreateWithoutSerialInput = {
   createdAt?: Date | string
 }
 
-export type SecurityAlertCreateOrConnectWithoutSerialInput = {
+export type SecurityAlertCreateOrConnectWithoutCodeInput = {
   where: Prisma.SecurityAlertWhereUniqueInput
-  create: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput>
+  create: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput>
 }
 
-export type SecurityAlertCreateManySerialInputEnvelope = {
-  data: Prisma.SecurityAlertCreateManySerialInput | Prisma.SecurityAlertCreateManySerialInput[]
+export type SecurityAlertCreateManyCodeInputEnvelope = {
+  data: Prisma.SecurityAlertCreateManyCodeInput | Prisma.SecurityAlertCreateManyCodeInput[]
   skipDuplicates?: boolean
 }
 
-export type SecurityAlertUpsertWithWhereUniqueWithoutSerialInput = {
+export type SecurityAlertUpsertWithWhereUniqueWithoutCodeInput = {
   where: Prisma.SecurityAlertWhereUniqueInput
-  update: Prisma.XOR<Prisma.SecurityAlertUpdateWithoutSerialInput, Prisma.SecurityAlertUncheckedUpdateWithoutSerialInput>
-  create: Prisma.XOR<Prisma.SecurityAlertCreateWithoutSerialInput, Prisma.SecurityAlertUncheckedCreateWithoutSerialInput>
+  update: Prisma.XOR<Prisma.SecurityAlertUpdateWithoutCodeInput, Prisma.SecurityAlertUncheckedUpdateWithoutCodeInput>
+  create: Prisma.XOR<Prisma.SecurityAlertCreateWithoutCodeInput, Prisma.SecurityAlertUncheckedCreateWithoutCodeInput>
 }
 
-export type SecurityAlertUpdateWithWhereUniqueWithoutSerialInput = {
+export type SecurityAlertUpdateWithWhereUniqueWithoutCodeInput = {
   where: Prisma.SecurityAlertWhereUniqueInput
-  data: Prisma.XOR<Prisma.SecurityAlertUpdateWithoutSerialInput, Prisma.SecurityAlertUncheckedUpdateWithoutSerialInput>
+  data: Prisma.XOR<Prisma.SecurityAlertUpdateWithoutCodeInput, Prisma.SecurityAlertUncheckedUpdateWithoutCodeInput>
 }
 
-export type SecurityAlertUpdateManyWithWhereWithoutSerialInput = {
+export type SecurityAlertUpdateManyWithWhereWithoutCodeInput = {
   where: Prisma.SecurityAlertScalarWhereInput
-  data: Prisma.XOR<Prisma.SecurityAlertUpdateManyMutationInput, Prisma.SecurityAlertUncheckedUpdateManyWithoutSerialInput>
+  data: Prisma.XOR<Prisma.SecurityAlertUpdateManyMutationInput, Prisma.SecurityAlertUncheckedUpdateManyWithoutCodeInput>
 }
 
 export type SecurityAlertScalarWhereInput = {
@@ -436,14 +436,14 @@ export type SecurityAlertScalarWhereInput = {
   OR?: Prisma.SecurityAlertScalarWhereInput[]
   NOT?: Prisma.SecurityAlertScalarWhereInput | Prisma.SecurityAlertScalarWhereInput[]
   id?: Prisma.StringFilter<"SecurityAlert"> | string
-  serialId?: Prisma.StringFilter<"SecurityAlert"> | string
+  codeId?: Prisma.StringFilter<"SecurityAlert"> | string
   alertType?: Prisma.EnumAlertTypeFilter<"SecurityAlert"> | $Enums.AlertType
   severity?: Prisma.EnumSeverityFilter<"SecurityAlert"> | $Enums.Severity
   resolved?: Prisma.BoolFilter<"SecurityAlert"> | boolean
   createdAt?: Prisma.DateTimeFilter<"SecurityAlert"> | Date | string
 }
 
-export type SecurityAlertCreateManySerialInput = {
+export type SecurityAlertCreateManyCodeInput = {
   id?: string
   alertType: $Enums.AlertType
   severity: $Enums.Severity
@@ -451,7 +451,7 @@ export type SecurityAlertCreateManySerialInput = {
   createdAt?: Date | string
 }
 
-export type SecurityAlertUpdateWithoutSerialInput = {
+export type SecurityAlertUpdateWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   alertType?: Prisma.EnumAlertTypeFieldUpdateOperationsInput | $Enums.AlertType
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
@@ -459,7 +459,7 @@ export type SecurityAlertUpdateWithoutSerialInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type SecurityAlertUncheckedUpdateWithoutSerialInput = {
+export type SecurityAlertUncheckedUpdateWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   alertType?: Prisma.EnumAlertTypeFieldUpdateOperationsInput | $Enums.AlertType
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
@@ -467,7 +467,7 @@ export type SecurityAlertUncheckedUpdateWithoutSerialInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type SecurityAlertUncheckedUpdateManyWithoutSerialInput = {
+export type SecurityAlertUncheckedUpdateManyWithoutCodeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   alertType?: Prisma.EnumAlertTypeFieldUpdateOperationsInput | $Enums.AlertType
   severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
@@ -479,62 +479,62 @@ export type SecurityAlertUncheckedUpdateManyWithoutSerialInput = {
 
 export type SecurityAlertSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   alertType?: boolean
   severity?: boolean
   resolved?: boolean
   createdAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["securityAlert"]>
 
 export type SecurityAlertSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   alertType?: boolean
   severity?: boolean
   resolved?: boolean
   createdAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["securityAlert"]>
 
 export type SecurityAlertSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   alertType?: boolean
   severity?: boolean
   resolved?: boolean
   createdAt?: boolean
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["securityAlert"]>
 
 export type SecurityAlertSelectScalar = {
   id?: boolean
-  serialId?: boolean
+  codeId?: boolean
   alertType?: boolean
   severity?: boolean
   resolved?: boolean
   createdAt?: boolean
 }
 
-export type SecurityAlertOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serialId" | "alertType" | "severity" | "resolved" | "createdAt", ExtArgs["result"]["securityAlert"]>
+export type SecurityAlertOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "codeId" | "alertType" | "severity" | "resolved" | "createdAt", ExtArgs["result"]["securityAlert"]>
 export type SecurityAlertInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 export type SecurityAlertIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 export type SecurityAlertIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  serial?: boolean | Prisma.SerialRegistryDefaultArgs<ExtArgs>
+  code?: boolean | Prisma.CodeDefaultArgs<ExtArgs>
 }
 
 export type $SecurityAlertPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SecurityAlert"
   objects: {
-    serial: Prisma.$SerialRegistryPayload<ExtArgs>
+    code: Prisma.$CodePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    serialId: string
+    codeId: string
     alertType: $Enums.AlertType
     severity: $Enums.Severity
     resolved: boolean
@@ -933,7 +933,7 @@ readonly fields: SecurityAlertFieldRefs;
  */
 export interface Prisma__SecurityAlertClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  serial<T extends Prisma.SerialRegistryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SerialRegistryDefaultArgs<ExtArgs>>): Prisma.Prisma__SerialRegistryClient<runtime.Types.Result.GetResult<Prisma.$SerialRegistryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  code<T extends Prisma.CodeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CodeDefaultArgs<ExtArgs>>): Prisma.Prisma__CodeClient<runtime.Types.Result.GetResult<Prisma.$CodePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -964,7 +964,7 @@ export interface Prisma__SecurityAlertClient<T, Null = never, ExtArgs extends ru
  */
 export interface SecurityAlertFieldRefs {
   readonly id: Prisma.FieldRef<"SecurityAlert", 'String'>
-  readonly serialId: Prisma.FieldRef<"SecurityAlert", 'String'>
+  readonly codeId: Prisma.FieldRef<"SecurityAlert", 'String'>
   readonly alertType: Prisma.FieldRef<"SecurityAlert", 'AlertType'>
   readonly severity: Prisma.FieldRef<"SecurityAlert", 'Severity'>
   readonly resolved: Prisma.FieldRef<"SecurityAlert", 'Boolean'>
