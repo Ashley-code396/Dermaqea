@@ -9,6 +9,7 @@ import { WalletProvider } from '@mysten/dapp-kit';
 import { WalletSyncProvider } from '@/components/blockchain/WalletSyncProvider';
 import { useCurrentClient, useCurrentNetwork } from '@mysten/dapp-kit-react';
 import { isEnokiNetwork, registerEnokiWallets } from '@mysten/enoki';
+import { EnokiFlowProvider } from '@mysten/enoki/react';
 
 const GRPC_URLS = {
   mainnet: 'https://fullnode.mainnet.sui.io:443',
@@ -163,18 +164,20 @@ export function SuiProvider({ children }: { children: React.ReactNode }) {
 
 return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks as any} createClient={createSuiClient as any} defaultNetwork="testnet">
-        <DAppKitProvider dAppKit={dAppKit}>
-          <RegisterEnokiWallets />
-          <WalletProvider autoConnect>
-            {/* WalletSyncProvider keeps a persisted copy of the connected address in localStorage
-                and exposes it to the app. */}
-            <WalletSyncProvider>
-              {children}
-            </WalletSyncProvider>
-          </WalletProvider>
-        </DAppKitProvider>
-      </SuiClientProvider>
+      <EnokiFlowProvider apiKey={process.env.NEXT_PUBLIC_ENOKI_API_KEY || ''}>
+        <SuiClientProvider networks={networks as any} createClient={createSuiClient as any} defaultNetwork="testnet">
+          <DAppKitProvider dAppKit={dAppKit}>
+            <RegisterEnokiWallets />
+            <WalletProvider autoConnect>
+              {/* WalletSyncProvider keeps a persisted copy of the connected address in localStorage
+                  and exposes it to the app. */}
+              <WalletSyncProvider>
+                {children}
+              </WalletSyncProvider>
+            </WalletProvider>
+          </DAppKitProvider>
+        </SuiClientProvider>
+      </EnokiFlowProvider>
     </QueryClientProvider>
   );
 }

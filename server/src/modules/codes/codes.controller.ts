@@ -61,7 +61,21 @@ export class CodesController {
 
  
 
-  // Removed batch model; clients should fetch product and then call /codes/product/:productId/codes or /download
+  // Replaced batch model with product-level mapping
+  @Get('product/:productId/codes')
+  async getProductCodes(@Param('productId') productId: string) {
+    const codes = await (this.prisma as any).code.findMany({ where: { productId } });
+    
+    // Map them for frontend
+    return { 
+      codes: codes.map(c => ({
+        id: c.id,
+        serialNumber: c.id, 
+        codeData: c.codeValue,
+        signature: c.codeValue ? c.codeValue.split('.')[1] || '' : '',
+      })) 
+    };
+  }
 
   @Get('product/:productId/download')
   async downloadProductCodes(@Param('productId') productId: string, @Res() res: Response) {

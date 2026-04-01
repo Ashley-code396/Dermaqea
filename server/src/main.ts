@@ -24,8 +24,12 @@ async function bootstrap() {
 
   app.enableCors({
     origin: function (origin, callback) {
+      // In development, completely disable CORS restrictions to ensure UI connects smoothly
+      if (!isProd) return callback(null, true);
+      
       // Allow non-browser requests (like curl, server-to-server) when origin is undefined
       if (!origin) return callback(null, true);
+      
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },

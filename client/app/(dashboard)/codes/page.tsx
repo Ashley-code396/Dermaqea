@@ -21,7 +21,6 @@ export default function CodesPage() {
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesList, setCodesList] = useState<any[]>([]);
   const [currentProduct, setCurrentProduct] = useState<any | null>(null);
-  const [codesBatchId, setCodesBatchId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,17 +42,7 @@ export default function CodesPage() {
     setCodesList([]);
     setCurrentProduct(product);
     try {
-      const resBatch = await fetch(`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(product.id)}/latest-batch`);
-      if (!resBatch.ok) throw new Error("Failed to lookup batch");
-      const batchBody = await resBatch.json();
-      if (!batchBody?.batch) {
-        setMessage("No batches found for this product");
-        setCodesDialogOpen(true);
-        return;
-      }
-      const batchId = batchBody.batch.id;
-      setCodesBatchId(batchId);
-      const res = await fetch(`${base.replace(/\/$/, "")}/codes/batch/${encodeURIComponent(batchId)}`);
+      const res = await fetch(`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(product.id)}/codes`);
       if (!res.ok) throw new Error("Failed to fetch codes");
       const body = await res.json();
       setCodesList(body?.codes ?? []);
@@ -176,7 +165,7 @@ export default function CodesPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="text-sm text-muted-foreground">No codes found for this batch.</div>
+              <div className="text-sm text-muted-foreground">No codes found for this product.</div>
             )}
           </div>
 
@@ -187,7 +176,7 @@ export default function CodesPage() {
                 Print
               </Button>
               <Button asChild>
-                <a href={`${base.replace(/\/$/, "")}/codes/batch/${encodeURIComponent(codesBatchId ?? "")}/download`}>
+                <a href={`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(currentProduct?.id ?? "")}/download`}>
                   <span className="flex items-center gap-2"><Download size={14} />Download CSV</span>
                 </a>
               </Button>

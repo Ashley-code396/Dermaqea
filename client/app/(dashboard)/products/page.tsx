@@ -39,7 +39,6 @@ export default function ProductsPage() {
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesList, setCodesList] = useState<any[]>([]);
   const [currentProduct, setCurrentProduct] = useState<any | null>(null);
-  const [codesBatchId, setCodesBatchId] = useState<string | null>(null);
 
   async function refreshManufacturer() {
     if (!acctAddr) return;
@@ -96,7 +95,7 @@ export default function ProductsPage() {
       for (const p of payloads) {
         // Sign as bytes
         const msg = new TextEncoder().encode(p);
-        
+
         const { signature: sigRes } = await keypair.signPersonalMessage(msg);
 
         // Normalize the various shapes we may get back
@@ -176,18 +175,7 @@ export default function ProductsPage() {
     setCodesList([]);
     setCurrentProduct(product);
     try {
-      // get latest batch for product
-      const resBatch = await fetch(`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(product.id)}/latest-batch`);
-      if (!resBatch.ok) throw new Error('Failed to lookup batch');
-      const batchBody = await resBatch.json();
-      if (!batchBody?.batch) {
-        setMessage('No batches found for this product');
-        setCodesDialogOpen(true);
-        return;
-      }
-  const batchId = batchBody.batch.id;
-  setCodesBatchId(batchId);
-  const res = await fetch(`${base.replace(/\/$/, "")}/codes/batch/${encodeURIComponent(batchId)}`);
+      const res = await fetch(`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(product.id)}/codes`);
       if (!res.ok) throw new Error('Failed to fetch codes');
       const body = await res.json();
       setCodesList(body?.codes ?? []);
@@ -211,7 +199,7 @@ export default function ProductsPage() {
   function printCodes() {
     // open a printable window with codes list
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:16px}pre{word-break:break-all;background:#f6f6f6;padding:8px;border-radius:4px}</style></head><body><h1>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</h1>${codesList
-  .map((c) => `<div style="margin-bottom:12px"><strong>Serial:</strong> ${c.serialNumber}<br/><strong>Code:</strong><pre>${c.codeData ?? ''}</pre></div>`)
+      .map((c) => `<div style="margin-bottom:12px"><strong>Serial:</strong> ${c.serialNumber}<br/><strong>Code:</strong><pre>${c.codeData ?? ''}</pre></div>`)
       .join('')}<script>window.onload=function(){window.print();}</script></body></html>`;
     const w = window.open('', '_blank', 'noopener,noreferrer');
     if (!w) {
@@ -227,16 +215,6 @@ export default function ProductsPage() {
 
   return (
     <div className="p-6">
-      {/* Dev debug */}
-      {process.env.NODE_ENV !== 'production' && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-100 rounded text-sm">
-          <div>Connected address: <strong>{acctAddr ?? 'none'}</strong></div>
-          <div>Enoki registered: <strong>{enokiRegisteredFlag ? 'yes' : 'no'}</strong></div>
-          <div style={{ marginTop: 6 }}>
-            EnokiFlow is {enokiflow ? 'initialized' : 'missing'}.
-          </div>
-        </div>
-      )}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Products</h2>
         <Button onClick={() => setShowForm((s) => !s)}>{showForm ? "Close" : "Add product"}</Button>
@@ -265,11 +243,11 @@ export default function ProductsPage() {
                   {codesList.map((c: any) => (
                     <tr key={c.id} className="border-t">
                       <td className="py-2 font-mono text-sm">{c.serialNumber}</td>
-                        <td className="py-2"><pre className="text-xs break-words">{c.codeData ?? ''}</pre></td>
+                      <td className="py-2"><pre className="text-xs break-words">{c.codeData ?? ''}</pre></td>
                       <td className="py-2 text-xs font-mono">{c.signature ?? ''}</td>
                       <td className="py-2">
                         <div className="flex gap-2">
-                            <Button size="sm" onClick={() => copyToClipboard(c.codeData ?? '')} className="flex items-center gap-2">
+                          <Button size="sm" onClick={() => copyToClipboard(c.codeData ?? '')} className="flex items-center gap-2">
                             <Copy size={14} />
                             Copy
                           </Button>
@@ -280,7 +258,7 @@ export default function ProductsPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="text-sm text-muted-foreground">No codes found for this batch.</div>
+              <div className="text-sm text-muted-foreground">No codes found for this product.</div>
             )}
           </div>
 
@@ -291,7 +269,7 @@ export default function ProductsPage() {
                 Print
               </Button>
               <Button asChild>
-                <a href={`${base.replace(/\/$/, "")}/codes/batch/${encodeURIComponent(codesBatchId ?? '')}/download`}>
+                <a href={`${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(currentProduct?.id ?? '')}/download`}>
                   <span className="flex items-center gap-2"><Download size={14} />Download CSV</span>
                 </a>
               </Button>
@@ -337,18 +315,18 @@ export default function ProductsPage() {
                   <td>{p.manufactureDate ? new Date(p.manufactureDate).toLocaleDateString() : "-"}</td>
                   <td>{p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : "-"}</td>
                   <td>{p.createdAt ? new Date(p.createdAt).toLocaleString() : "-"}</td>
-                    <td className="py-2">
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleDownload(p.id)} className="flex items-center gap-2">
-                          <Download size={14} />
-                          Download
-                        </Button>
-                        <Button size="sm" onClick={() => openCodesDialog(p)} className="flex items-center gap-2">
-                          <Printer size={14} />
-                          View codes
-                        </Button>
-                      </div>
-                    </td>
+                  <td className="py-2">
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleDownload(p.id)} className="flex items-center gap-2">
+                        <Download size={14} />
+                        Download
+                      </Button>
+                      <Button size="sm" onClick={() => openCodesDialog(p)} className="flex items-center gap-2">
+                        <Printer size={14} />
+                        View codes
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
