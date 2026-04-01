@@ -10,9 +10,9 @@ export class CodesController {
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
-  async generate(@Body() body: { manufacturerId: string; productUuid: string; nonce: string }) {
-    const { manufacturerId, productUuid, nonce } = body;
-    const result = await this.svc.generateCode({ manufacturerId, productUuid, nonce });
+  async generate(@Body() body: { manufacturerUuid: string; productUuid: string; nonce: string; signingKey?: string }) {
+    const { manufacturerUuid, productUuid, nonce, signingKey } = body;
+    const result = await this.svc.generateCode({ manufacturerUuid: manufacturerUuid, productUuid, nonce, signingKey });
     return result;
   }
 
@@ -28,9 +28,10 @@ export class CodesController {
       expiryDate: number | string;
       amount: number;
       batchNumber?: string;
+      signingKey?: string;
     },
   ) {
-    const { manufacturerId, productName, description, manufactureDate, expiryDate, amount, batchNumber } = body;
+    const { manufacturerId, productName, description, manufactureDate, expiryDate, amount, batchNumber, signingKey } = body;
     const res = await this.svc.createProductAndGenerateCodes({
       manufacturerId,
       productName,
@@ -39,18 +40,12 @@ export class CodesController {
       expiryDate,
       amount,
       batchNumber,
+      signingKey,
     });
     return res;
   }
 
-  @Get('batch/:batchId')
-  async getProductCodes(@Param('batchId') batchId: string) {
-  // Back-compat route kept: interpret batchId as productId
-  const productId = batchId;
-    // Use a relaxed any-cast because Prisma client types may be stale until `prisma generate` runs
-    const codes = await (this.prisma as any).code.findMany({ where: { productId } });
-  return { codes };
-  }
+ 
 
   // Removed batch model; clients should fetch product and then call /codes/product/:productId/codes or /download
 

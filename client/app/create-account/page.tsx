@@ -53,7 +53,7 @@ export default function CreateAccountPage() {
     setIsSubmitting(true);
     try {
       // Send data to backend API to create manufacturer record
-      const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
       const res = await fetch(`${base.replace(/\/$/, '')}/manufacturers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -123,6 +123,32 @@ function RegisterEnokiWallets() {
 export function SuiProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
+  // Fail-fast in production if the frontend is built without a backend URL.
+  // NEXT_PUBLIC_BACKEND_URL should be set in Vercel (or the hosting environment)
+  // to the production API host. If it's missing or points to localhost in
+  // production builds, render a helpful error so the app doesn't silently
+  // try to call localhost and produce CORS errors.
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd && (!backendUrl || backendUrl.includes('localhost'))) {
+    return (
+      <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+        <h1 style={{ color: '#b91c1c' }}>Configuration error: backend URL missing</h1>
+        <p>
+          This deployment is missing the required environment variable
+          <code style={{ background: '#f3f4f6', padding: '2px 6px', margin: '0 6px' }}>NEXT_PUBLIC_BACKEND_URL</code>.
+        </p>
+        <p>
+          In production, set <code>NEXT_PUBLIC_BACKEND_URL</code> to your API host (for example
+          <code>https://api.dermaqea.example</code>) in your Vercel project settings and redeploy.
+        </p>
+        <p style={{ color: '#6b7280' }}>
+          Current value: {backendUrl ?? <em>undefined</em>}
+        </p>
+      </div>
+    );
+  }
+
   // Provide Sui client context using gRPC clients only (cast to any to satisfy provider typing)
   const networks: Record<string, any> = {
     devnet: new SuiGrpcClient({ network: 'devnet', baseUrl: OVERRIDE_GRPC_URL || GRPC_URLS.devnet }),

@@ -28,7 +28,7 @@ export default function ProtectedDashboard({ children }: { children: React.React
       }
 
       try {
-        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
         const res = await fetch(`${base.replace(/\/$/, "")}/manufacturers/${encodeURIComponent(addr)}`);
 
         if (!res.ok) {

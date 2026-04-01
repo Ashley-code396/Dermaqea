@@ -70,7 +70,7 @@ export class EnokiService {
     // this wrapper adaptable across multiple SDK versions.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client: any = this.enokiClient as any;
-    const tryNames = ['signMessage', 'sign', 'signPayload'];
+  const tryNames = ['signPersonalMessage', 'signMessage', 'sign', 'signPayload'];
 
     const invokeCandidate = async (fn: (...args: any[]) => any) => {
       try {

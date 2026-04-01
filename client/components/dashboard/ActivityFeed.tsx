@@ -35,6 +35,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
               <Link
                 key={item.id}
                 href={item.link ?? "#"}
+                prefetch={false}
                 className="flex gap-4 rounded-lg p-3 transition-colors hover:bg-secondary/50"
               >
                 <div className={`shrink-0 ${colorClass}`}>

@@ -152,7 +152,8 @@ export const MOCK_ACTIVITY: ActivityItem[] = [
     title: "Batch #447 QR codes generated",
     description: "10,000 units",
     timestamp: "2025-02-18T10:30:00Z",
-    link: "/batches/batch-1",
+    // removed demo link to avoid prefetching deleted routes in production
+    // link: "/batches/batch-1",
     severity: "success",
   },
   {
@@ -160,7 +161,8 @@ export const MOCK_ACTIVITY: ActivityItem[] = [
     type: "product_approved",
     title: "Product 'Vitamin C Serum' approved by Dermaqea",
     timestamp: "2025-02-15T14:00:00Z",
-    link: "/products/prod-1",
+    // removed demo link to avoid prefetching deleted routes in production
+    // link: "/products/prod-1",
     severity: "success",
   },
   {
