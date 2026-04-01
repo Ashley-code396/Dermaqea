@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import useManufacturer from "@/lib/useManufacturer";
 import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentNetwork } from "@mysten/dapp-kit-react";
+import { useEnokiFlow } from "@mysten/enoki/react";
 import { Button } from "@/components/ui/button";
 import { Download, Printer, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -11,6 +13,8 @@ import { Input } from "@/components/ui/input";
 
 export default function ProductsPage() {
   const currentAccount = useCurrentAccount();
+  const currentNetwork = useCurrentNetwork();
+  const enokiflow = useEnokiFlow();
   const { connectedAddress } = useWalletSync();
   const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
 
@@ -60,7 +64,7 @@ export default function ProductsPage() {
     }
 
     try {
-      const payload = {
+      const initPayload = {
         manufacturerId: manufacturer.id,
         productName: name,
         manufactureDate: new Date(manufactureDate).toISOString(),
@@ -68,30 +72,87 @@ export default function ProductsPage() {
         amount: Number(amount),
       };
 
-      const res = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch`, {
+      // Step 1: create product and receive unsigned payloads to sign
+      const initRes = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch-init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(initPayload),
       });
-      if (!res.ok) throw new Error(`server returned ${res.status}`);
-      const body = await res.json();
-      // append product to list if returned
-      if (body?.product) {
-        setProducts((p) => [body.product, ...p]);
-        setMessage("Product created and codes generated.");
-        setShowForm(false);
-        setName("");
-        setManufactureDate("");
-        setExpiryDate("");
-        setAmount(1);
-      } else {
-        setMessage("Created, but server did not return product details.");
+      if (!initRes.ok) throw new Error(`server returned ${initRes.status}`);
+      const initBody = await initRes.json();
+      const product = initBody?.product;
+      const payloads: string[] = initBody?.payloads ?? [];
+      if (!product) throw new Error('Server did not return created product');
+
+      // Step 2: client-side sign each payload
+      // Verify Enoki flow is available
+      if (!enokiflow) {
+        throw new Error('Enoki flow is not initialized');
       }
 
-      // also trigger a refresh to get full manufacturer object
+      const keypair = await enokiflow.getKeypair({ network: currentNetwork });
+      const signedPayloads: Array<{ payload: string; signature: string }> = [];
+
+      for (const p of payloads) {
+        // Sign as bytes
+        const msg = new TextEncoder().encode(p);
+        
+        const { signature: sigRes } = await keypair.signPersonalMessage(msg);
+
+        // Normalize the various shapes we may get back
+        function toBase64UrlFromSig(raw: any): string {
+          if (!raw) throw new Error('Signing failed');
+
+          const candidate = raw.signature ?? raw.sig ?? raw.bytes ?? raw;
+
+          if (typeof candidate === 'string') {
+            return candidate.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+          }
+
+          if (candidate instanceof Uint8Array || (typeof Buffer !== 'undefined' && Buffer.isBuffer(candidate))) {
+            const arr = candidate instanceof Uint8Array ? candidate : new Uint8Array(candidate as Buffer);
+            let binary = '';
+            const chunk = 0x8000;
+            for (let i = 0; i < arr.length; i += chunk) {
+              const slice = arr.subarray(i, Math.min(i + chunk, arr.length));
+              binary += String.fromCharCode.apply(null, Array.from(slice));
+            }
+            const b64 = typeof window !== 'undefined' ? btoa(binary) : Buffer.from(arr).toString('base64');
+            return b64.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+          }
+
+          throw new Error('Unsupported signature format');
+        }
+
+        const b64url = toBase64UrlFromSig(sigRes);
+        signedPayloads.push({ payload: p, signature: b64url });
+      }
+
+      // Step 3: send signed payloads to server for verification & persistence
+      const finalizeRes = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch-finalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, signedPayloads }),
+      });
+      if (!finalizeRes.ok) throw new Error(`server finalize returned ${finalizeRes.status}`);
+      const finalBody = await finalizeRes.json();
+
+      // append new product if returned
+      if (finalBody?.product) {
+        setProducts((p) => [finalBody.product, ...p]);
+        setMessage('Product created and codes generated.');
+        setShowForm(false);
+        setName('');
+        setManufactureDate('');
+        setExpiryDate('');
+        setAmount(1);
+      } else {
+        setMessage('Created, but server did not return product details.');
+      }
+
       await refreshManufacturer();
     } catch (err: any) {
-      setMessage(err?.message ?? "Failed to create product");
+      setMessage(err?.message ?? 'Failed to create product');
     } finally {
       setBusy(false);
     }
@@ -162,9 +223,20 @@ export default function ProductsPage() {
   }
 
   if (loading) return <div className="p-6">Loading...</div>;
+  const enokiRegisteredFlag = typeof window !== 'undefined' ? Boolean((window as any).__ENOKI_REGISTERED) : false;
 
   return (
     <div className="p-6">
+      {/* Dev debug */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-100 rounded text-sm">
+          <div>Connected address: <strong>{acctAddr ?? 'none'}</strong></div>
+          <div>Enoki registered: <strong>{enokiRegisteredFlag ? 'yes' : 'no'}</strong></div>
+          <div style={{ marginTop: 6 }}>
+            EnokiFlow is {enokiflow ? 'initialized' : 'missing'}.
+          </div>
+        </div>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Products</h2>
         <Button onClick={() => setShowForm((s) => !s)}>{showForm ? "Close" : "Add product"}</Button>

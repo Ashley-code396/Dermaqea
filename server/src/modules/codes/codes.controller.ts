@@ -8,40 +8,54 @@ import { verifySignature } from './crypto.util';
 export class CodesController {
   constructor(private readonly svc: CodesService, private readonly prisma: PrismaService) {}
 
-  @Post('generate')
-  @HttpCode(HttpStatus.OK)
-  async generate(@Body() body: { manufacturerUuid: string; productUuid: string; nonce: string; signingKey?: string }) {
-    const { manufacturerUuid, productUuid, nonce, signingKey } = body;
-    const result = await this.svc.generateCode({ manufacturerUuid: manufacturerUuid, productUuid, nonce, signingKey });
-    return result;
-  }
 
-  @Post('create-batch')
+
+  /**
+   * Two-step client signing flow: Step 1 creates the product and returns
+   * unsigned payloads for the client to sign with their wallet.
+   */
+  @Post('create-batch-init')
   @HttpCode(HttpStatus.OK)
-  async createBatch(
+  async createBatchInit(
     @Body()
     body: {
-      manufacturerId: string;
+      // Accept either the DB UUID for the manufacturer or the manufacturer's
+      // connected wallet address (suiWalletAddress). Clients that only know
+      // the connected wallet can pass `manufacturerSuiAddress` and the
+      // server will resolve the corresponding Manufacturer record.
+      manufacturerId?: string;
+      manufacturerSuiAddress?: string;
       productName: string;
       description?: string;
       manufactureDate: number | string;
       expiryDate: number | string;
       amount: number;
       batchNumber?: string;
-      signingKey?: string;
     },
   ) {
-    const { manufacturerId, productName, description, manufactureDate, expiryDate, amount, batchNumber, signingKey } = body;
-    const res = await this.svc.createProductAndGenerateCodes({
+    const { manufacturerId, manufacturerSuiAddress, productName, description, manufactureDate, expiryDate, amount, batchNumber } = body;
+    const res = await this.svc.createProductAndBuildPayloads({
       manufacturerId,
+      manufacturerSuiAddress,
       productName,
       description,
       manufactureDate,
       expiryDate,
       amount,
       batchNumber,
-      signingKey,
     });
+    return res;
+  }
+
+  /**
+   * Two-step client signing flow: Step 2 receives signed payloads and
+   * persists verified codes.
+   */
+  @Post('create-batch-finalize')
+  @HttpCode(HttpStatus.OK)
+  async createBatchFinalize(@Body() body: { productId: string; signedPayloads: Array<{ payload: string; signature: string }> }) {
+    const { productId, signedPayloads } = body;
+    const res = await this.svc.finalizeBatchWithSignatures({ productId, signedPayloads });
     return res;
   }
 

@@ -12,11 +12,5 @@ export class ProductsController {
     return { data: items };
   }
 
-  // POST /products -> create product and generate codes (delegates to CodesService)
-  @Post()
-  @HttpCode(HttpStatus.OK)
-  async create(@Body() body: any) {
-    const res = await this.svc.createProductAndGenerateCodes(body);
-    return res;
-  }
+
 }

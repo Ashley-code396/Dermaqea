@@ -10,18 +10,5 @@ export class ProductsService {
     return this.prisma.product.findMany({ where: { manufacturerId }, orderBy: { createdAt: 'desc' } });
   }
 
-  async createProductAndGenerateCodes(params: {
-    manufacturerId: string;
-    productName: string;
-    description?: string;
-    manufactureDate: string | number;
-    expiryDate: string | number;
-    amount: number;
-    batchNumber?: string;
-  }) {
-    // delegate to CodesService which already implements creation + code generation
-    // adapt param names if necessary
-    const { manufacturerId, productName, description, manufactureDate, expiryDate, amount, batchNumber } = params;
-    return this.codes.createProductAndGenerateCodes({ manufacturerId, productName, description, manufactureDate, expiryDate, amount, batchNumber });
-  }
+
 }

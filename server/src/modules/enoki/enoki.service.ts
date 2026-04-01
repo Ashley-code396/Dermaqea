@@ -66,11 +66,12 @@ export class EnokiService {
    */
   async signPayload(manufacturerContext: string, payload: string): Promise<Uint8Array | string> {
     // If the Enoki client exposes a message signing helper, prefer it.
-    // We try a few common method names and several likely locations to keep
-    // this wrapper adaptable across multiple SDK versions.
+    // We try a few common method names and several likely locations (including
+    // prototype methods) to keep this wrapper adaptable across multiple SDK
+    // versions and runtime shapes.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client: any = this.enokiClient as any;
-  const tryNames = ['signPersonalMessage', 'signMessage', 'sign', 'signPayload'];
+    const tryNames = ['signPersonalMessage', 'signMessage', 'sign', 'signPayload'];
 
     const invokeCandidate = async (fn: (...args: any[]) => any) => {
       try {
@@ -92,10 +93,19 @@ export class EnokiService {
       }
     };
 
-    // 1) Direct methods on the client
+    const findFunction = (obj: any, name: string): Function | undefined => {
+      if (!obj) return undefined;
+      if (typeof obj[name] === 'function') return obj[name].bind(obj);
+      const proto = Object.getPrototypeOf(obj);
+      if (proto && typeof proto[name] === 'function') return proto[name].bind(obj);
+      return undefined;
+    };
+
+    // 1) Direct methods on the client (own props or on prototype)
     for (const name of tryNames) {
-      if (typeof client[name] === 'function') {
-        const res = await invokeCandidate(client[name].bind(client));
+      const fn = findFunction(client, name);
+      if (fn) {
+        const res = await invokeCandidate(fn as any);
         if (res) return res;
       }
     }
@@ -103,23 +113,26 @@ export class EnokiService {
     // 2) Common nested places: provider, wallet, auth, connector
     const nestedOwners = ['provider', 'wallet', 'auth', 'connector'];
     for (const owner of nestedOwners) {
-      const obj = client[owner];
+      // allow nested object to be defined as own property or on the prototype
+      const obj = client[owner] ?? Object.getPrototypeOf(client)?.[owner];
       if (!obj) continue;
       for (const name of tryNames) {
-        if (typeof obj[name] === 'function') {
-          const res = await invokeCandidate(obj[name].bind(obj));
+        const fn = findFunction(obj, name);
+        if (fn) {
+          const res = await invokeCandidate(fn as any);
           if (res) return res;
         }
       }
     }
 
-    // 3) Some SDKs expose rpc-like request method
-    if (typeof client.request === 'function') {
+    // 3) Some SDKs expose rpc-like request method (own property or prototype)
+    const requestFn = findFunction(client, 'request');
+    if (requestFn) {
       try {
         // Attempt a generic RPC-like call; adapt parameters conservatively.
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        const rpcRes = await client.request({ method: 'signMessage', params: { address: manufacturerContext, message: payload } });
+        const rpcRes = await requestFn({ method: 'signMessage', params: { address: manufacturerContext, message: payload } });
         if (rpcRes) return rpcRes;
       } catch (e) {
         // ignore and fallthrough
