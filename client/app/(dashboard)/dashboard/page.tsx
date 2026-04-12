@@ -6,14 +6,14 @@ import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { ScanChart } from "@/components/dashboard/ScanChart";
 import { Button } from "@/components/ui/button";
 import useManufacturer from '@/lib/useManufacturer';
-import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
+import { useEffect, useState } from 'react';
 import {
   MOCK_ACTIVITY,
   MOCK_PRODUCTS,
   MOCK_SCAN_DATA,
   MOCK_MANUFACTURER,
 } from "@/lib/mock-data";
-import { useEffect, useState } from "react";
+
 import { Package, Boxes, Download } from "lucide-react";
 
 export default function DashboardPage() {
@@ -41,8 +41,15 @@ export default function DashboardPage() {
     },
   };
   // Prefer real manufacturer verification status when available (based on connected wallet).
-  const { connectedAddress } = useWalletSync();
-  const { manufacturer } = useManufacturer(connectedAddress ?? null);
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== 'undefined' ? sessionStorage.getItem('connectedAddress') : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const { manufacturer } = useManufacturer(storedAddr ?? null);
 
   const mapStatus = (v?: string | null) => {
     if (!v) return MOCK_MANUFACTURER.verified ? 'VERIFIED' : 'PENDING_REVIEW';

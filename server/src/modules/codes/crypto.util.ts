@@ -79,6 +79,7 @@ export async function verifySignature(signatureB64Url: string, payload: string, 
       const expected = String(publicKeyEncoded || '').toLowerCase();
       const addr = publicKeyObj.toSuiAddress().toLowerCase();
       if (expected && expected.startsWith('0x')) {
+        if (addr !== expected) console.error(`[verifySignature] Address mismatch: recovered ${addr} vs expected ${expected}`);
         return addr === expected;
       }
       // If provided a raw public key bytes, try to decode and compare
@@ -86,16 +87,20 @@ export async function verifySignature(signatureB64Url: string, payload: string, 
       if (decoded) {
         const pkHex = Buffer.from(publicKeyObj.toRawBytes()).toString('hex');
         const providedHex = Buffer.from(decoded).toString('hex');
+        if (pkHex !== providedHex) console.error(`[verifySignature] Pubkey hex mismatch: ${pkHex} vs ${providedHex}`);
         return pkHex === providedHex;
       }
 
       // Fallback: compare addresses
+      if (addr !== expected) console.error(`[verifySignature] Address mismatch fallback: ${addr} vs ${expected}`);
       return addr === expected;
     } catch (e) {
+      console.error('[verifySignature] Error comparing addresses:', e);
       return false;
     }
   } catch (e) {
     // All verification attempts failed
+    console.error('[verifySignature] Exception during verifyPersonalMessageSignature:', e);
     return false;
   }
 }

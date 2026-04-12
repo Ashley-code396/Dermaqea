@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
 import Script from 'next/script';
 import { cookies } from 'next/headers';
-import { SuiProvider } from "./providers";
+import { Providers } from "./providers";
 
 const syne = Syne({
   variable: "--font-syne",
@@ -68,11 +68,13 @@ export default async function RootLayout({
         className={`${syne.variable} ${dmMono.variable} ${instrumentSans.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          <SuiProvider>
+          <Providers>
             {children}
-          </SuiProvider>
+          </Providers>
           <Toaster />
         </ThemeProvider>
+        {/* Portal for Enoki to mount UI elements (social login popup) */}
+        <div id="enoki-info-portal" />
       </body>
     </html>
   );

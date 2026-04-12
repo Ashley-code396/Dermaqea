@@ -6,8 +6,6 @@ import { LayoutDashboard, BarChart3, User, Settings, Boxes, Download } from "luc
 import { cn } from "@/lib/utils";
 import useManufacturer from "@/lib/useManufacturer";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useCurrentNetwork } from "@mysten/dapp-kit-react";
-import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useEffect, useState } from "react";
 
 const navItems = [
@@ -22,11 +20,19 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const currentAccount = useCurrentAccount();
-  const { connectedAddress } = useWalletSync();
-  const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== "undefined" ? sessionStorage.getItem("connectedAddress") : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const acctAddr = currentAccount?.address ?? storedAddr ?? null;
   const { manufacturer } = useManufacturer(acctAddr);
 
-  const currentNetwork = useCurrentNetwork();
+  // Determine current network from public env var (matches Providers defaultNetwork)
+  const currentNetwork = (process.env.NEXT_PUBLIC_SUI_NETWORK as string) || 'testnet';
 
     const isVerified = !!(
       manufacturer && (
@@ -102,7 +108,7 @@ export function Sidebar() {
               return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
             })()}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">{currentNetwork ? (currentNetwork.charAt(0).toUpperCase() + currentNetwork.slice(1)) : 'Unknown'}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{typeof currentNetwork === 'string' ? ((currentNetwork as string).charAt(0).toUpperCase() + (currentNetwork as string).slice(1)) : 'Unknown'}</p>
         </div>
       </div>
     </aside>

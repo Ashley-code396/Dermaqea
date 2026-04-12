@@ -8,10 +8,16 @@ import useManufacturer from "@/lib/useManufacturer";
 import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
-import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
-
 export default function ProfilePage() {
-  const { connectedAddress } = useWalletSync();
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== 'undefined' ? sessionStorage.getItem('connectedAddress') : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const connectedAddress = storedAddr;
   const { manufacturer, loading } = useManufacturer(connectedAddress ?? null);
 
   const [showUploadForm, setShowUploadForm] = useState(false);

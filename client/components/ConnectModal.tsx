@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useDAppKit, useWallets } from "@mysten/dapp-kit-react";
 import {
   Dialog,

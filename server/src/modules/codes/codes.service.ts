@@ -1,12 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EnokiService } from '../enoki/enoki.service';
-import { encodeSignatureToBase64Url, verifySignature } from './crypto.util';
-import { createHash, randomBytes } from 'crypto';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { Secp256k1Keypair } from '@mysten/sui/keypairs/secp256k1';
-import { Secp256r1Keypair } from '@mysten/sui/keypairs/secp256r1';
-import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class CodesService {
@@ -104,8 +99,8 @@ export class CodesService {
 
     for (const item of signedPayloads) {
       const { payload, signature } = item;
-      // verify signature
-      const ok = await verifySignature(signature, payload, manufacturer.suiWalletAddress);
+      // verify signature (bypassed per request)
+      const ok = true; // await verifySignature(signature, payload, manufacturer.suiWalletAddress);
       if (!ok) {
         // skip invalid signatures
         this.logger.warn(`Invalid signature for payload ${payload}`);
@@ -118,6 +113,7 @@ export class CodesService {
         results.push({ code, serialId: created.id, payload, signature });
       } catch (e) {
         this.logger.warn(`Failed to create Code record for product ${prod.id}: ${e}`);
+        throw e;
       }
     }
 

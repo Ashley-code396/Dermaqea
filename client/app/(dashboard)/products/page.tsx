@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import useManufacturer from "@/lib/useManufacturer";
-import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
-import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useCurrentNetwork } from "@mysten/dapp-kit-react";
-import { useEnokiFlow } from "@mysten/enoki/react";
+import { useCurrentAccount, useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import { useSignPersonalMessage } from "@mysten/dapp-kit";
+import { isEnokiWallet } from "@mysten/enoki";
 import { Button } from "@/components/ui/button";
 import { Download, Printer, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -13,10 +12,18 @@ import { Input } from "@/components/ui/input";
 
 export default function ProductsPage() {
   const currentAccount = useCurrentAccount();
-  const currentNetwork = useCurrentNetwork();
-  const enokiflow = useEnokiFlow();
-  const { connectedAddress } = useWalletSync();
-  const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const { mutateAsync: connect } = useConnectWallet();
+  const wallets = useWallets();
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== 'undefined' ? sessionStorage.getItem('connectedAddress') : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const acctAddr = currentAccount?.address ?? storedAddr ?? null;
 
   const { manufacturer, loading } = useManufacturer(acctAddr);
   const [products, setProducts] = useState<any[]>([]);
@@ -29,6 +36,7 @@ export default function ProductsPage() {
   const [amount, setAmount] = useState<number>(1);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [lastSignedExport, setLastSignedExport] = useState<null | { productId: string; signedPayloads: Array<{ payload: string; signature: string }> }>(null);
 
   useEffect(() => {
     if (manufacturer && manufacturer.products) setProducts(manufacturer.products);
@@ -72,6 +80,7 @@ export default function ProductsPage() {
       };
 
       // Step 1: create product and receive unsigned payloads to sign
+      console.log('Sending init request for:', initPayload);
       const initRes = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch-init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,77 +90,161 @@ export default function ProductsPage() {
       const initBody = await initRes.json();
       const product = initBody?.product;
       const payloads: string[] = initBody?.payloads ?? [];
+      console.log('Init response successful. Product ID:', product?.id, 'Payloads received:', payloads.length);
       if (!product) throw new Error('Server did not return created product');
 
       // Step 2: client-side sign each payload
-      // Verify Enoki flow is available
-      if (!enokiflow) {
-        throw new Error('Enoki flow is not initialized');
+      // If dapp-kit has not yet rehydrated a currentAccount (but we have a
+      // persisted connectedAddress), attempt to connect programmatically so
+      // the signing hooks become available. Prefer an Enoki wallet if present.
+      // If there's no currentAccount from the hook, attempt to auto-connect a wallet.
+      // Avoid waiting on the hook's value (race condition) by using the result returned
+      // from `connect(...)` which should include the newly connected account info.
+  let accountToUse = currentAccount ?? undefined;
+      if (!accountToUse) {
+        try {
+          const enoki = wallets.find((w: any) => isEnokiWallet(w));
+          const selected = enoki ?? wallets[0];
+          if (selected) {
+            console.log('Attempting to connect wallet automatically before signing');
+            const connResult: any = await connect({ wallet: selected });
+            // connect implementations may return the connected account in different shapes
+            accountToUse = connResult?.account ?? connResult?.currentAccount ?? (connResult?.accounts && connResult.accounts[0]) ?? accountToUse;
+          }
+        } catch (e) {
+          // ignore and let the subsequent check throw a helpful error
+        }
       }
 
-      const keypair = await enokiflow.getKeypair({ network: currentNetwork });
+      if (!accountToUse) {
+        throw new Error('Wallet not connected. Please connect your Enoki wallet first.');
+      }
+
+      console.log('Wallet connected. Proceeding to sign payloads.');
       const signedPayloads: Array<{ payload: string; signature: string }> = [];
 
-      for (const p of payloads) {
-        // Sign as bytes
-        const msg = new TextEncoder().encode(p);
+      // Helper: normalize various signature shapes into base64url string
+      function toBase64UrlFromSig(raw: any): string {
+        if (!raw) throw new Error('Signing failed');
 
-        const { signature: sigRes } = await keypair.signPersonalMessage(msg);
+        const candidate = raw.signature ?? raw.sig ?? raw.bytes ?? raw;
 
-        // Normalize the various shapes we may get back
-        function toBase64UrlFromSig(raw: any): string {
-          if (!raw) throw new Error('Signing failed');
-
-          const candidate = raw.signature ?? raw.sig ?? raw.bytes ?? raw;
-
-          if (typeof candidate === 'string') {
-            return candidate.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-          }
-
-          if (candidate instanceof Uint8Array || (typeof Buffer !== 'undefined' && Buffer.isBuffer(candidate))) {
-            const arr = candidate instanceof Uint8Array ? candidate : new Uint8Array(candidate as Buffer);
-            let binary = '';
-            const chunk = 0x8000;
-            for (let i = 0; i < arr.length; i += chunk) {
-              const slice = arr.subarray(i, Math.min(i + chunk, arr.length));
-              binary += String.fromCharCode.apply(null, Array.from(slice));
-            }
-            const b64 = typeof window !== 'undefined' ? btoa(binary) : Buffer.from(arr).toString('base64');
-            return b64.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-          }
-
-          throw new Error('Unsupported signature format');
+        if (typeof candidate === 'string') {
+          return candidate.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
         }
 
-        const b64url = toBase64UrlFromSig(sigRes);
-        signedPayloads.push({ payload: p, signature: b64url });
+        if (candidate instanceof Uint8Array || (typeof Buffer !== 'undefined' && Buffer.isBuffer(candidate))) {
+          const arr = candidate instanceof Uint8Array ? candidate : new Uint8Array(candidate as Buffer);
+          let binary = '';
+          const chunk = 0x8000;
+          for (let i = 0; i < arr.length; i += chunk) {
+            const slice = arr.subarray(i, Math.min(i + chunk, arr.length));
+            binary += String.fromCharCode.apply(null, Array.from(slice));
+          }
+          const b64 = typeof window !== 'undefined' ? btoa(binary) : Buffer.from(arr).toString('base64');
+          return b64.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+        }
+
+        throw new Error('Unsupported signature format');
       }
 
-      // Step 3: send signed payloads to server for verification & persistence
-      const finalizeRes = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch-finalize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id, signedPayloads }),
-      });
-      if (!finalizeRes.ok) throw new Error(`server finalize returned ${finalizeRes.status}`);
-      const finalBody = await finalizeRes.json();
+      // Parallel signing with limited concurrency to balance UX and performance.
+      // Many wallets don't like massive concurrent signing prompts; pick a small pool.
+      const CONCURRENCY = Math.min(4, Math.max(1, payloads.length));
+      let nextIndex = 0;
 
-      // append new product if returned
-      if (finalBody?.product) {
-        setProducts((p) => [finalBody.product, ...p]);
-        setMessage('Product created and codes generated.');
+      async function worker() {
+        while (true) {
+          const idx = nextIndex;
+          nextIndex += 1;
+          if (idx >= payloads.length) break;
+          const p = payloads[idx];
+          const msg = new TextEncoder().encode(p);
+          let sigRaw: any;
+          try {
+            sigRaw = await signPersonalMessage({ message: msg, account: accountToUse });
+          } catch (e: any) {
+            throw new Error('Failed to sign message: ' + (e?.message || String(e)));
+          }
+          const b64url = toBase64UrlFromSig(sigRaw);
+          console.log(`Payload signed: ${p.substring(0, 8)}... Signature Base64Url length: ${b64url.length}`);
+          signedPayloads[idx] = { payload: p, signature: b64url };
+        }
+      }
+
+      // spawn workers
+      const workers: Promise<void>[] = [];
+      for (let i = 0; i < CONCURRENCY; i++) workers.push(worker());
+      // Wait for all workers to finish (or throw)
+      await Promise.all(workers);
+
+      console.log('All payloads signed. Preparing signed payloads for mobile app (no server-side finalize).', signedPayloads.length);
+
+      // NOTE: Verification will be performed by the mobile app, not the manufacturer UI.
+      // We still sign payloads here, but we do NOT call the server finalize/verification endpoint.
+      // Instead we create a downloadable JSON containing the signed payloads so the mobile
+      // app can import/verify them later. We also optimistically add the product returned
+      // from the init call to the UI so manufacturers see it immediately.
+      try {
+        const exportObj = { productId: product.id, signedPayloads };
+        // Save for potential upload to backend (user can upload via button)
+        setLastSignedExport(exportObj);
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `product-${product.id}-signed-payloads.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setMessage('Signed payloads downloaded for mobile app. Verification will be performed by the mobile app.');
+      } catch (e: any) {
+        console.error('Failed to prepare signed payloads for download:', e);
+        setMessage('Failed to prepare signed payloads for mobile app');
+      }
+
+      // show the product returned by the init endpoint so the UI reflects the new product
+      if (product) {
+        setProducts((p) => [product, ...p]);
         setShowForm(false);
         setName('');
         setManufactureDate('');
         setExpiryDate('');
         setAmount(1);
-      } else {
-        setMessage('Created, but server did not return product details.');
       }
 
       await refreshManufacturer();
     } catch (err: any) {
+      console.error('CRITICAL ERROR DURING CREATION:', err);
+      alert('Error: ' + (err?.message ?? 'Failed to create product'));
       setMessage(err?.message ?? 'Failed to create product');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function uploadSignedPayloadsToBackend() {
+    if (!lastSignedExport) {
+      setMessage('No signed payloads available to upload.');
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      // lazy import to keep bundle small
+      const api = await import('@/lib/api');
+      const res = await api.finalizeBatch(lastSignedExport.productId, lastSignedExport.signedPayloads, base);
+      setMessage('Signed payloads uploaded to backend successfully.');
+      // optionally refresh manufacturer to reflect server-side codes
+      await refreshManufacturer();
+      // clear saved export to avoid accidental re-uploads
+      setLastSignedExport(null);
+      return res;
+    } catch (e: any) {
+      console.error('Failed to upload signed payloads to backend:', e);
+      setMessage(e?.message ?? 'Failed to upload signed payloads');
+      throw e;
     } finally {
       setBusy(false);
     }
@@ -159,7 +252,6 @@ export default function ProductsPage() {
 
   async function handleDownload(productId: string) {
     if (!acctAddr) return;
-    const base = (process.env.NEXT_PUBLIC_BACKEND_URL as string) || "http://localhost:5000";
     try {
       // trigger product-level codes download (server will return CSV)
       const url = `${base.replace(/\/$/, "")}/codes/product/${encodeURIComponent(productId)}/download`;
@@ -325,6 +417,11 @@ export default function ProductsPage() {
                         <Printer size={14} />
                         View codes
                       </Button>
+                      {lastSignedExport && lastSignedExport.productId === p.id ? (
+                        <Button size="sm" onClick={uploadSignedPayloadsToBackend} className="flex items-center gap-2">
+                          Upload signed payloads
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

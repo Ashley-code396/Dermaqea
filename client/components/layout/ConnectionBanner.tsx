@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useCurrentAccount, useConnectWallet, useWallets } from "@mysten/dapp-kit";
 import { isEnokiWallet } from "@mysten/enoki";
-import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
+import { useEffect, useState } from "react";
 
 function short(addr?: string | null) {
   if (!addr) return "-";
@@ -13,7 +13,15 @@ function short(addr?: string | null) {
 
 export function ConnectionBanner() {
   const currentAccount = useCurrentAccount();
-  const { connectedAddress } = useWalletSync();
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== "undefined" ? sessionStorage.getItem("connectedAddress") : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const connectedAddress = storedAddr;
   const { mutate: connectWallet } = useConnectWallet();
   const wallets = useWallets();
 

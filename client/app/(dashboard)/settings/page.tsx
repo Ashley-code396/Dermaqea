@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/
 import { Checkbox } from "@/components/ui/checkbox";
 import useManufacturer from '@/lib/useManufacturer';
 import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
-import { useCurrentNetwork } from '@mysten/dapp-kit-react';
-import { useWalletSync } from '@/components/blockchain/WalletSyncProvider';
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -23,12 +21,29 @@ import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const currentAccount = useCurrentAccount();
-  const { connectedAddress, setConnectedAddress } = useWalletSync();
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== 'undefined' ? localStorage.getItem('connectedAddress') : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const connectedAddress = storedAddr;
+  const setConnectedAddress = (addr: string | null) => {
+    try {
+      if (addr) localStorage.setItem('connectedAddress', addr);
+      else localStorage.removeItem('connectedAddress');
+    } catch (e) {
+      // ignore
+    }
+  };
   const { mutateAsync: disconnect } = useDisconnectWallet();
   const router = useRouter();
 
-  // read the active Sui network from the dapp-kit context
-  const currentNetwork = useCurrentNetwork();
+  // Determine current network from public env var (matches Providers defaultNetwork)
+  const currentNetwork = (process.env.NEXT_PUBLIC_SUI_NETWORK as string) || 'testnet';
+
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -199,7 +214,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground">Current Network</p>
-            <p className="font-mono">{currentNetwork ? currentNetwork.charAt(0).toUpperCase() + currentNetwork.slice(1) : 'Unknown'}</p>
+            <p className="font-mono">{typeof currentNetwork === 'string' ? ((currentNetwork as string).charAt(0).toUpperCase() + (currentNetwork as string).slice(1)) : 'Unknown'}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Connected Wallet</p>

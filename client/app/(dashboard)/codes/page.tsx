@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import useManufacturer from "@/lib/useManufacturer";
-import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
@@ -10,8 +9,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 
 export default function CodesPage() {
   const currentAccount = useCurrentAccount();
-  const { connectedAddress } = useWalletSync();
-  const acctAddr = currentAccount?.address ?? connectedAddress ?? null;
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStoredAddr(typeof window !== "undefined" ? sessionStorage.getItem("connectedAddress") : null);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const acctAddr = currentAccount?.address ?? storedAddr ?? null;
 
   const { manufacturer, loading } = useManufacturer(acctAddr);
   const [products, setProducts] = useState<any[]>([]);

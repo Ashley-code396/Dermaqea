@@ -33,18 +33,23 @@ export class CodesController {
       batchNumber?: string;
     },
   ) {
-    const { manufacturerId, manufacturerSuiAddress, productName, description, manufactureDate, expiryDate, amount, batchNumber } = body;
-    const res = await this.svc.createProductAndBuildPayloads({
-      manufacturerId,
-      manufacturerSuiAddress,
-      productName,
-      description,
-      manufactureDate,
-      expiryDate,
-      amount,
-      batchNumber,
-    });
-    return res;
+    try {
+      const { manufacturerId, manufacturerSuiAddress, productName, description, manufactureDate, expiryDate, amount, batchNumber } = body;
+      const res = await this.svc.createProductAndBuildPayloads({
+        manufacturerId,
+        manufacturerSuiAddress,
+        productName,
+        description,
+        manufactureDate,
+        expiryDate,
+        amount,
+        batchNumber,
+      });
+      return res;
+    } catch (e) {
+      console.error('[createBatchInit] Error:', e);
+      throw e;
+    }
   }
 
   /**
@@ -54,9 +59,14 @@ export class CodesController {
   @Post('create-batch-finalize')
   @HttpCode(HttpStatus.OK)
   async createBatchFinalize(@Body() body: { productId: string; signedPayloads: Array<{ payload: string; signature: string }> }) {
-    const { productId, signedPayloads } = body;
-    const res = await this.svc.finalizeBatchWithSignatures({ productId, signedPayloads });
-    return res;
+    try {
+      const { productId, signedPayloads } = body;
+      const res = await this.svc.finalizeBatchWithSignatures({ productId, signedPayloads });
+      return res;
+    } catch (e) {
+      console.error('[createBatchFinalize] Error:', e);
+      throw e;
+    }
   }
 
  

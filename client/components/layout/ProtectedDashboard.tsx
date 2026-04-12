@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useWalletSync } from "@/components/blockchain/WalletSyncProvider";
+import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 
 export default function ProtectedDashboard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const currentAccount = useCurrentAccount();
-  const { connectedAddress } = useWalletSync();
+  const [storedAddr, setStoredAddr] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      // Prefer sessionStorage (set by the Enoki login flow) but fall back to localStorage
+      const sess = typeof window !== "undefined" ? sessionStorage.getItem("connectedAddress") : null
+      setStoredAddr(sess);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+  const connectedAddress = storedAddr;
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -20,6 +30,8 @@ export default function ProtectedDashboard({ children }: { children: React.React
       const addr =
         currentAccount?.address ??
         connectedAddress ??
+        // Also check sessionStorage at runtime in case the login flow just set it.
+        (typeof window !== "undefined" ? sessionStorage.getItem("connectedAddress") : null) ??
         (typeof window !== "undefined" ? localStorage.getItem("connectedAddress") : null);
 
       if (!addr) {
@@ -55,7 +67,7 @@ export default function ProtectedDashboard({ children }: { children: React.React
     return () => {
       cancelled = true;
     };
-  }, [currentAccount?.address, connectedAddress, router]);
+  }, [currentAccount?.address, router]);
 
   if (checking) return null;
 
