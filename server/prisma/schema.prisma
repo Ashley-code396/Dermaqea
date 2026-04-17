@@ -127,6 +127,9 @@ model Code {
   generatedAt  DateTime @default(now())
   downloadedAt DateTime?
   printedAt    DateTime?
+  // SVG glyph representation derived from the signed payload (for printing/branding)
+  glyphSvg      String?
+  glyphGeneratedAt DateTime?
 
   product      Product? @relation(fields: [productId], references: [id])
   scans         ScanLog[]

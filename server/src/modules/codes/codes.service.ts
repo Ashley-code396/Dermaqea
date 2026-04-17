@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EnokiService } from '../enoki/enoki.service';
 import { randomBytes } from 'crypto';
+import { generateGlyphSvg } from './glyph.util';
 
 @Injectable()
 export class CodesService {
@@ -110,6 +111,17 @@ export class CodesService {
       const code = `${payload}.${signature}`;
       try {
         const created = await this.prisma.code.create({ data: { product: { connect: { id: prod.id } }, codeValue: code, generatedAt: new Date() } });
+
+        // Generate a printable SVG glyph (Glyph Block) from the signed payload.
+        // Keep the original codeValue intact; store the glyph alongside it.
+        try {
+          const svg = generateGlyphSvg(payload, signature);
+          await this.prisma.code.update({ where: { id: created.id }, data: { glyphSvg: svg, glyphGeneratedAt: new Date() } });
+        } catch (e) {
+          // non-fatal: log and continue
+          this.logger.warn(`Failed to generate glyph for code ${created.id}: ${e}`);
+        }
+
         results.push({ code, serialId: created.id, payload, signature });
       } catch (e) {
         this.logger.warn(`Failed to create Code record for product ${prod.id}: ${e}`);

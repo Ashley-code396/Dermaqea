@@ -153,6 +153,29 @@ export default function ProductsPage() {
       const CONCURRENCY = Math.min(4, Math.max(1, payloads.length));
       let nextIndex = 0;
 
+      // Helper that retries signPersonalMessage on 429 (rate limit) with exponential backoff + jitter.
+      async function signWithRetries(messageBytes: Uint8Array, account: any, maxAttempts = 5) {
+        const baseDelay = 250; // ms
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            return await signPersonalMessage({ message: messageBytes, account });
+          } catch (e: any) {
+            // try to detect HTTP status 429 from different error shapes
+            const status = e?.status || e?.response?.status || (typeof e?.message === 'string' && (/status[: ]?(\d{3})/.exec(e.message) || [])[1]);
+            const is429 = String(status) === '429' || (typeof e?.message === 'string' && e.message.includes('429'));
+            if (is429 && attempt < maxAttempts) {
+              // backoff with jitter
+              const delay = Math.min(10000, Math.pow(2, attempt) * baseDelay) + Math.floor(Math.random() * 300);
+              console.warn(`signPersonalMessage rate-limited (429). Retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})`);
+              await new Promise((r) => setTimeout(r, delay));
+              continue;
+            }
+            // rethrow non-retryable or final attempt error
+            throw e;
+          }
+        }
+      }
+
       async function worker() {
         while (true) {
           const idx = nextIndex;
@@ -162,8 +185,13 @@ export default function ProductsPage() {
           const msg = new TextEncoder().encode(p);
           let sigRaw: any;
           try {
-            sigRaw = await signPersonalMessage({ message: msg, account: accountToUse });
+            sigRaw = await signWithRetries(msg, accountToUse, 5);
           } catch (e: any) {
+            // If retries exhausted due to rate limiting, show a helpful message to the user
+            const is429 = typeof e?.message === 'string' && e.message.includes('429');
+            if (is429) {
+              setMessage('Signing rate-limited by Enoki. Please wait a bit and try again.');
+            }
             throw new Error('Failed to sign message: ' + (e?.message || String(e)));
           }
           const b64url = toBase64UrlFromSig(sigRaw);
@@ -288,6 +316,15 @@ export default function ProductsPage() {
     }
   }
 
+  function copySvgToClipboard(svg: string) {
+    try {
+      navigator.clipboard.writeText(svg);
+      setMessage('SVG copied to clipboard');
+    } catch (e) {
+      setMessage('Failed to copy SVG');
+    }
+  }
+
   function printCodes() {
     // open a printable window with codes list
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:16px}pre{word-break:break-all;background:#f6f6f6;padding:8px;border-radius:4px}</style></head><body><h1>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</h1>${codesList
@@ -327,6 +364,7 @@ export default function ProductsPage() {
                   <tr className="text-left">
                     <th className="py-2">Serial</th>
                     <th>Code</th>
+                    <th>Glyph</th>
                     <th>Signature</th>
                     <th>Actions</th>
                   </tr>
@@ -336,7 +374,24 @@ export default function ProductsPage() {
                     <tr key={c.id} className="border-t">
                       <td className="py-2 font-mono text-sm">{c.serialNumber}</td>
                       <td className="py-2"><pre className="text-xs break-words">{c.codeData ?? ''}</pre></td>
+
+                      <td className="py-2">
+                        {c.glyphSvg ? (
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-16" style={{ display: 'inline-block' }} dangerouslySetInnerHTML={{ __html: c.glyphSvg }} />
+                            <div>
+                              <Button size="sm" onClick={() => copySvgToClipboard(c.glyphSvg)} className="flex items-center gap-2">
+                                Copy SVG
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </td>
+
                       <td className="py-2 text-xs font-mono">{c.signature ?? ''}</td>
+
                       <td className="py-2">
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => copyToClipboard(c.codeData ?? '')} className="flex items-center gap-2">

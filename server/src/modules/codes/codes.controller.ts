@@ -83,6 +83,7 @@ export class CodesController {
         serialNumber: c.id, 
         codeData: c.codeValue,
         signature: c.codeValue ? c.codeValue.split('.')[1] || '' : '',
+        glyphSvg: c.glyphSvg ?? null,
       })) 
     };
   }

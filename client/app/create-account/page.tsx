@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -44,6 +44,7 @@ export default function CreateAccountPage() {
   const [step, setStep] = useState<"form" | "success">("form");
   const [storedAddr, setStoredAddr] = useState<string | null>(null);
   const currentAccount = useCurrentAccount();
+  const { mutateAsync: disconnect } = useDisconnectWallet();
 
   // Keep storedAddr in-sync with the wallet connection. Prefer the live
   // dapp-kit account address when available, otherwise fall back to sessionStorage.
@@ -165,6 +166,29 @@ export default function CreateAccountPage() {
               Back to home
             </Link>
           </Button>
+
+          {/* Minimal disconnect button for debugging wallet/connect issues */}
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  await disconnect();
+                } catch (err) {
+                  console.warn('disconnect error', err);
+                }
+                try {
+                  sessionStorage.removeItem('connectedAddress');
+                } catch {}
+                setStoredAddr(null);
+                // navigate to enoki login so user can reconnect
+                router.replace('/create-account/enoki');
+              }}
+            >
+              Disconnect Wallet
+            </Button>
+          </div>
 
           <Card className="border-border bg-card">
             <CardHeader>

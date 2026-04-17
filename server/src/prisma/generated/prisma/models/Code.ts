@@ -31,6 +31,8 @@ export type CodeMinAggregateOutputType = {
   generatedAt: Date | null
   downloadedAt: Date | null
   printedAt: Date | null
+  glyphSvg: string | null
+  glyphGeneratedAt: Date | null
 }
 
 export type CodeMaxAggregateOutputType = {
@@ -40,6 +42,8 @@ export type CodeMaxAggregateOutputType = {
   generatedAt: Date | null
   downloadedAt: Date | null
   printedAt: Date | null
+  glyphSvg: string | null
+  glyphGeneratedAt: Date | null
 }
 
 export type CodeCountAggregateOutputType = {
@@ -49,6 +53,8 @@ export type CodeCountAggregateOutputType = {
   generatedAt: number
   downloadedAt: number
   printedAt: number
+  glyphSvg: number
+  glyphGeneratedAt: number
   _all: number
 }
 
@@ -60,6 +66,8 @@ export type CodeMinAggregateInputType = {
   generatedAt?: true
   downloadedAt?: true
   printedAt?: true
+  glyphSvg?: true
+  glyphGeneratedAt?: true
 }
 
 export type CodeMaxAggregateInputType = {
@@ -69,6 +77,8 @@ export type CodeMaxAggregateInputType = {
   generatedAt?: true
   downloadedAt?: true
   printedAt?: true
+  glyphSvg?: true
+  glyphGeneratedAt?: true
 }
 
 export type CodeCountAggregateInputType = {
@@ -78,6 +88,8 @@ export type CodeCountAggregateInputType = {
   generatedAt?: true
   downloadedAt?: true
   printedAt?: true
+  glyphSvg?: true
+  glyphGeneratedAt?: true
   _all?: true
 }
 
@@ -160,6 +172,8 @@ export type CodeGroupByOutputType = {
   generatedAt: Date
   downloadedAt: Date | null
   printedAt: Date | null
+  glyphSvg: string | null
+  glyphGeneratedAt: Date | null
   _count: CodeCountAggregateOutputType | null
   _min: CodeMinAggregateOutputType | null
   _max: CodeMaxAggregateOutputType | null
@@ -190,6 +204,8 @@ export type CodeWhereInput = {
   generatedAt?: Prisma.DateTimeFilter<"Code"> | Date | string
   downloadedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
   printedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
+  glyphSvg?: Prisma.StringNullableFilter<"Code"> | string | null
+  glyphGeneratedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
   product?: Prisma.XOR<Prisma.ProductNullableScalarRelationFilter, Prisma.ProductWhereInput> | null
   scans?: Prisma.ScanLogListRelationFilter
   alerts?: Prisma.SecurityAlertListRelationFilter
@@ -202,6 +218,8 @@ export type CodeOrderByWithRelationInput = {
   generatedAt?: Prisma.SortOrder
   downloadedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   printedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  glyphSvg?: Prisma.SortOrderInput | Prisma.SortOrder
+  glyphGeneratedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   product?: Prisma.ProductOrderByWithRelationInput
   scans?: Prisma.ScanLogOrderByRelationAggregateInput
   alerts?: Prisma.SecurityAlertOrderByRelationAggregateInput
@@ -217,6 +235,8 @@ export type CodeWhereUniqueInput = Prisma.AtLeast<{
   generatedAt?: Prisma.DateTimeFilter<"Code"> | Date | string
   downloadedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
   printedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
+  glyphSvg?: Prisma.StringNullableFilter<"Code"> | string | null
+  glyphGeneratedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
   product?: Prisma.XOR<Prisma.ProductNullableScalarRelationFilter, Prisma.ProductWhereInput> | null
   scans?: Prisma.ScanLogListRelationFilter
   alerts?: Prisma.SecurityAlertListRelationFilter
@@ -229,6 +249,8 @@ export type CodeOrderByWithAggregationInput = {
   generatedAt?: Prisma.SortOrder
   downloadedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   printedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  glyphSvg?: Prisma.SortOrderInput | Prisma.SortOrder
+  glyphGeneratedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.CodeCountOrderByAggregateInput
   _max?: Prisma.CodeMaxOrderByAggregateInput
   _min?: Prisma.CodeMinOrderByAggregateInput
@@ -244,6 +266,8 @@ export type CodeScalarWhereWithAggregatesInput = {
   generatedAt?: Prisma.DateTimeWithAggregatesFilter<"Code"> | Date | string
   downloadedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Code"> | Date | string | null
   printedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Code"> | Date | string | null
+  glyphSvg?: Prisma.StringNullableWithAggregatesFilter<"Code"> | string | null
+  glyphGeneratedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Code"> | Date | string | null
 }
 
 export type CodeCreateInput = {
@@ -252,6 +276,8 @@ export type CodeCreateInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   product?: Prisma.ProductCreateNestedOneWithoutCodesInput
   scans?: Prisma.ScanLogCreateNestedManyWithoutCodeInput
   alerts?: Prisma.SecurityAlertCreateNestedManyWithoutCodeInput
@@ -264,6 +290,8 @@ export type CodeUncheckedCreateInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   scans?: Prisma.ScanLogUncheckedCreateNestedManyWithoutCodeInput
   alerts?: Prisma.SecurityAlertUncheckedCreateNestedManyWithoutCodeInput
 }
@@ -274,6 +302,8 @@ export type CodeUpdateInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   product?: Prisma.ProductUpdateOneWithoutCodesNestedInput
   scans?: Prisma.ScanLogUpdateManyWithoutCodeNestedInput
   alerts?: Prisma.SecurityAlertUpdateManyWithoutCodeNestedInput
@@ -286,6 +316,8 @@ export type CodeUncheckedUpdateInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   scans?: Prisma.ScanLogUncheckedUpdateManyWithoutCodeNestedInput
   alerts?: Prisma.SecurityAlertUncheckedUpdateManyWithoutCodeNestedInput
 }
@@ -297,6 +329,8 @@ export type CodeCreateManyInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
 }
 
 export type CodeUpdateManyMutationInput = {
@@ -305,6 +339,8 @@ export type CodeUpdateManyMutationInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodeUncheckedUpdateManyInput = {
@@ -314,6 +350,8 @@ export type CodeUncheckedUpdateManyInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodeListRelationFilter = {
@@ -333,6 +371,8 @@ export type CodeCountOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   downloadedAt?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
+  glyphSvg?: Prisma.SortOrder
+  glyphGeneratedAt?: Prisma.SortOrder
 }
 
 export type CodeMaxOrderByAggregateInput = {
@@ -342,6 +382,8 @@ export type CodeMaxOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   downloadedAt?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
+  glyphSvg?: Prisma.SortOrder
+  glyphGeneratedAt?: Prisma.SortOrder
 }
 
 export type CodeMinOrderByAggregateInput = {
@@ -351,6 +393,8 @@ export type CodeMinOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   downloadedAt?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
+  glyphSvg?: Prisma.SortOrder
+  glyphGeneratedAt?: Prisma.SortOrder
 }
 
 export type CodeScalarRelationFilter = {
@@ -438,6 +482,8 @@ export type CodeCreateWithoutProductInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   scans?: Prisma.ScanLogCreateNestedManyWithoutCodeInput
   alerts?: Prisma.SecurityAlertCreateNestedManyWithoutCodeInput
 }
@@ -448,6 +494,8 @@ export type CodeUncheckedCreateWithoutProductInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   scans?: Prisma.ScanLogUncheckedCreateNestedManyWithoutCodeInput
   alerts?: Prisma.SecurityAlertUncheckedCreateNestedManyWithoutCodeInput
 }
@@ -488,6 +536,8 @@ export type CodeScalarWhereInput = {
   generatedAt?: Prisma.DateTimeFilter<"Code"> | Date | string
   downloadedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
   printedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
+  glyphSvg?: Prisma.StringNullableFilter<"Code"> | string | null
+  glyphGeneratedAt?: Prisma.DateTimeNullableFilter<"Code"> | Date | string | null
 }
 
 export type CodeCreateWithoutScansInput = {
@@ -496,6 +546,8 @@ export type CodeCreateWithoutScansInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   product?: Prisma.ProductCreateNestedOneWithoutCodesInput
   alerts?: Prisma.SecurityAlertCreateNestedManyWithoutCodeInput
 }
@@ -507,6 +559,8 @@ export type CodeUncheckedCreateWithoutScansInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   alerts?: Prisma.SecurityAlertUncheckedCreateNestedManyWithoutCodeInput
 }
 
@@ -532,6 +586,8 @@ export type CodeUpdateWithoutScansInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   product?: Prisma.ProductUpdateOneWithoutCodesNestedInput
   alerts?: Prisma.SecurityAlertUpdateManyWithoutCodeNestedInput
 }
@@ -543,6 +599,8 @@ export type CodeUncheckedUpdateWithoutScansInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   alerts?: Prisma.SecurityAlertUncheckedUpdateManyWithoutCodeNestedInput
 }
 
@@ -552,6 +610,8 @@ export type CodeCreateWithoutAlertsInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   product?: Prisma.ProductCreateNestedOneWithoutCodesInput
   scans?: Prisma.ScanLogCreateNestedManyWithoutCodeInput
 }
@@ -563,6 +623,8 @@ export type CodeUncheckedCreateWithoutAlertsInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
   scans?: Prisma.ScanLogUncheckedCreateNestedManyWithoutCodeInput
 }
 
@@ -588,6 +650,8 @@ export type CodeUpdateWithoutAlertsInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   product?: Prisma.ProductUpdateOneWithoutCodesNestedInput
   scans?: Prisma.ScanLogUpdateManyWithoutCodeNestedInput
 }
@@ -599,6 +663,8 @@ export type CodeUncheckedUpdateWithoutAlertsInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   scans?: Prisma.ScanLogUncheckedUpdateManyWithoutCodeNestedInput
 }
 
@@ -608,6 +674,8 @@ export type CodeCreateManyProductInput = {
   generatedAt?: Date | string
   downloadedAt?: Date | string | null
   printedAt?: Date | string | null
+  glyphSvg?: string | null
+  glyphGeneratedAt?: Date | string | null
 }
 
 export type CodeUpdateWithoutProductInput = {
@@ -616,6 +684,8 @@ export type CodeUpdateWithoutProductInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   scans?: Prisma.ScanLogUpdateManyWithoutCodeNestedInput
   alerts?: Prisma.SecurityAlertUpdateManyWithoutCodeNestedInput
 }
@@ -626,6 +696,8 @@ export type CodeUncheckedUpdateWithoutProductInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   scans?: Prisma.ScanLogUncheckedUpdateManyWithoutCodeNestedInput
   alerts?: Prisma.SecurityAlertUncheckedUpdateManyWithoutCodeNestedInput
 }
@@ -636,6 +708,8 @@ export type CodeUncheckedUpdateManyWithoutProductInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   downloadedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   printedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  glyphSvg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  glyphGeneratedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -685,6 +759,8 @@ export type CodeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   generatedAt?: boolean
   downloadedAt?: boolean
   printedAt?: boolean
+  glyphSvg?: boolean
+  glyphGeneratedAt?: boolean
   product?: boolean | Prisma.Code$productArgs<ExtArgs>
   scans?: boolean | Prisma.Code$scansArgs<ExtArgs>
   alerts?: boolean | Prisma.Code$alertsArgs<ExtArgs>
@@ -698,6 +774,8 @@ export type CodeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   generatedAt?: boolean
   downloadedAt?: boolean
   printedAt?: boolean
+  glyphSvg?: boolean
+  glyphGeneratedAt?: boolean
   product?: boolean | Prisma.Code$productArgs<ExtArgs>
 }, ExtArgs["result"]["code"]>
 
@@ -708,6 +786,8 @@ export type CodeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   generatedAt?: boolean
   downloadedAt?: boolean
   printedAt?: boolean
+  glyphSvg?: boolean
+  glyphGeneratedAt?: boolean
   product?: boolean | Prisma.Code$productArgs<ExtArgs>
 }, ExtArgs["result"]["code"]>
 
@@ -718,9 +798,11 @@ export type CodeSelectScalar = {
   generatedAt?: boolean
   downloadedAt?: boolean
   printedAt?: boolean
+  glyphSvg?: boolean
+  glyphGeneratedAt?: boolean
 }
 
-export type CodeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "productId" | "codeValue" | "generatedAt" | "downloadedAt" | "printedAt", ExtArgs["result"]["code"]>
+export type CodeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "productId" | "codeValue" | "generatedAt" | "downloadedAt" | "printedAt" | "glyphSvg" | "glyphGeneratedAt", ExtArgs["result"]["code"]>
 export type CodeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.Code$productArgs<ExtArgs>
   scans?: boolean | Prisma.Code$scansArgs<ExtArgs>
@@ -748,6 +830,8 @@ export type $CodePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     generatedAt: Date
     downloadedAt: Date | null
     printedAt: Date | null
+    glyphSvg: string | null
+    glyphGeneratedAt: Date | null
   }, ExtArgs["result"]["code"]>
   composites: {}
 }
@@ -1180,6 +1264,8 @@ export interface CodeFieldRefs {
   readonly generatedAt: Prisma.FieldRef<"Code", 'DateTime'>
   readonly downloadedAt: Prisma.FieldRef<"Code", 'DateTime'>
   readonly printedAt: Prisma.FieldRef<"Code", 'DateTime'>
+  readonly glyphSvg: Prisma.FieldRef<"Code", 'String'>
+  readonly glyphGeneratedAt: Prisma.FieldRef<"Code", 'DateTime'>
 }
     
 

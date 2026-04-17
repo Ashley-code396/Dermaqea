@@ -1027,7 +1027,9 @@ export const CodeScalarFieldEnum = {
   codeValue: 'codeValue',
   generatedAt: 'generatedAt',
   downloadedAt: 'downloadedAt',
-  printedAt: 'printedAt'
+  printedAt: 'printedAt',
+  glyphSvg: 'glyphSvg',
+  glyphGeneratedAt: 'glyphGeneratedAt'
 } as const
 
 export type CodeScalarFieldEnum = (typeof CodeScalarFieldEnum)[keyof typeof CodeScalarFieldEnum]
