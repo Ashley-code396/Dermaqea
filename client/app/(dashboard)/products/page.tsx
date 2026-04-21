@@ -36,7 +36,8 @@ export default function ProductsPage() {
   const [amount, setAmount] = useState<number>(1);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [lastSignedExport, setLastSignedExport] = useState<null | { productId: string; signedPayloads: Array<{ payload: string; signature: string }> }>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [lastSignedExport, setLastSignedExport] = useState<null | { productId: string; signedPayloads: Array<{ payload: string; signature: string }>; imageFile: File | null }>(null);
 
   useEffect(() => {
     if (manufacturer && manufacturer.products) setProducts(manufacturer.products);
@@ -71,6 +72,27 @@ export default function ProductsPage() {
     }
 
     try {
+      // Ensure wallet is connected synchronously (or close to the initial user gesture) before fetching 
+      // preventing the browser from blocking popups out-of-band.
+      let accountToUse = currentAccount ?? undefined;
+      if (!accountToUse) {
+        try {
+          const enoki = wallets.find((w: any) => isEnokiWallet(w));
+          const selected = enoki ?? wallets[0];
+          if (selected) {
+            console.log('Attempting to connect wallet automatically before signing');
+            const connResult: any = await connect({ wallet: selected });
+            accountToUse = connResult?.account ?? connResult?.currentAccount ?? (connResult?.accounts && connResult.accounts[0]) ?? undefined;
+          }
+        } catch (e: any) {
+          console.warn('Wallet connection interrupted:', e.message);
+        }
+      }
+
+      // We do not strictly throw here because `mutateAsync` might successfully connect 
+      // in the background without returning an obvious account shape, and `useSignPersonalMessage` 
+      // can safely fallback to the contextual `currentAccount`.
+
       const initPayload = {
         manufacturerId: manufacturer.id,
         productName: name,
@@ -94,32 +116,6 @@ export default function ProductsPage() {
       if (!product) throw new Error('Server did not return created product');
 
       // Step 2: client-side sign each payload
-      // If dapp-kit has not yet rehydrated a currentAccount (but we have a
-      // persisted connectedAddress), attempt to connect programmatically so
-      // the signing hooks become available. Prefer an Enoki wallet if present.
-      // If there's no currentAccount from the hook, attempt to auto-connect a wallet.
-      // Avoid waiting on the hook's value (race condition) by using the result returned
-      // from `connect(...)` which should include the newly connected account info.
-  let accountToUse = currentAccount ?? undefined;
-      if (!accountToUse) {
-        try {
-          const enoki = wallets.find((w: any) => isEnokiWallet(w));
-          const selected = enoki ?? wallets[0];
-          if (selected) {
-            console.log('Attempting to connect wallet automatically before signing');
-            const connResult: any = await connect({ wallet: selected });
-            // connect implementations may return the connected account in different shapes
-            accountToUse = connResult?.account ?? connResult?.currentAccount ?? (connResult?.accounts && connResult.accounts[0]) ?? accountToUse;
-          }
-        } catch (e) {
-          // ignore and let the subsequent check throw a helpful error
-        }
-      }
-
-      if (!accountToUse) {
-        throw new Error('Wallet not connected. Please connect your Enoki wallet first.');
-      }
-
       console.log('Wallet connected. Proceeding to sign payloads.');
       const signedPayloads: Array<{ payload: string; signature: string }> = [];
 
@@ -216,7 +212,7 @@ export default function ProductsPage() {
       try {
         const exportObj = { productId: product.id, signedPayloads };
         // Save for potential upload to backend (user can upload via button)
-        setLastSignedExport(exportObj);
+        setLastSignedExport({ ...exportObj, imageFile });
         const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -240,6 +236,7 @@ export default function ProductsPage() {
         setManufactureDate('');
         setExpiryDate('');
         setAmount(1);
+        setImageFile(null);
       }
 
       await refreshManufacturer();
@@ -262,12 +259,39 @@ export default function ProductsPage() {
     try {
       // lazy import to keep bundle small
       const api = await import('@/lib/api');
-      const res = await api.finalizeBatch(lastSignedExport.productId, lastSignedExport.signedPayloads, base);
+      const res = await api.finalizeBatch(lastSignedExport.productId, lastSignedExport.signedPayloads, lastSignedExport.imageFile, base);
       setMessage('Signed payloads uploaded to backend successfully.');
+
+      // Generate ZIP of stego images if they reside in the response
+      if (res?.codes && res.codes.length > 0) {
+        try {
+          const JSZipModule = await import('jszip');
+          const JSZip = JSZipModule.default || JSZipModule;
+          const fileSaver = await import('file-saver');
+          const saveAs = fileSaver.saveAs || fileSaver.default;
+          const zip = new JSZip();
+          let hasImages = false;
+          res.codes.forEach((code: any) => {
+            if (code.stegoImageBase64) {
+              zip.file(`code-${code.serialId}.png`, code.stegoImageBase64, { base64: true });
+              hasImages = true;
+            }
+          });
+          if (hasImages) {
+            const content = await zip.generateAsync({ type: 'blob' });
+            saveAs(content, `stego-packages-${lastSignedExport.productId}.zip`);
+            setMessage('Signed payloads uploaded. Stego packages downloaded as ZIP.');
+          }
+        } catch(e) {
+          console.error("Failed to generate zip", e);
+        }
+      }
+
       // optionally refresh manufacturer to reflect server-side codes
       await refreshManufacturer();
       // clear saved export to avoid accidental re-uploads
       setLastSignedExport(null);
+      setImageFile(null);
       return res;
     } catch (e: any) {
       console.error('Failed to upload signed payloads to backend:', e);
@@ -411,6 +435,8 @@ export default function ProductsPage() {
           <Input type="date" value={manufactureDate} onChange={(e) => setManufactureDate(e.target.value)} required />
           <label className="text-sm">Expiry date</label>
           <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} required />
+          <label className="text-sm">Packaging artwork (optional)</label>
+          <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
           <label className="text-sm">Quantity (how many codes)</label>
           <Input type="number" min={1} value={String(amount)} onChange={(e) => setAmount(Number(e.target.value))} required />
           <div>

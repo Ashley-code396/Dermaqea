@@ -100,10 +100,21 @@ export class CodesService {
     if (!prod) throw new Error('product not found');
 
     const manufacturer = await this.prisma.manufacturer.findUnique({ where: { id: prod.manufacturerId } });
-    if (!manufacturer) throw new Error('manufacturer not found');
-    if (!manufacturer.suiWalletAddress) throw new Error('manufacturer does not have a configured suiWalletAddress; cannot verify signatures');
-
-    if (!inputImageBuffer) throw new Error('inputImageBuffer is required to embed the steganographic signature');
+    let imageToUse = inputImageBuffer;
+    if (!imageToUse) {
+      const sharp = require('sharp');
+      // Generate a default 1024x1024 white packaging template if none provided
+      imageToUse = await sharp({
+        create: {
+          width: 1024,
+          height: 1024,
+          channels: 3,
+          background: { r: 255, g: 255, b: 255 }
+        }
+      })
+      .jpeg()
+      .toBuffer();
+    }
 
     const results: Array<{ code: string; serialId: string; payload: string; signature: string; stegoImageBase64: string }> = [];
 
@@ -122,7 +133,7 @@ export class CodesService {
       let stegoImageBase64 = '';
       try {
         // Embed the signature invisibly into the image buffer
-        const stegoImgBuf = await embedSignature(inputImageBuffer, code);
+        const stegoImgBuf = await embedSignature(imageToUse as Buffer, code);
         stegoImageBase64 = stegoImgBuf.toString('base64');
       } catch (e) {
         this.logger.error(`Failed to embed steganographic signature for ${code}`, e);

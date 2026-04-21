@@ -59,11 +59,17 @@ export class CodesController {
    * persists verified codes.
    */
   @Post('create-batch-finalize')
+  @UseInterceptors(FileInterceptor('image'))
   @HttpCode(HttpStatus.OK)
-  async createBatchFinalize(@Body() body: { productId: string; signedPayloads: Array<{ payload: string; signature: string }> }) {
+  async createBatchFinalize(@UploadedFile() file: any, @Body() body: { productId: string; signedPayloads: string | Array<any> }) {
     try {
-      const { productId, signedPayloads } = body;
-      const res = await this.svc.finalizeBatchWithSignatures({ productId, signedPayloads });
+      const { productId, signedPayloads: signedPayloadsRaw } = body;
+      const signedPayloads = typeof signedPayloadsRaw === 'string' ? JSON.parse(signedPayloadsRaw) : signedPayloadsRaw;
+      const res = await this.svc.finalizeBatchWithSignatures({ 
+        productId, 
+        signedPayloads,
+        inputImageBuffer: file?.buffer
+      });
       return res;
     } catch (e) {
       console.error('[createBatchFinalize] Error:', e);

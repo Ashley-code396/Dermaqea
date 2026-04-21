@@ -24,7 +24,9 @@ export default function SettingsPage() {
   const [storedAddr, setStoredAddr] = useState<string | null>(null);
   useEffect(() => {
     try {
-      setStoredAddr(typeof window !== 'undefined' ? localStorage.getItem('connectedAddress') : null);
+      // prefer sessionStorage (matches WalletProvider storage) but fall back to localStorage
+      const sess = typeof window !== 'undefined' ? sessionStorage.getItem('connectedAddress') : null;
+      setStoredAddr(sess ?? (typeof window !== 'undefined' ? localStorage.getItem('connectedAddress') : null));
     } catch (e) {
       // ignore
     }
@@ -32,8 +34,16 @@ export default function SettingsPage() {
   const connectedAddress = storedAddr;
   const setConnectedAddress = (addr: string | null) => {
     try {
-      if (addr) localStorage.setItem('connectedAddress', addr);
-      else localStorage.removeItem('connectedAddress');
+      // Persist to sessionStorage (used by WalletProvider) and also mirror to localStorage
+      if (typeof window !== 'undefined') {
+        if (addr) {
+          sessionStorage.setItem('connectedAddress', addr);
+          localStorage.setItem('connectedAddress', addr);
+        } else {
+          sessionStorage.removeItem('connectedAddress');
+          try { localStorage.removeItem('connectedAddress'); } catch {};
+        }
+      }
     } catch (e) {
       // ignore
     }
@@ -90,6 +100,8 @@ export default function SettingsPage() {
       // ignore provider disconnect errors — still clear local state
       console.warn('disconnect error', err);
     }
+    // Clear both sessionStorage and localStorage so the app fully forgets the address
+    try { if (typeof window !== 'undefined') sessionStorage.removeItem('connectedAddress'); } catch {}
     try { localStorage.removeItem('connectedAddress'); } catch {}
     setConnectedAddress(null);
     router.refresh();

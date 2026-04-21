@@ -122,18 +122,35 @@ const COORD2 = [5, 4]; // u2, v2
 export async function embedSignature(imageBuffer: Buffer, payload: string): Promise<Buffer> {
   const payloadBits = stringToBits(payload);
   const metadata = await sharp(imageBuffer).metadata();
-  const width = metadata.width || 0;
-  const height = metadata.height || 0;
+  let width = metadata.width || 0;
+  let height = metadata.height || 0;
+
+  const HEADER_RESERVE_BLOCKS = 3200;
+  const payloadOnlyBits = payloadBits.slice(16);
+  const requiredBlocks = HEADER_RESERVE_BLOCKS + payloadOnlyBits.length;
+
+  let totalBlocks = Math.floor(width / 8) * Math.floor(height / 8);
+  let currentBuffer = imageBuffer;
+
+  if (totalBlocks < requiredBlocks) {
+    const aspect = height > 0 ? (width / height) : 1;
+    const newWidth = Math.ceil(Math.sqrt(requiredBlocks * 64 * aspect));
+    const newHeight = Math.ceil(newWidth / aspect);
+    width = Math.ceil(newWidth / 8) * 8;
+    height = Math.ceil(newHeight / 8) * 8;
+    
+    currentBuffer = await sharp(imageBuffer).resize(width, height).toBuffer();
+    totalBlocks = Math.floor(width / 8) * Math.floor(height / 8);
+  }
 
   // We enforce alpha removal for precise math in 3-channel (RGB)
-  const img = await sharp(imageBuffer)
+  const img = await sharp(currentBuffer)
     .removeAlpha()
     .raw()
     .toBuffer();
 
   const blocksX = Math.floor(width / 8);
   const blocksY = Math.floor(height / 8);
-  const totalBlocks = blocksX * blocksY;
 
   // We spread the bits across the available blocks, repeating them many times
   // and use a deterministic sequence (PRNG) to select blocks so it's uniform.
@@ -144,14 +161,7 @@ export async function embedSignature(imageBuffer: Buffer, payload: string): Prom
     [blockIndices[i], blockIndices[j]] = [blockIndices[j], blockIndices[i]];
   }
 
-  const HEADER_RESERVE_BLOCKS = 3200;
-  if (totalBlocks <= HEADER_RESERVE_BLOCKS) throw new Error("Image too small to embed the payload");
-  
-  const payloadOnlyBits = payloadBits.slice(16);
   const availablePayloadBlocks = totalBlocks - HEADER_RESERVE_BLOCKS;
-  
-  if (availablePayloadBlocks < payloadOnlyBits.length) throw new Error("Image too small to embed the payload data");
-  
   const headerBlocksPerBit = HEADER_RESERVE_BLOCKS / 16;
   const payloadBlocksPerBit = Math.floor(availablePayloadBlocks / payloadOnlyBits.length);
   
