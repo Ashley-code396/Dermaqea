@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EnokiService } from '../enoki/enoki.service';
+import { embedSignature } from './steganography.util';
 import { randomBytes } from 'crypto';
-import { generateGlyphSvg } from './glyph.util';
 
 @Injectable()
 export class CodesService {
@@ -67,12 +67,17 @@ export class CodesService {
     });
 
     const payloads: string[] = [];
+    // ensure nonces are unique within this generated batch
+    const seen = new Set<string>();
+    const mId = manufacturer.id;
     for (let i = 0; i < amount; i++) {
-      const nonce = this.generateNonce(6);
-      // Use the resolved manufacturer's DB id to build the payload. If the
-      // caller provided manufacturerId this will match `manufacturer.id`.
-      const mId = manufacturer.id;
-      const payload = `${mId}-${prod.id}-${nonce}`;
+      let nonce: string;
+      let payload: string;
+      do {
+        nonce = this.generateNonce(6);
+        payload = `${mId}-${prod.id}-${nonce}`;
+      } while (seen.has(payload));
+      seen.add(payload);
       payloads.push(payload);
     }
 
@@ -81,14 +86,16 @@ export class CodesService {
 
   /**
    * Step 2 (client flow): Accept signed payloads from the client, verify each
-   * signature against the manufacturer's configured Sui address, and persist
-   * Code records. Returns the created codes.
+   * signature against the manufacturer's configured Sui address, embed the
+   * cryptographic validation steganographically into an input image, and
+   * persist Code records. Returns the created codes and associated images.
    */
   async finalizeBatchWithSignatures(params: {
     productId: string;
     signedPayloads: Array<{ payload: string; signature: string }>;
+    inputImageBuffer?: Buffer; // The packaging template to embed into buffer
   }) {
-    const { productId, signedPayloads } = params;
+    const { productId, signedPayloads, inputImageBuffer } = params;
     const prod = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!prod) throw new Error('product not found');
 
@@ -96,7 +103,9 @@ export class CodesService {
     if (!manufacturer) throw new Error('manufacturer not found');
     if (!manufacturer.suiWalletAddress) throw new Error('manufacturer does not have a configured suiWalletAddress; cannot verify signatures');
 
-    const results: Array<{ code: string; serialId: string; payload: string; signature: string }> = [];
+    if (!inputImageBuffer) throw new Error('inputImageBuffer is required to embed the steganographic signature');
+
+    const results: Array<{ code: string; serialId: string; payload: string; signature: string; stegoImageBase64: string }> = [];
 
     for (const item of signedPayloads) {
       const { payload, signature } = item;
@@ -109,20 +118,21 @@ export class CodesService {
       }
 
       const code = `${payload}.${signature}`;
+      
+      let stegoImageBase64 = '';
+      try {
+        // Embed the signature invisibly into the image buffer
+        const stegoImgBuf = await embedSignature(inputImageBuffer, code);
+        stegoImageBase64 = stegoImgBuf.toString('base64');
+      } catch (e) {
+        this.logger.error(`Failed to embed steganographic signature for ${code}`, e);
+        throw e;
+      }
+
       try {
         const created = await this.prisma.code.create({ data: { product: { connect: { id: prod.id } }, codeValue: code, generatedAt: new Date() } });
 
-        // Generate a printable SVG glyph (Glyph Block) from the signed payload.
-        // Keep the original codeValue intact; store the glyph alongside it.
-        try {
-          const svg = generateGlyphSvg(payload, signature);
-          await this.prisma.code.update({ where: { id: created.id }, data: { glyphSvg: svg, glyphGeneratedAt: new Date() } });
-        } catch (e) {
-          // non-fatal: log and continue
-          this.logger.warn(`Failed to generate glyph for code ${created.id}: ${e}`);
-        }
-
-        results.push({ code, serialId: created.id, payload, signature });
+        results.push({ code, serialId: created.id, payload, signature, stegoImageBase64 });
       } catch (e) {
         this.logger.warn(`Failed to create Code record for product ${prod.id}: ${e}`);
         throw e;

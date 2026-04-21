@@ -316,15 +316,6 @@ export default function ProductsPage() {
     }
   }
 
-  function copySvgToClipboard(svg: string) {
-    try {
-      navigator.clipboard.writeText(svg);
-      setMessage('SVG copied to clipboard');
-    } catch (e) {
-      setMessage('Failed to copy SVG');
-    }
-  }
-
   function printCodes() {
     // open a printable window with codes list
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:16px}pre{word-break:break-all;background:#f6f6f6;padding:8px;border-radius:4px}</style></head><body><h1>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</h1>${codesList
@@ -364,7 +355,6 @@ export default function ProductsPage() {
                   <tr className="text-left">
                     <th className="py-2">Serial</th>
                     <th>Code</th>
-                    <th>Glyph</th>
                     <th>Signature</th>
                     <th>Actions</th>
                   </tr>
@@ -375,20 +365,7 @@ export default function ProductsPage() {
                       <td className="py-2 font-mono text-sm">{c.serialNumber}</td>
                       <td className="py-2"><pre className="text-xs break-words">{c.codeData ?? ''}</pre></td>
 
-                      <td className="py-2">
-                        {c.glyphSvg ? (
-                          <div className="flex items-center gap-3">
-                            <div className="w-16 h-16" style={{ display: 'inline-block' }} dangerouslySetInnerHTML={{ __html: c.glyphSvg }} />
-                            <div>
-                              <Button size="sm" onClick={() => copySvgToClipboard(c.glyphSvg)} className="flex items-center gap-2">
-                                Copy SVG
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
-                      </td>
+                      {/* glyph column removed */}
 
                       <td className="py-2 text-xs font-mono">{c.signature ?? ''}</td>
 

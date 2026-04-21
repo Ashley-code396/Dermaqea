@@ -1,8 +1,10 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Get, Param, Res } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, Get, Param, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { CodesService } from './codes.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { verifySignature } from './crypto.util';
+import { extractSignature } from './steganography.util';
 
 @Controller('codes')
 export class CodesController {
@@ -137,5 +139,31 @@ export class CodesController {
     const publicKey = manufacturer.suiWalletAddress;
     const isValid = await verifySignature(signature, payload, publicKey);
     return { result: isValid ? 'AUTHENTIC_PRODUCT' : 'COUNTERFEIT_OR_MODIFIED_CODE', isValid };
+  }
+
+  @Post('extract-stego')
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.OK)
+  async extractStego(@UploadedFile() file: any) {
+    if (!file) throw new Error('No image file uploaded');
+    
+    try {
+      const payloadString = await extractSignature(file.buffer);
+      if (!payloadString) return { success: false, message: 'No payload could be reliably extracted' };
+      
+      // Auto-verify it if we extracted something that looks mostly like a code
+      if (!payloadString.includes('.')) {
+         return { success: false, message: 'Extracted payload does not appear to be a signed product code', extracted: payloadString };
+      }
+
+      const result = await this.verify({ code: payloadString });
+      return {
+        success: true,
+        extracted: payloadString,
+        verification: result
+      };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   }
 }
