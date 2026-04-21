@@ -37,7 +37,6 @@ export default function ProductsPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [lastSignedExport, setLastSignedExport] = useState<null | { productId: string; signedPayloads: Array<{ payload: string; signature: string }>; imageFile: File | null }>(null);
 
   useEffect(() => {
     if (manufacturer && manufacturer.products) setProducts(manufacturer.products);
@@ -102,6 +101,7 @@ export default function ProductsPage() {
       };
 
       // Step 1: create product and receive unsigned payloads to sign
+      setMessage('Initializing product and reserving signatures...');
       console.log('Sending init request for:', initPayload);
       const initRes = await fetch(`${base.replace(/\/$/, "")}/codes/create-batch-init`, {
         method: "POST",
@@ -116,6 +116,7 @@ export default function ProductsPage() {
       if (!product) throw new Error('Server did not return created product');
 
       // Step 2: client-side sign each payload
+      setMessage('Awaiting wallet signature approvals...');
       console.log('Wallet connected. Proceeding to sign payloads.');
       const signedPayloads: Array<{ payload: string; signature: string }> = [];
 
@@ -202,66 +203,13 @@ export default function ProductsPage() {
       // Wait for all workers to finish (or throw)
       await Promise.all(workers);
 
-      console.log('All payloads signed. Preparing signed payloads for mobile app (no server-side finalize).', signedPayloads.length);
+      setMessage('Finalizing packaging artwork and embedding signatures...');
+      console.log('All payloads signed. Now automatically finalizing with the backend.', signedPayloads.length);
 
-      // NOTE: Verification will be performed by the mobile app, not the manufacturer UI.
-      // We still sign payloads here, but we do NOT call the server finalize/verification endpoint.
-      // Instead we create a downloadable JSON containing the signed payloads so the mobile
-      // app can import/verify them later. We also optimistically add the product returned
-      // from the init call to the UI so manufacturers see it immediately.
-      try {
-        const exportObj = { productId: product.id, signedPayloads };
-        // Save for potential upload to backend (user can upload via button)
-        setLastSignedExport({ ...exportObj, imageFile });
-        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `product-${product.id}-signed-payloads.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        setMessage('Signed payloads downloaded for mobile app. Verification will be performed by the mobile app.');
-      } catch (e: any) {
-        console.error('Failed to prepare signed payloads for download:', e);
-        setMessage('Failed to prepare signed payloads for mobile app');
-      }
-
-      // show the product returned by the init endpoint so the UI reflects the new product
-      if (product) {
-        setProducts((p) => [product, ...p]);
-        setShowForm(false);
-        setName('');
-        setManufactureDate('');
-        setExpiryDate('');
-        setAmount(1);
-        setImageFile(null);
-      }
-
-      await refreshManufacturer();
-    } catch (err: any) {
-      console.error('CRITICAL ERROR DURING CREATION:', err);
-      alert('Error: ' + (err?.message ?? 'Failed to create product'));
-      setMessage(err?.message ?? 'Failed to create product');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function uploadSignedPayloadsToBackend() {
-    if (!lastSignedExport) {
-      setMessage('No signed payloads available to upload.');
-      return;
-    }
-    setBusy(true);
-    setMessage(null);
-    try {
-      // lazy import to keep bundle small
+      // Step 3: Automatically upload the signed payloads & image and download the ZIP
       const api = await import('@/lib/api');
-      const res = await api.finalizeBatch(lastSignedExport.productId, lastSignedExport.signedPayloads, lastSignedExport.imageFile, base);
-      setMessage('Signed payloads uploaded to backend successfully.');
-
+      const res = await api.finalizeBatch(product.id, signedPayloads, imageFile, base);
+      
       // Generate ZIP of stego images if they reside in the response
       if (res?.codes && res.codes.length > 0) {
         try {
@@ -279,24 +227,29 @@ export default function ProductsPage() {
           });
           if (hasImages) {
             const content = await zip.generateAsync({ type: 'blob' });
-            saveAs(content, `stego-packages-${lastSignedExport.productId}.zip`);
-            setMessage('Signed payloads uploaded. Stego packages downloaded as ZIP.');
+            saveAs(content, `stego-packages-${product.id}.zip`);
           }
         } catch(e) {
           console.error("Failed to generate zip", e);
         }
       }
 
-      // optionally refresh manufacturer to reflect server-side codes
-      await refreshManufacturer();
-      // clear saved export to avoid accidental re-uploads
-      setLastSignedExport(null);
+      setMessage('Packaging units generated successfully! Downloading ZIP...');
+
+      // show the product returned by the init endpoint so the UI reflects the new product
+      setProducts((p) => [product, ...p]);
+      setShowForm(false);
+      setName('');
+      setManufactureDate('');
+      setExpiryDate('');
+      setAmount(1);
       setImageFile(null);
-      return res;
-    } catch (e: any) {
-      console.error('Failed to upload signed payloads to backend:', e);
-      setMessage(e?.message ?? 'Failed to upload signed payloads');
-      throw e;
+
+      await refreshManufacturer();
+    } catch (err: any) {
+      console.error('CRITICAL ERROR DURING CREATION:', err);
+      alert('Error: ' + (err?.message ?? 'Failed to create product'));
+      setMessage(err?.message ?? 'Failed to create product');
     } finally {
       setBusy(false);
     }
@@ -341,9 +294,9 @@ export default function ProductsPage() {
   }
 
   function printCodes() {
-    // open a printable window with codes list
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:16px}pre{word-break:break-all;background:#f6f6f6;padding:8px;border-radius:4px}</style></head><body><h1>Codes for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</h1>${codesList
-      .map((c) => `<div style="margin-bottom:12px"><strong>Serial:</strong> ${c.serialNumber}<br/><strong>Code:</strong><pre>${c.codeData ?? ''}</pre></div>`)
+    // open a printable window with log list
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Serials for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:16px}pre{word-break:break-all;background:#f6f6f6;padding:8px;border-radius:4px}</style></head><body><h1>Packaging Serials for ${currentProduct?.product_name ?? currentProduct?.name ?? ''}</h1>${codesList
+      .map((c) => `<div style="margin-bottom:12px"><strong>Serial:</strong> ${c.serialNumber}</div>`)
       .join('')}<script>window.onload=function(){window.print();}</script></body></html>`;
     const w = window.open('', '_blank', 'noopener,noreferrer');
     if (!w) {
@@ -367,7 +320,7 @@ export default function ProductsPage() {
       <Dialog open={codesDialogOpen} onOpenChange={(v) => setCodesDialogOpen(v)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Codes for {currentProduct?.product_name ?? currentProduct?.name ?? ''}</DialogTitle>
+            <DialogTitle>Packaging Units for {currentProduct?.product_name ?? currentProduct?.name ?? ''}</DialogTitle>
           </DialogHeader>
 
           <div className="max-h-[60vh] overflow-auto mt-2">
@@ -377,9 +330,7 @@ export default function ProductsPage() {
               <table className="w-full table-auto border-collapse">
                 <thead>
                   <tr className="text-left">
-                    <th className="py-2">Serial</th>
-                    <th>Code</th>
-                    <th>Signature</th>
+                    <th className="py-2">Serial Number</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -387,17 +338,12 @@ export default function ProductsPage() {
                   {codesList.map((c: any) => (
                     <tr key={c.id} className="border-t">
                       <td className="py-2 font-mono text-sm">{c.serialNumber}</td>
-                      <td className="py-2"><pre className="text-xs break-words">{c.codeData ?? ''}</pre></td>
-
-                      {/* glyph column removed */}
-
-                      <td className="py-2 text-xs font-mono">{c.signature ?? ''}</td>
 
                       <td className="py-2">
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={() => copyToClipboard(c.codeData ?? '')} className="flex items-center gap-2">
+                          <Button size="sm" onClick={() => copyToClipboard(c.serialNumber ?? '')} className="flex items-center gap-2">
                             <Copy size={14} />
-                            Copy
+                            Copy Serial
                           </Button>
                         </div>
                       </td>
@@ -406,7 +352,7 @@ export default function ProductsPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="text-sm text-muted-foreground">No codes found for this product.</div>
+              <div className="text-sm text-muted-foreground">No units found for this product.</div>
             )}
           </div>
 
@@ -435,12 +381,12 @@ export default function ProductsPage() {
           <Input type="date" value={manufactureDate} onChange={(e) => setManufactureDate(e.target.value)} required />
           <label className="text-sm">Expiry date</label>
           <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} required />
-          <label className="text-sm">Packaging artwork (optional)</label>
-          <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-          <label className="text-sm">Quantity (how many codes)</label>
+          <label className="text-sm">Packaging artwork (required)</label>
+          <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} required />
+          <label className="text-sm">Quantity (how many packaging units)</label>
           <Input type="number" min={1} value={String(amount)} onChange={(e) => setAmount(Number(e.target.value))} required />
           <div>
-            <Button type="submit" disabled={busy}>{busy ? "Creating..." : "Create product & generate codes"}</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Generating..." : "Generate packaging units"}</Button>
           </div>
         </form>
       )}
@@ -469,17 +415,12 @@ export default function ProductsPage() {
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleDownload(p.id)} className="flex items-center gap-2">
                         <Download size={14} />
-                        Download
+                        Export Log
                       </Button>
                       <Button size="sm" onClick={() => openCodesDialog(p)} className="flex items-center gap-2">
                         <Printer size={14} />
-                        View codes
+                        View Serials
                       </Button>
-                      {lastSignedExport && lastSignedExport.productId === p.id ? (
-                        <Button size="sm" onClick={uploadSignedPayloadsToBackend} className="flex items-center gap-2">
-                          Upload signed payloads
-                        </Button>
-                      ) : null}
                     </div>
                   </td>
                 </tr>
