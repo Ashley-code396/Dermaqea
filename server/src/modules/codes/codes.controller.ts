@@ -136,8 +136,9 @@ export class CodesController {
     const signature = code.slice(idx + 1);
 
     const parts = payload.split('-');
-    if (parts.length < 3) return { result: 'COUNTERFEIT_OR_MODIFIED_CODE' };
-    const manufacturerId = parts[0];
+    // UUIDs have 4 dashes. manufacturerId is the first 5 parts.
+    if (parts.length < 11) return { result: 'COUNTERFEIT_OR_MODIFIED_CODE' };
+    const manufacturerId = parts.slice(0, 5).join('-');
     // Lookup manufacturer by id
     const manufacturer = await this.prisma.manufacturer.findUnique({ where: { id: manufacturerId } });
     if (!manufacturer) return { result: 'COUNTERFEIT_OR_MODIFIED_CODE' };

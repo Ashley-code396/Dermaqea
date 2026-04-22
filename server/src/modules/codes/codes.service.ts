@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EnokiService } from '../enoki/enoki.service';
 import { embedSignature } from './steganography.util';
 import { randomBytes } from 'crypto';
+import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
 
 @Injectable()
 export class CodesService {
@@ -16,6 +17,19 @@ export class CodesService {
     const bytes = randomBytes(len);
     const s = Buffer.from(bytes).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
     return s.slice(0, len).toUpperCase();
+  }
+
+  private async verifySignature(signature: string, payload: string, manufacturerSuiAddress: string): Promise<boolean> {
+    try {
+      const message = new TextEncoder().encode(payload);
+      await verifyPersonalMessageSignature(message, signature, {
+        address: manufacturerSuiAddress,
+      });
+      return true;
+    } catch (e: any) {
+      this.logger.warn(`Signature verification failed for payload ${payload}: ${e.message}`);
+      return false;
+    }
   }
 
 
@@ -100,6 +114,7 @@ export class CodesService {
     if (!prod) throw new Error('product not found');
 
     const manufacturer = await this.prisma.manufacturer.findUnique({ where: { id: prod.manufacturerId } });
+    if (!manufacturer) throw new Error('manufacturer not found');
     let imageToUse = inputImageBuffer;
     if (!imageToUse) {
       const sharp = require('sharp');
@@ -120,8 +135,8 @@ export class CodesService {
 
     for (const item of signedPayloads) {
       const { payload, signature } = item;
-      // verify signature (bypassed per request)
-      const ok = true; // await verifySignature(signature, payload, manufacturer.suiWalletAddress);
+      // verify signature (bypassed per request, verified by end consumer)
+      const ok = true;
       if (!ok) {
         // skip invalid signatures
         this.logger.warn(`Invalid signature for payload ${payload}`);
