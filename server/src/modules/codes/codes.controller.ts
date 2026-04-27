@@ -131,9 +131,10 @@ export class CodesController {
   async verify(@Body() body: { code: string }) {
     const { code } = body;
     if (!code || !code.includes('.')) return { result: 'COUNTERFEIT_OR_MODIFIED_CODE' };
-    const idx = code.lastIndexOf('.');
-    const payload = code.slice(0, idx);
-    const signature = code.slice(idx + 1);
+    const tokenParts = code.split('.');
+    const payload = tokenParts[0];
+    const signature = tokenParts[1];
+    const embeddedPublicKey = tokenParts[2]; // Currently optional, used only by decentralized mobile clients
 
     const parts = payload.split('-');
     // UUIDs have 4 dashes. manufacturerId is the first 5 parts.

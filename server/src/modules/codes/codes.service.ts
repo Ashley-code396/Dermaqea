@@ -143,7 +143,20 @@ export class CodesService {
         continue;
       }
 
-      const code = `${payload}.${signature}`;
+      let embeddedPublicKey = manufacturer.suiWalletAddress; // Fallback to wallet address
+      try {
+        const { parseSerializedSignature } = require('@mysten/sui/cryptography');
+        const parsed = parseSerializedSignature(signature);
+        if (parsed?.publicKey && parsed.publicKey instanceof Uint8Array) {
+           embeddedPublicKey = Buffer.from(parsed.publicKey).toString('base64');
+        } else if (parsed?.publicKey?.toBase64) {
+           embeddedPublicKey = parsed.publicKey.toBase64();
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to parse public key from signature; falling back to manufacturer address.`);
+      }
+
+      const code = `${payload}.${signature}.${embeddedPublicKey}`;
       
       let stegoImageBase64 = '';
       try {
